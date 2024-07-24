@@ -41,3 +41,11 @@ export interface IUserUpdatePayload {
     password?: string;
     isLocked?: number;
 }
+
+export interface IUserBulkAddResponse {
+    users: IUserResponse[]
+}
+
+export interface IUsersGetResponse {
+    users: IUserResponse[]
+}

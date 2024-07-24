@@ -14,6 +14,7 @@ class User extends Model {
 
   @Column({
     type: DataType.STRING(200),
+
   })
   declare displayName: string;
 
@@ -37,7 +38,7 @@ class User extends Model {
   @Column({
     type: DataType.INTEGER,
   })
-  declare IsVerified: number;
+  declare isVerified: number;
 
   @Column({
     type: DataType.STRING(50),
@@ -54,11 +55,13 @@ class User extends Model {
   })
   declare location: string;
 
+  @AllowNull(true)
   @Column({
     type: DataType.STRING(200),
   })
   declare image: string;
 
+  @AllowNull(true)
   @Column({
     type: DataType.STRING(200),
   })
