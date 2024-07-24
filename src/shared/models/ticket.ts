@@ -19,12 +19,17 @@ class Ticket extends Model {
     @Column({
         type: DataType.STRING(200),
     })
+    declare title: string;
+
+    @Column({
+        type: DataType.STRING(200),
+    })
     declare comment: string;
 
     @Column({
         type: DataType.INTEGER,
     })
-    declare status: string;
+    declare status: number;
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare profile: Profile;

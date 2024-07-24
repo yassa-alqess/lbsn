@@ -1,4 +1,4 @@
-export interface AppointmentPayload {
+export interface IAppointmentPayload {
     email : string;
     name: string;
     companyName : string;

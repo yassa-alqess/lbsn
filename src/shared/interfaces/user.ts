@@ -1,46 +1,43 @@
-export interface UserAddPayload {
-    email?: string;
-    academicId: string; //required
-    displayName: string; // required
-    arabicName?: string;
-    gender?: boolean;
-    password: string; // required
-    isLocked?: boolean;
-    isDeleted?: boolean;
-    departmentName?: string;
-    group?: string;
-    role: number; // required
-    lawId?: string;
+export interface IUserAddPayload {
+    email: string;
+    displayName: string;
+    taxId?: string;
+    role: number;
+    isVerified?: number;
+    companyName: string;
+    phone: string;
+    location: string;
+    image?: string;
+    password?: string;
+    isLocked?: number;
+
 }
 
-export interface UserResponse {
+export interface IUserResponse {
     userId: string;
-    studentId?: string;
-    instructorId?: string;
-    email?: string;
-    academicId: string;
+    email: string;
     displayName: string;
-    arabicName?: string;
-    gender?: boolean;
-    isLocked?: boolean;
-    isDeleted?: boolean;
-    departmentName?: string;
-    group?: string;
+    taxId: string;
     role: number;
-    lawId?: string;
+    isVerified: number;
+    companyName: string;
+    phone: string;
+    location: string;
+    image: string;
+    password: string;
+    isLocked: number;
 }
-export interface UserUpdatePayload {
-    userId: string; // required
+export interface IUserUpdatePayload {
+    userId: string;
     email?: string;
-    academicId?: string;
     displayName?: string;
-    arabicName?: string
-    gender?: boolean;
-    hashedPassword?: string;
-    isLocked?: boolean;
-    isDeleted?: boolean;
-    departmentName?: string;
-    group?: string;
-    role?: number;
-    lawId?: string;
+    taxId?: string;
+    role: number;
+    isVerified?: number;
+    companyName?: string;
+    phone?: string;
+    location?: string;
+    image?: string;
+    password?: string;
+    isLocked?: number;
 }

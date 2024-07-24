@@ -1,21 +1,19 @@
-export interface TasksGetPayload {
+export interface ITasksGetPayload {
     profileId: string;
     status: number;
 }
 
-export interface TasksGetRespones {
-    tasks: Task[];
-
-
+export interface ITasksGetRespones {
+    tasks: ITask[];
 }
 
-export interface TasksAddPayload {
+export interface ITasksAddPayload {
     profileId: string;
     title: string;
     comment: string;
 }
 
-export interface Task {
+export interface ITask {
     taskId: string;
     profileId: string;
     title: string;

@@ -1,5 +1,5 @@
 
-import { TasksAddPayload, TasksGetPayload } from '../../shared/interfaces/task';
+import { ITasksAddPayload, ITasksGetPayload } from '../../shared/interfaces/task';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import TaskService from './tasks.service';
@@ -8,10 +8,9 @@ export default class TaskController {
 
     public addTask = async (req: Request, res: Response) => {
         try {
-            const taskPayload: TasksAddPayload = req.body;
-            const path = req.file ? req.file.filename : '';
-            const task = await this.taskService.addTask(taskPayload, path); // path may be empty string
-            res.status(StatusCodes.CREATED).json(task);
+            const taskPayload: ITasksAddPayload = req.body;
+            await this.taskService.addTask(taskPayload);
+            res.status(StatusCodes.CREATED)
             //eslint-disable-next-line
         } catch (error: any) {
             res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
@@ -20,14 +19,13 @@ export default class TaskController {
 
     public getTasks = async (req: Request, res: Response) => {
         try {
-            const payload: TasksGetPayload = req.body;
+            const payload: ITasksGetPayload = req.body;
             const tasks = await this.taskService.getTasks(payload);
-            res.status(200).json(tasks);
+            res.status(StatusCodes.OK).json(tasks);
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(400).json({ message: error.message });
+            res.status(StatusCodes.BAD_REQUEST).json({ message: error.message });
         }
     };
-
 
 }

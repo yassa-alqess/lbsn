@@ -1,5 +1,5 @@
 import { Table, Model, Column, DataType, BelongsTo } from 'sequelize-typescript';
-import Profile from './profile';
+// import Profile from './profile';
 import Task from './task';
 
 
@@ -27,8 +27,8 @@ class TaskSubmission extends Model {
     })
     declare comment: string;
 
-    @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
-    declare profile: Profile;
+    // @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    // declare profile: Profile;
 
     @BelongsTo(() => Task, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare task: Task;

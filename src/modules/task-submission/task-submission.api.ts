@@ -5,5 +5,6 @@ import TaskSubmissonService from "./task-submission.service";
 const taskRouter = express.Router();
 const taskController = new TaskSubmissonController(new TaskSubmissonService());
 
-taskRouter.post("/addTaskSubmisson", upload("taskSubmissions")!.single("file"), taskController.addTaskSubmissonResponse);
-taskRouter.post("/updateTaskSubmisson", upload("taskSubmissions")!.single("file"), taskController.updateTaskSubmissonResponse);
+taskRouter.post("/addTaskSubmisson", upload("taskSubmissions")!.single("file"), taskController.addTaskSubmisson);
+taskRouter.post("/updateTaskSubmisson", upload("taskSubmissions")!.single("file"), taskController.updateTaskSubmisson);
+taskRouter.post("/getTaskSubmission", taskController.getTaskSubmission);
