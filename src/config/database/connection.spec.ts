@@ -1,4 +1,4 @@
-import '../enviroments';
+import '../env';
 import sequelize, { syncDatabase } from './connection';
 import logger from '../logger';
 
@@ -9,6 +9,7 @@ jest.mock('../logger', () => ({
 jest.mock('sequelize-typescript', () => {
   const mSequelize = {
     sync: jest.fn(),
+    query: jest.fn(),
   };
   return {
     Sequelize: jest.fn(() => mSequelize),
