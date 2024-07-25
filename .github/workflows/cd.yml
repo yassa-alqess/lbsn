@@ -1,10 +1,13 @@
-name: Deploy to Server
+name: cd-workflow
 
 on:
   workflow_run:
-    workflows: ['ci']
-    types:
-      - completed
+    workflows: ['ci-workflow']
+    types: [completed]
+    branches:
+      - main
+      - development
+  workflow_dispatch:
 
 jobs:
   setup: #The workflow must contain at least one job with no dependencies.
