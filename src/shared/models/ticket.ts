@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import Profile from './profile';
 
 
@@ -30,6 +30,10 @@ class Ticket extends Model {
         type: DataType.INTEGER,
     })
     declare status: number;
+
+    @ForeignKey(() => Profile)
+    @Column
+    declare profileId: number;
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare profile: Profile;

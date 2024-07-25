@@ -1,8 +1,8 @@
 import { StatusCodes } from 'http-status-codes';
 import UserService from './users.service';
 import { Request, Response } from 'express';
-import { IUserAddPayload, IUserUpdatePayload } from '@/shared/interfaces/user';
-import { INVALID_UUID, DUPLICATE_ERR } from '@/shared/constants';
+import { IUserAddPayload, IUserUpdatePayload } from '../../shared/interfaces/user';
+import { INVALID_UUID, DUPLICATE_ERR } from '../../shared/constants';
 // import { Role } from '../../shared/enums';
 
 export default class UserController {

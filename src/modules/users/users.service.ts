@@ -1,6 +1,6 @@
-import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "@/shared/interfaces/user";
-import User from "@/shared/models/user";
-import { readXlsx } from "@/shared/utils";
+import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "../../shared/interfaces/user";
+import User from "../../shared/models/user";
+import { readXlsx } from "../../shared/utils";
 
 export default class UserService {
 
@@ -139,5 +139,5 @@ export default class UserService {
         await user.destroy();
     }
 
-    
+
 }

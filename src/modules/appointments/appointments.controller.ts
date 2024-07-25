@@ -1,4 +1,4 @@
-import { AppointmentPayload } from '@/shared/interfaces/appointment';
+import { IAppointmentPayload } from '../../shared/interfaces/appointment';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import AppointmentService from './appointments.service';
@@ -7,7 +7,7 @@ export default class AppointmentController {
 
     public makeAppointment = async (req: Request, res: Response) => {
         try {
-            const appointmentPayload: AppointmentPayload = req.body;
+            const appointmentPayload: IAppointmentPayload = req.body;
             await this.authService.makeAppointment(appointmentPayload);
             res.status(StatusCodes.CREATED); //not interested in returning anything
             //eslint-disable-next-line

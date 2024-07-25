@@ -6,11 +6,11 @@
 
 
 import express from "express";
-import RefreshToken from "@/shared/models/refresh-token";
+import RefreshToken from "../../../shared/models/refresh-token";
 import jwt from 'jsonwebtoken';
 import { StatusCodes } from "http-status-codes";
-import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, } from "@/shared/constants";
-import { UserPayload } from "@/shared/interfaces/auth";
+import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET, } from "../../../shared/constants";
+import { UserPayload } from "../../../shared/interfaces/auth";
 const tokenRouter = express.Router();
 
 
