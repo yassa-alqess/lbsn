@@ -2,7 +2,7 @@ import { Table, Model, Column, DataType, BelongsTo } from 'sequelize-typescript'
 import User from './user';
 
 @Table({ schema: 'public', timestamps: true })
-class Token extends Model {
+class RefreshToken extends Model {
     @Column({
         primaryKey: true,
         type: DataType.UUID,
@@ -20,8 +20,13 @@ class Token extends Model {
     })
     declare value: string;
 
+    @Column({
+        type: DataType.DATE,
+    })
+    declare expiresAt: Date;
+
     @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
-    declare profile: User;
+    declare user: User;
 }
 
-export default Token;
+export default RefreshToken;

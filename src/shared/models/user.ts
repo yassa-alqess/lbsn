@@ -1,6 +1,8 @@
-import { Table, Model, Column, DataType, BelongsToMany, AllowNull } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsToMany, AllowNull, HasMany } from 'sequelize-typescript';
 import UserProfile from './user-profile';
 import Profile from './profile';
+import RefreshToken from './refresh-token';
+import ResetToken from './reset-token';
 
 
 @Table({ schema: 'public', timestamps: false })
@@ -74,6 +76,12 @@ class User extends Model {
 
   @BelongsToMany(() => Profile, () => UserProfile)
   declare profiles: Profile[];
+
+  @HasMany(() => RefreshToken)
+  declare refreshTokens: RefreshToken[];
+
+  @HasMany(() => ResetToken)
+  declare resetTokens: ResetToken[];
 }
 
 export default User;

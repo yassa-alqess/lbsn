@@ -15,8 +15,8 @@ export default class AuthController {
 
     public async logout(req: Request, res: Response): Promise<void> {
         try {
-            const { email } = req.body;
-            await this.authService.logout(email);
+            const { token } = req.body;
+            await this.authService.logout(token);
             res.status(StatusCodes.OK).json({ message: 'Logout successfully' });
             //eslint-disable-next-line
         } catch (error: any) {
@@ -45,10 +45,20 @@ export default class AuthController {
         }
     }
 
+    public async verifyOtp(req: Request, res: Response): Promise<void> {
+        try {
+            const { otp } = req.body;
+            await this.authService.verifyOtp(otp);
+            res.status(StatusCodes.OK).json({ message: 'matched' });
+            //eslint-disable-next-line
+        } catch (error: any) {
+            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+        }
+    }
     public async resetPassword(req: Request, res: Response): Promise<void> {
         try {
-            const { email, password, token } = req.body;
-            await this.authService.resetPassword(email, password, token);
+            const { email, password } = req.body;
+            await this.authService.resetPassword(email, password);
             res.status(StatusCodes.OK).json({ message: 'Password reset successfully' });
             //eslint-disable-next-line
         } catch (error: any) {
@@ -58,24 +68,24 @@ export default class AuthController {
 
     public async verifyEmail(req: Request, res: Response): Promise<void> {
         try {
-            const { email, token } = req.body;
-            await this.authService.verifyEmail(email, token);
-            res.status(StatusCodes.OK).json({ message: 'Email verified successfully' });
-        //eslint-disable-next-line
+            const { email } = req.body;
+            await this.authService.verifyEmail(email);
+            res.status(StatusCodes.OK).json({ message: 'Email sent' });
+            //eslint-disable-next-line
         } catch (error: any) {
             res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
         }
     }
 
-    public async refreshToken(req: Request, res: Response): Promise<void> {
-        try {
-            const { email, refreshToken } = req.body;
-            const token = await this.authService.refreshToken(email, refreshToken);
-            res.status(StatusCodes.OK).json(token);
-        //eslint-disable-next-line
-        } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-        }
-    }
+    // public async refreshToken(req: Request, res: Response): Promise<void> {
+    //     try {
+    //         const { email, refreshToken } = req.body;
+    //         const token = await this.authService.refreshToken(email, refreshToken);
+    //         res.status(StatusCodes.OK).json(token);
+    //     //eslint-disable-next-line
+    //     } catch (error: any) {
+    //         res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+    //     }
+    // }
 
 }
