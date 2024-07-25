@@ -1,8 +1,8 @@
-name: Deploy to Server
+name: cd-workflow
 
 on:
   workflow_run:
-    workflows: ['ci-workflow', 'ci']
+    workflows: ['ci-workflow']
     types:
       - completed
   workflow_dispatch:
