@@ -3,8 +3,10 @@ name: cd-workflow
 on:
   workflow_run:
     workflows: ['ci-workflow']
-    types:
-      - completed
+    types: [completed]
+    branches:
+      - main
+      - development
   workflow_dispatch:
 
 jobs:
