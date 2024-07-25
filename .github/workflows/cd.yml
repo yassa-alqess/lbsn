@@ -2,7 +2,7 @@ name: Deploy to Server
 
 on:
   workflow_run:
-    workflows: ['ci']
+    workflows: ['ci-workflow']
     types:
       - completed
 
