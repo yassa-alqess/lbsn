@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import User from './user';
 
 @Table({ schema: 'public', timestamps: true })
@@ -24,6 +24,10 @@ class ResetToken extends Model {
         type: DataType.DATE,
     })
     declare expiresAt: Date;
+
+    @ForeignKey(() => User)
+    @Column
+    declare userId: number;
 
     @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare user: User;

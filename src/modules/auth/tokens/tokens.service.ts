@@ -1,7 +1,7 @@
 
-import { UserPayload } from "@/shared/interfaces/auth";
-import RefreshToken from "@/shared/models/refresh-token";
-import { generateAccessTokenAsync } from "@/shared/utils";
+import { UserPayload } from "../../../shared/interfaces/auth";
+import RefreshToken from "../../../shared/models/refresh-token";
+import { generateAccessTokenAsync } from "../../../shared/utils";
 
 
 export default class TokenService {

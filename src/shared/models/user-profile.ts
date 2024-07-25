@@ -22,7 +22,6 @@ class UserProfile extends Model {
     type: DataType.UUID,
   })
   declare userId: string;
-
 }
 
 export default UserProfile;

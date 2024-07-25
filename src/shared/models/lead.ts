@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo, } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey, } from 'sequelize-typescript';
 import Profile from './profile';
 
 
@@ -20,6 +20,10 @@ class Lead extends Model {
         type: DataType.INTEGER,
     })
     declare status: string;
+
+    @ForeignKey(() => Profile)
+    @Column
+    declare profileId: string;
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare profile: Profile;

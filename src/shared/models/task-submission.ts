@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
 // import Profile from './profile';
 import Task from './task';
 
@@ -29,6 +29,10 @@ class TaskSubmission extends Model {
 
     // @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     // declare profile: Profile;
+
+    @ForeignKey(() => Task)
+    @Column
+    declare taskId: number;
 
     @BelongsTo(() => Task, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare task: Task;

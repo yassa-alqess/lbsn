@@ -1,4 +1,4 @@
-import '../enviroments';
+import '../env';
 import logger from './index';
 
 describe('Logger', () => {
@@ -6,7 +6,9 @@ describe('Logger', () => {
     expect(logger).toBeDefined();
   });
   it('should contains proper level', () => {
-    expect(logger.level).toMatch(process.env.LOG_LEVEL as string); // env file is for sure loaded properly thanks to enviroments/index.ts
+
+    expect(logger.level).toMatch(process.env.LOG_LEVEL as string || ""); // env file is for sure loaded properly thanks to enviroments/index.ts
+
   });
 });
 
