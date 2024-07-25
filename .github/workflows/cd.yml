@@ -5,6 +5,10 @@ on:
     workflows: ['ci-workflow']
     types:
       - completed
+  pull_request:
+    branches:
+      - main
+      - development
   workflow_dispatch:
 
 jobs:
