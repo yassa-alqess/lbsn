@@ -2,9 +2,10 @@ name: Deploy to Server
 
 on:
   workflow_run:
-    workflows: ['ci-workflow']
+    workflows: ['ci-workflow', 'ci']
     types:
       - completed
+  workflow_dispatch:
 
 jobs:
   setup: #The workflow must contain at least one job with no dependencies.
