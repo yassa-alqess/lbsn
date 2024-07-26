@@ -9,7 +9,7 @@ import { Server } from 'http';
 import { ENV, PORT } from './config/env'; //will also trigger dotenv config procedure
 import { syncDatabase, closeConnection } from './config/database/connection';
 import logger from './config/logger';
-// import restRouter from './modules/routes';
+import restRouter from './modules/routes';
 
 // app container & middlewares
 const APP = express();
@@ -40,7 +40,7 @@ let server: Server | null = null;
 
 (async () => {
   try {
-    // await syncDatabase(); // sync db & catch errors
+    await syncDatabase(); // sync db & catch errors
     APP.get('/', (_, res: Response) => {
       res.sendStatus(200);
     });
