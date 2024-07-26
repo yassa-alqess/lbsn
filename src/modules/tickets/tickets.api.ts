@@ -8,3 +8,5 @@ const ticketController = new TicketController(new TicketService());
 ticketRouter.post("/addTicket", upload("tickets")!.single("file"), ticketController.addTicket);
 ticketRouter.post("/getTickets", ticketController.getTickets);
 ticketRouter.post("/resolveTicket", ticketController.resolveTicket);
+
+export default ticketRouter;
