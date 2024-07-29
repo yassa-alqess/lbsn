@@ -1,12 +1,14 @@
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import AuthService from './auth.service';
 export default class AuthController {
     constructor(private readonly authService: AuthService) { }
+
     public async login(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body;
-            const token = await this.authService.login(email, password);
-            res.status(StatusCodes.OK).json(token);
+            const tokens = await this.authService.login(email, password);
+            res.status(StatusCodes.OK).json(tokens);
             //eslint-disable-next-line
         } catch (error: any) {
             res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
@@ -24,20 +26,10 @@ export default class AuthController {
         }
     }
 
-    // public async register(req: Request, res: Response): Promise<void> {
-    //     try {
-    //         const { email, password } = req.body;
-    //         const user = await this.authService.register(email, password);
-    //         res.status(StatusCodes.OK).json(user);
-    //     } catch (error) {
-    //         res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-    //     }
-    // }
-
-    public async forgotPassword(req: Request, res: Response): Promise<void> {
+    public async forgetPassword(req: Request, res: Response): Promise<void> {
         try {
             const { email } = req.body;
-            await this.authService.forgotPassword(email);
+            await this.authService.forgetPassword(email);
             res.status(StatusCodes.OK).json({ message: 'Email sent' });
             //eslint-disable-next-line
         } catch (error: any) {
@@ -55,6 +47,7 @@ export default class AuthController {
             res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
         }
     }
+
     public async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             const { email, password } = req.body;
@@ -76,16 +69,5 @@ export default class AuthController {
             res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
         }
     }
-
-    // public async refreshToken(req: Request, res: Response): Promise<void> {
-    //     try {
-    //         const { email, refreshToken } = req.body;
-    //         const token = await this.authService.refreshToken(email, refreshToken);
-    //         res.status(StatusCodes.OK).json(token);
-    //     //eslint-disable-next-line
-    //     } catch (error: any) {
-    //         res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-    //     }
-    // }
 
 }
