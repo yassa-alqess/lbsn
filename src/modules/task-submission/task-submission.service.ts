@@ -1,4 +1,4 @@
-import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetPayload, ItaskSubmissionGetResponse, ITaskSubmissionUpdatePayload } from "../../shared/interfaces/task-submission";
+import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetByIdPayload, ItaskSubmissionGetByIdResponse, ITaskSubmissionUpdatePayload } from "../../shared/interfaces/task-submission";
 import TaskSubmission from "../../shared/models/task-submission";
 
 export default class TaskSubmissionService {
@@ -31,16 +31,16 @@ export default class TaskSubmissionService {
         }
         throw new Error('Task Submission not found');
     }
-    public async getTaskSubmission(taskSubmissionGetPayload: ItaskSubmissionGetPayload): Promise<ItaskSubmissionGetResponse> {
+    public async getTaskSubmissionByTaskId(taskSubmissionGetByIdPayload: ItaskSubmissionGetByIdPayload): Promise<ItaskSubmissionGetByIdResponse> {
         const taskSubmission = await TaskSubmission.findOne({
             where: {
-                // profileId: taskSubmissionGetPayload.profileId,
-                taskId: taskSubmissionGetPayload.taskId
+                // profileId: taskSubmissionGetByIdPayload.profileId,
+                taskId: taskSubmissionGetByIdPayload.taskId
             }
         });
         if (taskSubmission) {
             return {
-                taskSubmissionGetResponse: {
+                taskSubmissionGetByIdResponse: {
                     taskSubmissionId: taskSubmission.taskSubmissionId,
                     taskId: taskSubmission.task.taskId,
                     documentUrl: taskSubmission.documentUrl,

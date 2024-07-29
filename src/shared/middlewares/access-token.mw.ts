@@ -1,9 +1,3 @@
-
-
-/**
- * ! this middleware is replaced with jwt auth strategy
- */
-
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET } from '../constants';

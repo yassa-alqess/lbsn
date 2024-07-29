@@ -6,4 +6,4 @@ const appointmentRouter = express.Router();
 const appointmentController = new AppointmentController(new AppointmentService());
 
 
-appointmentRouter.post("/make-appointment", appointmentController.makeAppointment);
+appointmentRouter.post("/", appointmentController.makeAppointment); //make-appointment

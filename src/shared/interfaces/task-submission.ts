@@ -13,15 +13,15 @@ export interface ITaskSubmissionUpdatePayload {
     comment: string;
 }
 
-export interface ItaskSubmissionGetPayload {
+export interface ItaskSubmissionGetByIdPayload {
     // profileId: string;
     taskId: string;
 }
 
 
-export interface ItaskSubmissionGetResponse {
+export interface ItaskSubmissionGetByIdResponse {
 
-    taskSubmissionGetResponse: ITaskSubmission
+    taskSubmissionGetByIdResponse: ITaskSubmission
 }
 
 export interface ITaskSubmission {

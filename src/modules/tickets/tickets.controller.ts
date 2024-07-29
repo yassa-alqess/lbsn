@@ -20,7 +20,11 @@ export default class TicketController {
 
     public getTickets = async (req: Request, res: Response) => {
         try {
-            const payload: ITicketsGetPayload = req.body;
+            const { id, status } = req.params;
+            const payload: ITicketsGetPayload = {
+                profileId: id,
+                status: status ? parseInt(status) : 0
+            }
             const tickets = await this.ticketService.getTickets(payload);
             res.status(StatusCodes.OK).json(tickets);
             //eslint-disable-next-line
