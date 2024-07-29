@@ -18,34 +18,43 @@ authRouter.post("/reset-password", authController.resetPassword);
 authRouter.post("/verify-email", authController.verifyEmail);
 authRouter.post("/verify-otp", authController.verifyOtp);
 authRouter.post('/refresh-token', async (req, res) => {
-    const { token } = req.body;
+    try {
+        const { token } = req.body;
 
-    if (!token) {
-        return res.sendStatus(StatusCodes.BAD_REQUEST);
-    }
-
-    const refreshToken = await RefreshToken.findOne({
-        where: {
-            value: token,
-        },
-    });
-
-    if (!refreshToken)
-        return res.sendStatus(StatusCodes.UNAUTHORIZED);
+        if (!token)
+            return res.sendStatus(StatusCodes.BAD_REQUEST);
 
 
-    if (refreshToken.expiresAt < new Date())
-        return res.sendStatus(StatusCodes.UNAUTHORIZED);
+        const refreshToken = await RefreshToken.findOne({
+            where: {
+                value: token,
+            },
+        });
 
-
-    jwt.verify(token, REFRESH_TOKEN_SECRET, (err: jwt.VerifyErrors | null, user: string | jwt.JwtPayload | undefined) => {
-        if (err) {
+        if (!refreshToken)
             return res.sendStatus(StatusCodes.UNAUTHORIZED);
-        }
 
-        const userPayload = user as UserPayload;
 
-        const accessToken = jwt.sign({ id: userPayload.id, role: userPayload.role }, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
-        res.json({ accessToken });
-    });
+        if (refreshToken.expiresAt < new Date())
+            return res.sendStatus(StatusCodes.UNAUTHORIZED);
+
+
+        jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null, user: string | jwt.JwtPayload | undefined) => {
+            if (err)
+                return res.sendStatus(StatusCodes.UNAUTHORIZED);
+
+
+            const userPayload = user as UserPayload;
+
+            const accessToken = jwt.sign(
+                { id: userPayload.id, role: userPayload.role },
+                process.env.ACCESS_TOKEN_SECRET as string,
+                { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+            );
+            res.json({ accessToken });
+        });
+    } catch (error) {
+        res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+    }
 });
+
