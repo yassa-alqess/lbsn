@@ -3,8 +3,6 @@ import express, { Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import passport from 'passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
 import { Server } from 'http';
 
 // src imports & config
@@ -12,57 +10,7 @@ import { ENV, PORT } from './config/env'; //will also trigger dotenv config proc
 import { syncDatabase, closeConnection } from './config/database/connection';
 import logger from './config/logger';
 import restRouter from './modules/routes';
-import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from './shared/constants';
-import User from './shared/models/user';
 
-// strarigies
-passport.use(
-  'jwt',
-  new Strategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: ACCESS_TOKEN_SECRET,
-      jsonWebTokenOptions: {
-        maxAge: ACCESS_TOKEN_EXPIRY,
-      },
-    },
-    async (payload, done) => {
-      const user = await User.findOne({
-        where: {
-          id: payload.id,
-        },
-      });
-      if (user) {
-        return done(null, { id: user.id, role: payload.role });
-      }
-      return done(null, false);
-    }
-  )
-);
-
-passport.use(
-  'jwt-refresh',
-  new Strategy(
-    {
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: REFRESH_TOKEN_SECRET,
-      jsonWebTokenOptions: {
-        maxAge: REFRESH_TOKEN_EXPIRY,
-      },
-    },
-    async (payload, done) => {
-      const user = await User.findOne({
-        where: {
-          id: payload.id,
-        },
-      });
-      if (user) {
-        return done(null, { id: user.id, role: payload.role });
-      }
-      return done(null, false);
-    }
-  )
-);
 
 // app container & middlewares
 const APP = express();

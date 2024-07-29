@@ -6,7 +6,7 @@ import { StatusCodes } from "http-status-codes";
 import RefreshToken from "../../shared/models/refresh-token";
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from "../../shared/constants";
 import jwt from 'jsonwebtoken'
-import { UserPayload } from "../../shared/interfaces/auth";
+import { IAuthPayload } from "@/shared/interfaces/auth";
 
 const authRouter = express.Router();
 const authController = new AuthController(new AuthService());
@@ -39,17 +39,17 @@ authRouter.post('/refresh-token', async (req, res) => {
             return res.sendStatus(StatusCodes.UNAUTHORIZED);
 
 
-        jwt.verify(token, process.env.REFRESH_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null, user: string | jwt.JwtPayload | undefined) => {
+        jwt.verify(token, REFRESH_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null, user: string | jwt.JwtPayload | undefined) => {
             if (err)
                 return res.sendStatus(StatusCodes.UNAUTHORIZED);
 
 
-            const userPayload = user as UserPayload;
+            const userPayload = user as IAuthPayload;
 
             const accessToken = jwt.sign(
                 { id: userPayload.id, role: userPayload.role },
-                process.env.ACCESS_TOKEN_SECRET as string,
-                { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
+                ACCESS_TOKEN_SECRET as string,
+                { expiresIn: ACCESS_TOKEN_EXPIRY }
             );
             res.json({ accessToken });
         });
