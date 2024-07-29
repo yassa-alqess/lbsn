@@ -5,7 +5,6 @@ import User from "../../shared/models/user";
 import RefreshToken from "../../shared/models/refresh-token";
 
 export default class AuthService {
-    constructor() { }
 
     public async login(email: string, password: string): Promise<string[]> {
         const user = await User.findOne({

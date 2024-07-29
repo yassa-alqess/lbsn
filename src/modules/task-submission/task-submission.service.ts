@@ -2,8 +2,6 @@ import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetPayload, 
 import TaskSubmission from "../../shared/models/task-submission";
 
 export default class TaskSubmissionService {
-    constructor() {
-    }
     public async addTaskSubmisson(taskSubmissionAddPayload: ITaskSubmissionAddPayload, path: string): Promise<ITaskSubmission> {
         const taskSubmission = await TaskSubmission.create({ ...taskSubmissionAddPayload, documentUrl: path });
         return {

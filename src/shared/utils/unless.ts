@@ -1,5 +1,5 @@
 /**
- * The `unless middleware` function is used to conditionally apply another middleware function based on the request path.
+ * applyMiddlewareExceptSpecificPaths
  */
 
 import { Request, Response, NextFunction } from 'express';
