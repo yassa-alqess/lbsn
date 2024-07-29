@@ -1,8 +1,12 @@
-// import upload from "../../config/storage/multer.config";
-// import TokenController from "./tokens.controller";
-// import TokenService from "./tokens.service";
-// const tokenController = new TokenController(new TokenService());
-// tokenRouter.post("/token", tokenController.issueToken);
+/**
+ *  for seperation of concerns, we will create a controller and service for the token module
+    * import upload from "../../config/storage/multer.config";
+    * import TokenController from "./tokens.controller";
+    * import TokenService from "./tokens.service";
+    * const tokenController = new TokenController(new TokenService());
+    * tokenRouter.post("/token", tokenController.issueToken);
+ */
+
 
 
 import express from "express";
