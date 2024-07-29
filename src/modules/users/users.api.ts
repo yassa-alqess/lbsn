@@ -5,12 +5,12 @@ import UserService from "./users.service";
 
 const userRouter = Router();
 const userController = new UserController(new UserService());
-userRouter.post("/addUser", userController.addUser); //specify role
-userRouter.post("/getUser", userController.getUser); //specify role
-userRouter.post("/getUsers", userController.getUsers); //specify role
-userRouter.post("/updateUser", userController.updateUser);
-userRouter.post("/deleteUser", userController.deleteUser);
-userRouter.post("/bulkAddUsers", upload("users")!.single("file"), userController.bulkAddUsers);
+userRouter.post("/add-tser", userController.addUser); //specify role
+userRouter.post("/get-user", userController.getUser); //specify role
+userRouter.post("/get-users", userController.getUsers); //specify role
+userRouter.post("/update-user", userController.updateUser);
+userRouter.post("/delete-user", userController.deleteUser);
+userRouter.post("/bulk-add-users", upload("users")!.single("file"), userController.bulkAddUsers);
 
 
 export default userRouter;

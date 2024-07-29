@@ -5,8 +5,8 @@ import TicketService from "./tickets.service";
 const ticketRouter = express.Router();
 const ticketController = new TicketController(new TicketService());
 
-ticketRouter.post("/addTicket", upload("tickets")!.single("file"), ticketController.addTicket);
-ticketRouter.post("/getTickets", ticketController.getTickets);
-ticketRouter.post("/resolveTicket", ticketController.resolveTicket);
+ticketRouter.post("/add-ticket", upload("tickets")!.single("file"), ticketController.addTicket);
+ticketRouter.post("/get-tickets", ticketController.getTickets);
+ticketRouter.post("/resolve-ticket", ticketController.resolveTicket);
 
 export default ticketRouter;
