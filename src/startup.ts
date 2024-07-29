@@ -15,7 +15,6 @@ import restRouter from './modules/routes';
 import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from './shared/constants';
 import User from './shared/models/user';
 
-
 // strarigies
 passport.use(
   'jwt',
