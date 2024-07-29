@@ -1,4 +1,4 @@
-import { IAuthPayload } from './auth'; // Adjust the import path as necessary
+import { IAuthPayload } from '../interfaces/auth'; // Adjust the import path as necessary
 
 declare global {
     namespace Express {

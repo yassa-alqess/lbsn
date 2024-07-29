@@ -7,3 +7,5 @@ const appointmentController = new AppointmentController(new AppointmentService()
 
 
 appointmentRouter.post("/", appointmentController.makeAppointment); //make-appointment
+
+export default appointmentRouter;
