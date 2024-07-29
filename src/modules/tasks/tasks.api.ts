@@ -6,7 +6,6 @@ import TaskService from "./tasks.service";
 const taskRouter = express.Router();
 const taskController = new TaskController(new TaskService());
 
-taskRouter.all('/*',); // Protect all routes with role 1
 taskRouter.get("/", taskController.getTasks); //get-tasks
 taskRouter.post("/", taskController.addTask); //add-task
 

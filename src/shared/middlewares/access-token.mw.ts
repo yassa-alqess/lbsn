@@ -1,11 +1,11 @@
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET } from '../constants';
 import { StatusCodes } from 'http-status-codes';
-import { AuthenticatedRequest, IAuthPayload } from '../interfaces/auth';
+import { IAuthPayload } from '../interfaces/auth';
 
 
-export default async function accessTokenGuard(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+export default async function accessTokenGuard(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
