@@ -1,8 +1,8 @@
-import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "@/shared/constants";
-import jwt from 'jsonwebtoken'
+import { REFRESH_TOKEN_EXPIRY } from "@/shared/constants";
 import bcrypt from 'bcrypt'
 import User from "../../shared/models/user";
 import RefreshToken from "../../shared/models/refresh-token";
+import { generateAccessToken, generateRefreshToken } from "@/shared/utils";
 
 export default class AuthService {
 
@@ -19,12 +19,13 @@ export default class AuthService {
         if (!isMatch) {
             throw new Error('Invalid credentials');
         }
-        const payload = {
+
+        const tokenPayload = {
             id: user.id,
             role: user.role,
         };
-        const accessToken = jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRY });
-        const refreshToken = jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: REFRESH_TOKEN_EXPIRY });
+        const accessToken = generateAccessToken(tokenPayload);
+        const refreshToken = generateRefreshToken(tokenPayload);
         await RefreshToken.create({ value: refreshToken, expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY) });
         return [accessToken, refreshToken];
     }
