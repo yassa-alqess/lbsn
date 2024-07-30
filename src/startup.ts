@@ -9,7 +9,8 @@ import { Server } from 'http';
 import { ENV, PORT } from './config/env'; //will also trigger dotenv config procedure
 import { syncDatabase, closeConnection } from './config/database/connection';
 import logger from './config/logger';
-// import restRouter from './modules/routes';
+import restRouter from './modules/routes';
+
 
 // app container & middlewares
 const APP = express();
@@ -31,6 +32,9 @@ APP.use(
 );
 APP.set('trust proxy', 1); // trust nginx
 
+/**
+ * ! static files are handled with Nginx
+ */
 
 // map the app routes
 APP.use('/api/v0.1/', restRouter);
@@ -40,7 +44,7 @@ let server: Server | null = null;
 
 (async () => {
   try {
-    // await syncDatabase(); // sync db & catch errors
+    await syncDatabase(); // sync db & catch errors
     APP.get('/', (_, res: Response) => {
       res.sendStatus(200);
     });

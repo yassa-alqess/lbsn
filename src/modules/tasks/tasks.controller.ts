@@ -19,7 +19,11 @@ export default class TaskController {
 
     public getTasks = async (req: Request, res: Response) => {
         try {
-            const payload: ITasksGetPayload = req.body;
+            const { id, status } = req.params;
+            const payload: ITasksGetPayload = {
+                profileId: id,
+                status: status ? parseInt(status) : 0
+            }
             const tasks = await this.taskService.getTasks(payload);
             res.status(StatusCodes.OK).json(tasks);
             //eslint-disable-next-line

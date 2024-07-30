@@ -3,9 +3,6 @@ import User from "../../shared/models/user";
 import { readXlsx } from "../../shared/utils";
 
 export default class UserService {
-
-    constructor() { }
-
     public async addUser(userPayload: IUserAddPayload): Promise<IUserResponse> {
         const user = await User.create({ ...userPayload });
         return {

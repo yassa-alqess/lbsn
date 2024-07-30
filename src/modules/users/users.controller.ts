@@ -45,7 +45,11 @@ export default class UserController {
 
     public updateUser = async (req: Request, res: Response) => {
         try {
-            const userUpdatePayload: IUserUpdatePayload = req.body;
+            const { id } = req.params;
+            const userUpdatePayload: IUserUpdatePayload = {
+                ...req.body,
+                userId: id
+            }
             const user = await this.userService.updateUser(userUpdatePayload);
             res.status(StatusCodes.OK).json(user);
             //eslint-disable-next-line
@@ -62,8 +66,8 @@ export default class UserController {
 
     public getUser = async (req: Request, res: Response) => {
         try {
-            const { userId } = req.body;
-            const user = await this.userService.getUser(userId);
+            const { id } = req.params;
+            const user = await this.userService.getUser(id);
             res.status(StatusCodes.OK).json(user);
             //eslint-disable-next-line
         } catch (error: any) {
@@ -86,9 +90,9 @@ export default class UserController {
 
     public deleteUser = async (req: Request, res: Response) => {
         try {
-            const { userId } = req.body;
-            await this.userService.deleteUser(userId);
-            res.status(StatusCodes.OK).json({ userId });
+            const { id } = req.params;
+            await this.userService.deleteUser(id);
+            res.status(StatusCodes.OK).json({ id });
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid

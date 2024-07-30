@@ -2,9 +2,6 @@ import { ITicket, ITicketResolvePayload, ITicketsAddPayload, ITicketsGetPayload,
 import Ticket from "../../shared/models/ticket";
 
 export default class TicketService {
-    constructor() {
-    }
-
     public async addTicket(ticketPayload: ITicketsAddPayload, path: string): Promise<ITicket> {
 
         const ticket = await Ticket.create({ ...ticketPayload, documentUrl: path });

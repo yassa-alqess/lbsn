@@ -2,10 +2,6 @@ import { ITasksAddPayload, ITask, ITasksGetPayload, ITasksGetRespones } from "..
 import Task from "../../shared/models/task";
 
 export default class TaskService {
-    constructor() {
-    }
-
-
     public async addTask(taskPayload: ITasksAddPayload): Promise<ITask> {
         const task = await Task.create({ ...taskPayload });
         return {
