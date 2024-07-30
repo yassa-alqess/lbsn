@@ -14,7 +14,6 @@ import { Server } from "http";
 
 const app = new App([
 
-  new AuthController(),
   new UserController(),
   new TicketController(),
   new TaskController(),
