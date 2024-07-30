@@ -1,5 +1,5 @@
 import { MAIL_HOST, MAIL_PASS, MAIL_PORT, MAIL_USER } from '../../shared/constants';
-import { IEmailOptions } from '../../shared/interfaces/email';
+import { IEmailOptions } from './email.interface';
 import nodemailer from 'nodemailer';
 import { pugEngine } from 'nodemailer-pug-engine';
 import path from 'path';

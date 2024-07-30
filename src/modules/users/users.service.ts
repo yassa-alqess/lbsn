@@ -1,4 +1,4 @@
-import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "../../shared/interfaces/user";
+import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "./user.interface";
 import User from "../../shared/models/user";
 import { readXlsx } from "../../shared/utils";
 

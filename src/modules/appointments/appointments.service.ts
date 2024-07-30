@@ -1,4 +1,4 @@
-import { IAppointmentPayload } from "../../shared/interfaces/appointment";
+import { IAppointmentPayload } from "./appointment.interface";
 
 export default class AppointmentService {
     public async makeAppointment(appointmentPayload: IAppointmentPayload) {

@@ -1,4 +1,4 @@
-import { ITicket, ITicketResolvePayload, ITicketsAddPayload, ITicketsGetPayload, ITicketsGetResponse } from "../../shared/interfaces/ticket";
+import { ITicket, ITicketResolvePayload, ITicketsAddPayload, ITicketsGetPayload, ITicketsGetResponse } from "./tickets.interface";
 import Ticket from "../../shared/models/ticket";
 
 export default class TicketService {
