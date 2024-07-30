@@ -3,7 +3,6 @@ import './config/env'
 import TicketController from "./modules/tickets/tickets.controller";
 import TaskController from "./modules/tasks/tasks.controller";
 import UserController from "./modules/users/users.controller";
-import AuthController from "./modules/auth/auth.controller";
 import TaskSubmissionController from "./modules/task-submission/task-submission.controller";
 import logger from "./config/logger";
 import { closeConnection } from "./config/database/connection";
