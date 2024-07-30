@@ -2,7 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { ACCESS_TOKEN_SECRET } from '../constants';
 import { StatusCodes } from 'http-status-codes';
-import { IAuthPayload } from '../interfaces/auth';
+import { IAuthPayload } from '../../modules/auth/auth.interface';
+
 
 
 export default async function accessTokenGuard(req: Request, res: Response, next: NextFunction) {

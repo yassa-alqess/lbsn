@@ -1,4 +1,4 @@
-import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetByIdPayload, ItaskSubmissionGetByIdResponse, ITaskSubmissionUpdatePayload } from "../../shared/interfaces/task-submission";
+import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetByIdPayload, ItaskSubmissionGetByIdResponse, ITaskSubmissionUpdatePayload } from "./task-submission.interface";
 import TaskSubmission from "../../shared/models/task-submission";
 
 export default class TaskSubmissionService {

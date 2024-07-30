@@ -1,5 +1,5 @@
 import { Response, NextFunction } from "express";
-import { AuthenticatedRequest } from "../interfaces/auth";
+import { AuthenticatedRequest } from "../../modules/auth/auth.interface";
 import { StatusCodes } from "http-status-codes";
 
 export default function roleGuard(requiredRole: number) {

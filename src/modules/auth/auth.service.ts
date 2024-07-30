@@ -1,8 +1,11 @@
-import { REFRESH_TOKEN_EXPIRY } from "@/shared/constants";
-import bcrypt from 'bcrypt'
+// file dependencies
+import { REFRESH_TOKEN_EXPIRY } from "../../shared/constants";
 import User from "../../shared/models/user";
 import RefreshToken from "../../shared/models/refresh-token";
-import { generateAccessToken, generateRefreshToken } from "@/shared/utils";
+import { generateAccessToken, generateRefreshToken } from "../../shared/utils";
+
+//3rd party dependinces
+import bcrypt from 'bcrypt'
 
 export default class AuthService {
 
