@@ -22,6 +22,11 @@ export default class TaskController implements Controller {
         this.router.use(accessTokenGuard);
         this.router.post(this.path, this.addTask);
         this.router.get(`${this.path}/:id/:status?`, this.getTasks);
+
+        // there is no update or delete tasks yet
+        // this.router.patch(`${this.path}/:id`, this.updateTask);
+        // this.router.delete(`${this.path}/:id`, this.deleteTask);
+
     }
 
     public addTask = async (req: Request, res: Response) => {
