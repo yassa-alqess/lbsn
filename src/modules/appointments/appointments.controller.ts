@@ -1,5 +1,5 @@
 // file dependencies
-import { IAppointmentPayload } from './appointment.interface';
+import { IAppointmentsAddPayload } from './appointment.interface';
 import Controller from '../../shared/interfaces/controller.interface';
 import { APPOINTMENTS_PATH } from '../../shared/constants';
 import AppointmentService from './appointments.service';
@@ -22,7 +22,7 @@ export default class AppointmentController implements Controller {
     }
     public makeAppointment = async (req: Request, res: Response) => {
         try {
-            const appointmentPayload: IAppointmentPayload = req.body;
+            const appointmentPayload: IAppointmentsAddPayload = req.body;
             await this._appointmentService.makeAppointment(appointmentPayload);
             res.status(StatusCodes.CREATED); //not interested in returning anything
             //eslint-disable-next-line

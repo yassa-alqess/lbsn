@@ -1,45 +1,45 @@
 export interface IUserAddPayload {
     email: string;
-    displayName: string;
+    name: string;
     taxId?: string;
     role: number;
-    isVerified?: number;
+    isVerified?: boolean;
     companyName: string;
     phone: string;
     location: string;
     image?: string;
-    password?: string;
-    isLocked?: number;
+    password: string;
+    isLocked?: boolean;
 
 }
 
 export interface IUserResponse {
     userId: string;
     email: string;
-    displayName: string;
+    name: string;
     taxId: string;
     role: number;
-    isVerified: number;
+    isVerified: boolean;
     companyName: string;
     phone: string;
     location: string;
     image: string;
     password: string;
-    isLocked: number;
+    isLocked: boolean;
 }
 export interface IUserUpdatePayload {
     userId: string;
     email?: string;
-    displayName?: string;
+    name?: string;
     taxId?: string;
     role: number;
-    isVerified?: number;
+    isVerified?: boolean;
     companyName?: string;
     phone?: string;
     location?: string;
     image?: string;
     password?: string;
-    isLocked?: number;
+    isLocked?: boolean;
 }
 
 export interface IUserBulkAddResponse {

@@ -1,7 +1,10 @@
-export interface IAppointmentPayload {
-    email : string;
+export interface IAppointmentsAddPayload {
+    email: string;
     name: string;
-    companyName : string;
-    phone : string;
-    location : string;
+    companyName: string;
+    taxId: string;
+    phone: string;
+    location: string;
+    timeSlot: Date;
+    serviceId: string;
 }

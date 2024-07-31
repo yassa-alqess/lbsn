@@ -1,6 +1,6 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, USERS_PATH } from '../../shared/constants';
-import { IUserAddPayload, IUserUpdatePayload } from './user.interface';
+import { IUserAddPayload, IUserUpdatePayload } from './users.interface';
 import Controller from '../../shared/interfaces/controller.interface';
 import UserService from './users.service';
 
