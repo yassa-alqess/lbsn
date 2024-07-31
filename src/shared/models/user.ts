@@ -18,7 +18,7 @@ class User extends Model {
     type: DataType.STRING(200),
 
   })
-  declare displayName: string;
+  declare name: string;
 
   @Column({
     type: DataType.STRING(200),
@@ -38,9 +38,9 @@ class User extends Model {
   declare role: number;
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.BOOLEAN,
   })
-  declare isVerified: number;
+  declare isVerified: boolean;
 
   @Column({
     type: DataType.STRING(50),
@@ -63,7 +63,6 @@ class User extends Model {
   })
   declare image: string;
 
-  @AllowNull(true)
   @Column({
     type: DataType.STRING(200),
   })
@@ -72,7 +71,7 @@ class User extends Model {
   @Column({
     type: DataType.BOOLEAN,
   })
-  declare isLocked: number;
+  declare isLocked: boolean;
 
   @BelongsToMany(() => Profile, () => UserProfile)
   declare profiles: Profile[];

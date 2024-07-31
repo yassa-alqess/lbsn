@@ -1,6 +1,7 @@
-import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "./user.interface";
+import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "./users.interface";
 import User from "../../shared/models/user";
 import { readXlsx } from "../../shared/utils";
+import { UserNotFoundError } from "../../shared/errors";
 
 export default class UserService {
     public async addUser(userPayload: IUserAddPayload): Promise<IUserResponse> {
@@ -8,7 +9,7 @@ export default class UserService {
         return {
             userId: user.userId,
             email: user.email,
-            displayName: user.displayName,
+            name: user.name,
             taxId: user.taxId,
             role: user.role,
             isVerified: user.isVerified,
@@ -25,13 +26,13 @@ export default class UserService {
         const { userId } = userPayload;
         const user = await User.findByPk(userId);
         if (!user) {
-            throw new Error('User not found');
+            throw new UserNotFoundError('User not found');
         }
         await user.update({ ...userPayload });
         return {
             userId: user.userId,
             email: user.email,
-            displayName: user.displayName,
+            name: user.name,
             taxId: user.taxId,
             role: user.role,
             isVerified: user.isVerified,
@@ -51,7 +52,7 @@ export default class UserService {
         const users = data.map((user: any) => {
             return {
                 email: user.email,
-                displayName: user.displayName,
+                name: user.name,
                 taxId: user.taxId,
                 role,
                 isVerified: user.isVerified,
@@ -71,7 +72,7 @@ export default class UserService {
                     return {
                         userId: user.userId,
                         email: user.email,
-                        displayName: user.displayName,
+                        name: user.name,
                         taxId: user.taxId,
                         role: user.role,
                         isVerified: user.isVerified,
@@ -86,15 +87,36 @@ export default class UserService {
         };
     }
 
-    public async getUser(userId: string): Promise<IUserResponse> {
+    public async getUser(userId: string): Promise<IUserResponse | undefined> {
         const user = await User.findByPk(userId);
         if (!user) {
-            throw new Error('User not found');
+            throw new UserNotFoundError('User not found');
         }
         return {
             userId: user.userId,
             email: user.email,
-            displayName: user.displayName,
+            name: user.name,
+            taxId: user.taxId,
+            role: user.role,
+            isVerified: user.isVerified,
+            companyName: user.companyName,
+            phone: user.phone,
+            location: user.location,
+            image: user.image,
+            password: user.password,
+            isLocked: user.isLocked,
+        };
+    }
+
+    public async getUserByEmail(email: string): Promise<IUserResponse | undefined> {
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            throw new UserNotFoundError('User not found');
+        }
+        return {
+            userId: user.userId,
+            email: user.email,
+            name: user.name,
             taxId: user.taxId,
             role: user.role,
             isVerified: user.isVerified,
@@ -114,7 +136,7 @@ export default class UserService {
                 users.map(user => ({
                     userId: user.userId,
                     email: user.email,
-                    displayName: user.displayName,
+                    name: user.name,
                     taxId: user.taxId,
                     role: user.role,
                     isVerified: user.isVerified,
@@ -131,10 +153,8 @@ export default class UserService {
     public async deleteUser(userId: string): Promise<void> {
         const user = await User.findByPk(userId);
         if (!user) {
-            throw new Error('User not found');
+            throw new UserNotFoundError('User not found');
         }
         await user.destroy();
     }
-
-
 }
