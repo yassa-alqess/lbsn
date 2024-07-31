@@ -26,7 +26,9 @@ class Appointment extends Model {
     declare meetingUrl: string;
 
     @ForeignKey(() => Guest)
-    @Column
+    @Column({
+        type: DataType.UUID,
+    })
     declare guestId: number;
 
     @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })

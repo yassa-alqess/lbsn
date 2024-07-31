@@ -22,7 +22,9 @@ class Lead extends Model {
     declare status: string;
 
     @ForeignKey(() => Profile)
-    @Column
+    @Column({
+        type: DataType.UUID,
+    })
     declare profileId: string;
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })

@@ -27,11 +27,10 @@ class TaskSubmission extends Model {
     })
     declare comment: string;
 
-    // @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
-    // declare profile: Profile;
-
     @ForeignKey(() => Task)
-    @Column
+    @Column({
+        type: DataType.UUID,
+    })
     declare taskId: number;
 
     @BelongsTo(() => Task, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })

@@ -32,7 +32,9 @@ class Ticket extends Model {
     declare status: number;
 
     @ForeignKey(() => Profile)
-    @Column
+    @Column({
+        type: DataType.UUID,
+    })
     declare profileId: number;
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
