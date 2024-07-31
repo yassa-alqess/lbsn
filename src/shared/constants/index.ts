@@ -38,4 +38,7 @@ export const DOMAIN = process.env.DOMAIN || "localhost"
 export const ACQUISITION_MAIL = `sales@${DOMAIN}.com`
 
 
+export const ENV = process.env.NODE_ENV || 'dev';
+export const PORT = process.env.PORT || 8000;
+
 

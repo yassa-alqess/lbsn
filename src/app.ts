@@ -1,6 +1,6 @@
 //file dependinces
 import Controller from './shared/interfaces/controller.interface';
-import { ENV, PORT } from './config/env'; //will also trigger dotenv config procedure
+import { ENV, PORT } from './shared/constants'; //will also trigger dotenv config procedure
 import { syncDatabase } from './config/database/connection';
 import logger from './config/logger';
 
