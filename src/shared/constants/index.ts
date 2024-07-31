@@ -29,6 +29,13 @@ export const USER_PROFILES_PATH = "/profiles"
 export const TICKETS_PATH = "/tickets"
 export const TASKS_PATH = "/tasks"
 export const TASK_SUBMISSION_PATH = "/task-submission"
+export const GUESTS_PATH = "/guests"
+export const SERVICES_PATH = "/services"
+// export const GUEST_SERVICES_PATH = "/guest-services"
+
+
+export const DOMAIN = process.env.DOMAIN || "localhost"
+export const ACQUISITION_MAIL = `sales@${DOMAIN}.com`
 
 
 
