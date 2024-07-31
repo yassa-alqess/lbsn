@@ -1,0 +1,25 @@
+name: assign-reviewer-workflow
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  assign-reviewer:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: assign-reviewer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          REVIEWER="Abdulmonaim"
+          PR_NUMBER=$(jq --raw-output .number "$GITHUB_EVENT_PATH")
+          curl -X POST \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/pulls/$PR_NUMBER/requested_reviewers \
+            -d '{"reviewers":["'"$REVIEWER"'"]}'
