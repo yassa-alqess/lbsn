@@ -155,4 +155,4 @@ upload/
 
 
 # dev json files
-/keys
+/.keys
