@@ -25,6 +25,16 @@ class Appointment extends Model {
     })
     declare meetingUrl: string;
 
+    @Column({
+        type: DataType.STRING(200),
+    })
+    declare meetingJoinUrl: string;
+
+    @Column({
+        type: DataType.STRING(200),
+    })
+    declare meetingPassword: string;
+
     @ForeignKey(() => Guest)
     @Column({
         type: DataType.UUID,
