@@ -10,7 +10,8 @@ const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
 export const syncDatabase = async () => {
   // propagate the error to the server, so we can catch it later
   // create schema if not exists
-  await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${process.env.SCHEMA}`);
+  const schema = process.env.SCHEMA;
+  if (schema) await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
   await sequelize.sync({ alter: true, force: false });
   logger.debug(`connected to ${process.env.DB_NAME} database`);
 };

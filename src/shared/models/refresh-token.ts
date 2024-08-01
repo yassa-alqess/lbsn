@@ -26,7 +26,9 @@ class RefreshToken extends Model {
     declare expiresAt: Date;
 
     @ForeignKey(() => User)
-    @Column
+    @Column({
+        type: DataType.UUID,
+    })
     declare userId: number;
 
     @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })

@@ -11,9 +11,3 @@ describe('Logger', () => {
 
   });
 });
-
-/**
- * not sure which to test,
- * all loggers for each env,
- * or just one logger (which is test Logger as we will be running tests in test env)
- */

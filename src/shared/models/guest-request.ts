@@ -17,17 +17,17 @@ class GuestRequest extends Model {
     })
     declare serviceId: string;
 
-    @Column({
-        type: DataType.BOOLEAN,
-        defaultValue: false,
-    })
-    declare resolved: boolean;
 
     @ForeignKey(() => Guest)
     @Column({
         type: DataType.UUID,
     })
     declare guestId: string;
+    @Column({
+        type: DataType.BOOLEAN,
+        defaultValue: false,
+    })
+    declare resolved: boolean;
 }
 
 export default GuestRequest;
