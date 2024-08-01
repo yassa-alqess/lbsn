@@ -42,3 +42,8 @@ export const ENV = process.env.NODE_ENV || 'dev';
 export const PORT = process.env.PORT || 8000;
 
 
+export const MEETING_API_URL = "https://api.zoom.us/v2/users/me/meetings"
+export const MEETING_AUTH_API_URL = "https://api.zoom.us"
+export const MEETING_ACCOUNT_ID = process.env.MEETING_ACCOUNT_ID || ""
+export const MEETING_CLIENT_ID = process.env.MEETING_CLIENT_ID || ""
+export const MEETING_CLIENT_SECRET = process.env.MEETING_CLIENT_SECRET || ""
