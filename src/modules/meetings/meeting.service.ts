@@ -11,7 +11,7 @@ export default class MeetingService {
         return response.data.access_token
     }
 
-    public sheduleMeeting = async (topic: string, startTime: string, password: string) => {
+    public sheduleMeeting = async (topic: string, startTime: Date, password: string) => {
 
         const url = `${MEETING_API_URL}`
         const token = await this._getAccessToken();
@@ -24,9 +24,11 @@ export default class MeetingService {
             start_time: startTime,
             timeZone: 'GMT+2',
             duration: 60,
-            password
+            password,
+            default_password: false,
+            pre_schedule: false,
         }
-        const response = await axios.post(url, payload, { headers })
-        return response.data.join_url
+        const response = await axios.post(url, payload, { headers });
+        return response.data;
     }
 }
