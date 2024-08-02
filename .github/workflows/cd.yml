@@ -42,14 +42,18 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          # Use sshpass to handle SSH password authentication
-          sshpass -p "$SSH_PASS" ssh -t -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
-            
+          # Use sshpass to handle SSH password authentication and force pseudo-terminal allocation
+          ssh  -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          
             # Navigate to the directory where the compose file is located
             cd /app
 
-            # Run Docker commands with sudo
-            echo "$SSH_PASS" | sudo -S bash -c "docker-compose -f compose.yml pull && \
-                                                 docker-compose -f compose.yml down -v || true && \
-                                                 docker-compose -f compose.yml up -d --build"
+            # Run Docker commands without sudo
+            docker-compose -f compose.yml pull
+
+            # Stop and remove the existing containers
+            docker-compose -f compose.yml down -v || true
+
+            # Start the containers with the new image
+            docker-compose -f compose.yml up -d --build
           EOF
