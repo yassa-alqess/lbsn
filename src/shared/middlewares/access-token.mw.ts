@@ -6,7 +6,7 @@ import { IAuthPayload } from '../../modules/auth/auth.interface';
 
 
 
-export default async function accessTokenGuard(req: Request, res: Response, next: NextFunction) {
+export async function accessTokenGuard(req: Request, res: Response, next: NextFunction) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
