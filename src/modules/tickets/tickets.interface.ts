@@ -29,5 +29,5 @@ export interface ITicketsAddPayload {
 
 export interface ITicketResolvePayload {
     ticketId: string;
-    status: number;
+    status: TicketStatusEnum;
 }
