@@ -3,6 +3,8 @@ import { INVALID_UUID, DUPLICATE_ERR, USERS_PATH } from '../../shared/constants'
 import { IUserAddPayload, IUserUpdatePayload } from './users.interface';
 import Controller from '../../shared/interfaces/controller.interface';
 import UserService from './users.service';
+import { RoleEnum } from '../../shared/enums';
+import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -18,6 +20,8 @@ export default class UserController implements Controller {
     }
 
     private _initializeRoutes() {
+        this.router.use(accessTokenGuard);
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.SUPER_ADMIN]));
         this.router.post(this.path, this.addUser);
         this.router.post(`${this.path}/bulk`, this.bulkAddUsers);
         this.router.patch(`${this.path}/:id`, this.updateUser);

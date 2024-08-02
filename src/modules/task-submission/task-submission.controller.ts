@@ -2,8 +2,8 @@
 
 // file dependinces
 import { ITaskSubmissionAddPayload, ItaskSubmissionGetByIdPayload, ItaskSubmissionGetByIdResponse, ITaskSubmissionUpdatePayload } from './task-submission.interface';
-import { TASK_SUBMISSION_PATH } from '../../shared/constants';
-import accessTokenGuard from '../../shared/middlewares/access-token.mw';
+import { TASKS_PATH } from '../../shared/constants';
+import { accessTokenGuard } from '../../shared/middlewares';
 import TaskSubmissionService from './task-submission.service';
 
 // 3rd party dependencies
@@ -12,7 +12,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class TaskSubmissionController {
 
-    path = TASK_SUBMISSION_PATH;
+    path = TASKS_PATH;
     router = express.Router();
     private _taskSubmissionService = new TaskSubmissionService();
 
@@ -22,13 +22,16 @@ export default class TaskSubmissionController {
 
     private _initializeRoutes() {
         this.router.use(accessTokenGuard);
-        this.router.post(this.path, this.addTaskSubmisson);
-        this.router.patch(`${this.path}/:id`, this.updateTaskSubmisson);
-        this.router.get(`${this.path}/:id`, this.getTaskSubmissionByTaskId);
+        this.router.post(`${this.path}/:taskId/submission`, this.addTaskSubmisson);
+        this.router.patch(`${this.path}/:taskId/submission/:taskSubmissionId`, this.updateTaskSubmisson);
+        this.router.get(`${this.path}/:taskId/submission`, this.getTaskSubmissionByTaskId);
     }
     public addTaskSubmisson = async (req: Request, res: Response) => {
         try {
-            const taskSubmissionAddPayload: ITaskSubmissionAddPayload = req.body;
+            const taskSubmissionAddPayload: ITaskSubmissionAddPayload = {
+                ...req.body,
+                taskId: req.params.taskId
+            }
             const path = req.file ? req.file.filename : '';
             const task = await this._taskSubmissionService.addTaskSubmisson(taskSubmissionAddPayload, path); // path may be empty string
             res.status(StatusCodes.CREATED).json(task);
@@ -41,10 +44,11 @@ export default class TaskSubmissionController {
 
     public updateTaskSubmisson = async (req: Request, res: Response) => {
         try {
-            const { id } = req.params;
+            const { taskId, taskSubmissionId } = req.params;
             const taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload = {
                 ...req.body,
-                taskSubmissionId: id
+                taskId,
+                taskSubmissionId
             }
             const path = req.file ? req.file.filename : '';
             const task = await this._taskSubmissionService.updateTaskSubmisson(taskSubmissionUpdatePayload, path); // path may be empty string
@@ -57,9 +61,9 @@ export default class TaskSubmissionController {
 
     public getTaskSubmissionByTaskId = async (req: Request, res: Response) => {
         try {
-            const { id } = req.params;
+            const { taskId } = req.params;
             const taskSubmissionGetByIdPayload: ItaskSubmissionGetByIdPayload = {
-                taskId: id
+                taskId,
             }
             const taskSubmissionGetByIdResponse: ItaskSubmissionGetByIdResponse = await this._taskSubmissionService.getTaskSubmissionByTaskId(taskSubmissionGetByIdPayload);
 

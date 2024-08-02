@@ -1,4 +1,4 @@
-import { IProfileAddPayload, IProfileResponse, IProfilesGetResponse, IProfileUpdatePayload } from "./profiles.interface";
+import { IProfileAddPayload, IProfileResponse, IProfileUpdatePayload } from "./profiles.interface";
 import Profile from "../../shared/models/profile";
 import { ProfileAlreadyExistsError } from "../../shared/errors";
 
@@ -37,18 +37,6 @@ export default class ProfileService {
             name: profile.name,
         };
     }
-
-    public async getProfiles(): Promise<IProfilesGetResponse> {
-        const profiles = await Profile.findAll();
-        return {
-            profiles:
-                profiles.map(profile => ({
-                    profileId: profile.profileId,
-                    name: profile.name,
-                }))
-        }
-    }
-
     public async deleteProfile(profileId: string): Promise<void> {
         const profile = await Profile.findByPk(profileId);
         if (!profile) {

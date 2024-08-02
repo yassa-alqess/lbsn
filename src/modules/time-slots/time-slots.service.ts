@@ -7,7 +7,7 @@ export default class TimeSlotService {
         return {
             timeSlotId: timeSlot.timeSlotId,
             time: timeSlot.time,
-            available: timeSlot.available,
+            isAvailable: timeSlot.isAvailable,
         };
     }
 
@@ -21,7 +21,7 @@ export default class TimeSlotService {
         return {
             timeSlotId: timeSlot.timeSlotId,
             time: timeSlot.time,
-            available: timeSlot.available,
+            isAvailable: timeSlot.isAvailable,
         };
     }
     public async getTimeSlot(timeSlotId: string): Promise<ITimeSlotResponse> {
@@ -32,18 +32,18 @@ export default class TimeSlotService {
         return {
             timeSlotId: timeSlot.timeSlotId,
             time: timeSlot.time,
-            available: timeSlot.available
+            isAvailable: timeSlot.isAvailable
         };
     }
 
     public async getTimeSlots(activated: boolean | undefined): Promise<ITimeSlotsGetResponse> {
-        const where = activated === undefined ? {} : { available: activated };
+        const where = activated === undefined ? {} : { isAvailable: activated };
         const timeSlots = await TimeSlot.findAll({ where });
         return {
             timeSlots: timeSlots.map(timeSlot => ({
                 timeSlotId: timeSlot.timeSlotId,
                 time: timeSlot.time,
-                available: timeSlot.available
+                isAvailable: timeSlot.isAvailable
             }))
         };
     }

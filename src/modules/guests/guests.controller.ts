@@ -3,6 +3,8 @@ import { INVALID_UUID, DUPLICATE_ERR, GUESTS_PATH } from '../../shared/constants
 import { IGuestAddPayload, IGuestUpdatePayload } from './guests.interface';
 import Controller from '../../shared/interfaces/controller.interface';
 import GuestService from './guests.service';
+import { RoleEnum } from '../../shared/enums';
+import { accessTokenGuard, requireAnyOfThoseRoles} from '../../shared/middlewares';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -18,6 +20,8 @@ export default class GuestController implements Controller {
     }
 
     private _initializeRoutes() {
+        this.router.use(accessTokenGuard);
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
         this.router.post(this.path, this.addGuest);
         this.router.patch(`${this.path}/:id`, this.updateGuest);
         this.router.get(`${this.path}/:id`, this.getGuest);
@@ -26,7 +30,6 @@ export default class GuestController implements Controller {
         this.router.post(`${this.path}/approve/:id`, this.approveGuest);
         this.router.get(`${this.path}/email/:email`, this.getGuestByEmail);
     }
-
     public addGuest = async (req: Request, res: Response) => {
         try {
             const guestAddPayload: IGuestAddPayload = req.body;

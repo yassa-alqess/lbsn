@@ -1,8 +1,9 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, SERVICES_PATH } from '../../shared/constants';
-import { IProfileAddPayload, IProfileUpdatePayload } from './profiles.interface';
+import { IProfileUpdatePayload } from './profiles.interface';
 import Controller from '../../shared/interfaces/controller.interface';
 import ProfileService from './profiles.service';
+import { accessTokenGuard } from '../../shared/middlewares';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -18,26 +19,10 @@ export default class ProfileController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.post(this.path, this.addProfile);
-        this.router.patch(`${this.path}/:id`, this.updateProfile);
+        this.router.use(accessTokenGuard);
         this.router.get(`${this.path}/:id`, this.getProfile);
-        this.router.get(this.path, this.getProfiles);
+        this.router.patch(`${this.path}/:id`, this.updateProfile);
         this.router.delete(`${this.path}/:id`, this.deleteProfile);
-    }
-
-    public addProfile = async (req: Request, res: Response) => {
-        try {
-            const profileAddPayload: IProfileAddPayload = req.body;
-            const profile = await this._profileProfile.addProfile(profileAddPayload);
-            res.status(StatusCodes.CREATED).json(profile);
-            //eslint-disable-next-line
-        } catch (error: any) {
-            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Profile already exists' });
-            }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-            // next(error);
-        }
     }
 
     public updateProfile = async (req: Request, res: Response) => {
@@ -72,16 +57,6 @@ export default class ProfileController implements Controller {
                 return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid profileId' });
             }
             res.status(StatusCodes.NOT_FOUND).json({ error: error.message });
-        }
-    }
-
-    public getProfiles = async (req: Request, res: Response) => {
-        try {
-            const profiles = await this._profileProfile.getProfiles();
-            res.status(StatusCodes.OK).json(profiles);
-            //eslint-disable-next-line
-        } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
         }
     }
 

@@ -4,8 +4,9 @@
 import { TICKETS_PATH } from '../../shared/constants';
 import { ITicketResolvePayload, ITicketsAddPayload, ITicketsGetPayload } from './tickets.interface';
 import Controller from '../../shared/interfaces/controller.interface';
-import accessTokenGuard from '../../shared/middlewares/access-token.mw';
 import TicketService from './tickets.service';
+import { RoleEnum } from '../../shared/enums';
+import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -24,6 +25,8 @@ export default class TicketController implements Controller {
         this.router.use(accessTokenGuard);
         this.router.post(this.path, this.addTicket);
         this.router.get(`${this.path}/:id/:status?`, this.getTickets);
+
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
         this.router.patch(`${this.path}/resolve`, this.resolveTicket);
     }
 
