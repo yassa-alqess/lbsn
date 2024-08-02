@@ -5,10 +5,12 @@ import Controller from '../../shared/interfaces/controller.interface';
 import UserService from './users.service';
 import { RoleEnum } from '../../shared/enums';
 import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
+import upload from '../../config/storage/multer.config';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+
 
 export default class UserController implements Controller {
 
@@ -23,7 +25,7 @@ export default class UserController implements Controller {
         this.router.use(accessTokenGuard);
         this.router.use(requireAnyOfThoseRoles([RoleEnum.SUPER_ADMIN]));
         this.router.post(this.path, this.addUser);
-        this.router.post(`${this.path}/bulk`, this.bulkAddUsers);
+        this.router.post(`${this.path}/bulk`, upload(this.path)!.single("file"), this.bulkAddUsers);
         this.router.patch(`${this.path}/:id`, this.updateUser);
         this.router.get(`${this.path}/:id`, this.getUser);
         this.router.get(this.path, this.getUsers);
