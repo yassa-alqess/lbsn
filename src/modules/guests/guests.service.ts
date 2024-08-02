@@ -3,10 +3,13 @@ import { IUserAddPayload } from "../users/users.interface";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import generateRandomPassword from "../../shared/utils/random-password";
 import Guest from "../../shared/models/guest";
-import { Role } from "../../shared/enums";
+import { IsVerifiedEnum, RoleEnum } from "../../shared/enums";
 import UserService from "../users/users.service";
 import EmailService from "../../config/mailer";
 import { GuestNotFoundError, GuestAlreadyApprovedError, UserAlreadyExistsError, GuestAlreadyExistsError } from "../../shared/errors";
+import Role from "../../shared/models/role";
+import User from "../../shared/models/user";
+// import UserRole from "@/shared/models/user-role";
 
 //3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -119,14 +122,23 @@ export default class GuestService {
             email,
             name: guest.name,
             taxId: guest.taxId,
-            role: Role.User,
             companyName: guest.companyName,
             phone: guest.phone,
             location: guest.location,
             password: hashedPassword,
-            isVerified: false,
+            isVerified: IsVerifiedEnum.PENDING,
         };
-        const newUser = await this._userService.addUser(userPayload);
+        // const newUser = await this._userService.addUser(userPayload);
+        const newUser = await User.create({ ...userPayload });
+        const role = await Role.findOne({ where: { name: RoleEnum.USER } });
+        if (!role)
+            throw new Error('Role User not found');
+
+        newUser.roles.push(role);
+        await newUser.save();
+
+        // await UserRole.create({ userId: newUser.userId, roleId: role.roleId });
+
 
         /**
          *  we can't delete the guest as he may have requested other services, instead we mark him as approved to indecate he is already a user

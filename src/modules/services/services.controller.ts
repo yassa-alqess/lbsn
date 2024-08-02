@@ -7,6 +7,9 @@ import ServiceService from './services.service';
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import accessTokenGuard from '../../shared/middlewares/access-token.mw';
+import { requireAnyOfThoseRoles } from '../../shared/middlewares/role.mw';
+import { RoleEnum } from '../../shared/enums';
 
 export default class ServiceController implements Controller {
 
@@ -18,10 +21,13 @@ export default class ServiceController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.post(this.path, this.addService);
-        this.router.patch(`${this.path}/:id`, this.updateService);
         this.router.get(`${this.path}/:id`, this.getService);
         this.router.get(this.path, this.getServices);
+
+        this.router.use(accessTokenGuard);
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
+        this.router.post(this.path, this.addService);
+        this.router.patch(`${this.path}/:id`, this.updateService);
         this.router.delete(`${this.path}/:id`, this.deleteService);
     }
 

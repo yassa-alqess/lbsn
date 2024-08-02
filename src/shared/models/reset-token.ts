@@ -13,11 +13,6 @@ class ResetToken extends Model {
     @Column({
         type: DataType.STRING(200),
     })
-    declare name: string;
-
-    @Column({
-        type: DataType.STRING(200),
-    })
     declare value: string;
 
     @Column({

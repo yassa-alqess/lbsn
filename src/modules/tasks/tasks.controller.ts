@@ -3,8 +3,9 @@
 import { ITasksAddPayload, ITasksGetPayload } from './tasks.interface';
 import { TASKS_PATH } from '../../shared/constants';
 import Controller from '../../shared/interfaces/controller.interface';
-import accessTokenGuard from '../../shared/middlewares/access-token.mw';
 import TaskService from './tasks.service';
+import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
+import { RoleEnum } from '../../shared/enums';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -20,8 +21,10 @@ export default class TaskController implements Controller {
 
     private _initializeRoutes() {
         this.router.use(accessTokenGuard);
-        this.router.post(this.path, this.addTask);
         this.router.get(`${this.path}/:id/:status?`, this.getTasks);
+
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
+        this.router.post(this.path, this.addTask);
 
         // there is no update or delete tasks yet
         // this.router.patch(`${this.path}/:id`, this.updateTask);

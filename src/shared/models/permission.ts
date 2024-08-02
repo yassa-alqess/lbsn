@@ -7,6 +7,12 @@ import {
 } from 'sequelize-typescript';
 import RolePermission from './role-permission';
 import Role from './role';
+import { PermissionEnum } from '../enums';
+
+//3rd party imports
+import * as _ from "lodash";
+
+const permissions: string[] = _.values(PermissionEnum);
 
 @Table({ schema: process.env.SCHEMA })
 class Permission extends Model {
@@ -18,9 +24,16 @@ class Permission extends Model {
     declare permissionId: string;
 
     @Column({
-        type: DataType.STRING,
+        type: DataType.ENUM({
+            values: permissions
+        }),
+
+        validate: {
+            isIn: [permissions]
+        },
+        unique: true,
     })
-    declare name: string;
+    declare name: PermissionEnum;
 
     @BelongsToMany(() => Role, () => RolePermission)
     declare roles: Role[];

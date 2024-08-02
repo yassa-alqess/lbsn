@@ -1,3 +1,5 @@
+import { TicketStatusEnum } from "../../shared/enums";
+
 export interface ITicketsGetPayload {
     profileId: string;
     status: number;
@@ -14,7 +16,7 @@ export interface ITicket {
     // profileId: string;
     title: string;
     comment: string;
-    status: number;
+    status: TicketStatusEnum;
     createdAt: Date;
     updatedAt: Date;
 }

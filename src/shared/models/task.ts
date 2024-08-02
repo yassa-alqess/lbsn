@@ -1,8 +1,12 @@
 import { Table, Model, Column, DataType, BelongsTo, HasOne, ForeignKey } from 'sequelize-typescript';
 import Profile from './profile';
 import TaskSubmission from './task-submission';
+import { TaskStatusEnum } from '../enums';
 
+//3rd party dependinces
+import * as _ from "lodash";
 
+const statueses: string[] = _.values(TaskStatusEnum);
 @Table({ schema: 'public', timestamps: true })
 class Task extends Model {
   @Column({
@@ -23,9 +27,16 @@ class Task extends Model {
   declare comment: string;
 
   @Column({
-    type: DataType.INTEGER,
+    type: DataType.ENUM({
+      values: statueses
+    }),
+
+    validate: {
+      isIn: [statueses]
+    },
+    unique: true,
   })
-  declare status: number;
+  declare status: TaskStatusEnum;
 
   @ForeignKey(() => Profile)
   @Column({

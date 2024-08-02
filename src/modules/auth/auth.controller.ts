@@ -4,7 +4,7 @@ import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, AUTH_PATH, REFRESH_TOKEN_SECR
 import { IAuthPayload } from './auth.interface';
 import Controller from '../../shared/interfaces/controller.interface';
 import RefreshToken from '../../shared/models/refresh-token';
-import accessTokenGuard from '../../shared/middlewares/access-token.mw';
+import { accessTokenGuard } from '../../shared/middlewares';
 import AuthService from './auth.service';
 
 // 3rd party dependencies
@@ -126,7 +126,7 @@ export default class AuthController implements Controller {
                 const userPayload = user as IAuthPayload;
 
                 const accessToken = jwt.sign(
-                    { id: userPayload.id, role: userPayload.role },
+                    { id: userPayload.id, roles: userPayload.roles },
                     ACCESS_TOKEN_SECRET as string,
                     { expiresIn: ACCESS_TOKEN_EXPIRY }
                 );

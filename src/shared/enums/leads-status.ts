@@ -1,6 +1,6 @@
-export enum LeadStatus {
-    sales = 0,
-    followUp = 1,
-    NPNA = 2,
-    NI = 3,
+export enum LeadStatusEnum {
+    SALES = "SALES",
+    FOLLOW_UP = "FOLLOW_UP",
+    NPNA = "NPNA",
+    NI = "NI",
 }

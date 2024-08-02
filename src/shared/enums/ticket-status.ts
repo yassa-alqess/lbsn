@@ -1,4 +1,4 @@
-export enum TicketStatus {
-    Verified = 0,
-    NotVerified = 1,
+export enum TicketStatusEnum {
+    VERIFIED = "VERIFIED",
+    PENDING = "PENDING",
 }

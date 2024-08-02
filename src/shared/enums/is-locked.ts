@@ -1,4 +1,4 @@
-export enum IsLocked {
-    Locked = 0,
-    NotLocked = 1,
+export enum IsLockedEnum {
+    LOCKED = "LOCKED",
+    UNLOCKED = "UNLOCKED",
 }

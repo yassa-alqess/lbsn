@@ -3,7 +3,15 @@ import UserProfile from './user-profile';
 import Profile from './profile';
 import RefreshToken from './refresh-token';
 import ResetToken from './reset-token';
+import Role from './role';
+import UserRole from './user-role';
+import { IsLockedEnum, IsVerifiedEnum } from '../enums';
 
+//3rd party dependinces
+import * as _ from "lodash";
+
+const isVerifiedEnumStatuses: string[] = _.values(IsVerifiedEnum);
+const isLockedEnumStatuses: string[] = _.values(IsLockedEnum);
 
 @Table({ schema: 'public', timestamps: false })
 class User extends Model {
@@ -38,9 +46,16 @@ class User extends Model {
   declare role: number;
 
   @Column({
-    type: DataType.BOOLEAN,
+    type: DataType.ENUM({
+      values: isVerifiedEnumStatuses
+    }),
+
+    validate: {
+      isIn: [isVerifiedEnumStatuses]
+    },
+    unique: true,
   })
-  declare isVerified: boolean;
+  declare isVerified: IsVerifiedEnum;
 
   @Column({
     type: DataType.STRING(50),
@@ -69,9 +84,16 @@ class User extends Model {
   declare password: string;
 
   @Column({
-    type: DataType.BOOLEAN,
+    type: DataType.ENUM({
+      values: isLockedEnumStatuses
+    }),
+
+    validate: {
+      isIn: [isLockedEnumStatuses]
+    },
+    unique: true,
   })
-  declare isLocked: boolean;
+  declare isLocked: IsLockedEnum;
 
   @BelongsToMany(() => Profile, () => UserProfile)
   declare profiles: Profile[];
@@ -81,6 +103,9 @@ class User extends Model {
 
   @HasMany(() => ResetToken)
   declare resetTokens: ResetToken[];
+
+  @BelongsToMany(() => Role, () => UserRole)
+  declare roles: Role[];
 }
 
 export default User;

@@ -2,6 +2,7 @@
 import { DUPLICATE_ERR, USERS_PATH } from '../../shared/constants';
 import Controller from '../../shared/interfaces/controller.interface';
 import UserProfilesService from './user-profiles.service';
+import { accessTokenGuard } from '../../shared/middlewares';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -17,7 +18,7 @@ export default class UserProfilesController implements Controller {
     }
 
     private _initializeRoutes() {
-        //accept user and profile ids and do basic crud operations
+        this.router.use(accessTokenGuard);
         this.router.post(`${this.path}/:userId/profiles/:profileId`, this.addUserProfile);
         this.router.get(`${this.path}/:userId/profiles`, this.getUserProfiles);
         this.router.delete(`${this.path}/:userId/profiles/:profileId`, this.deleteUserProfile);

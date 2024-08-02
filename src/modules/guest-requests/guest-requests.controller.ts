@@ -2,10 +2,13 @@
 import { DUPLICATE_ERR, GUESTS_PATH } from '../../shared/constants';
 import Controller from '../../shared/interfaces/controller.interface';
 import GuestRequestsService from './guest-requests.service';
+import { RoleEnum } from '../../shared/enums';
+import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+
 
 export default class GuestRequestsController implements Controller {
 
@@ -17,6 +20,8 @@ export default class GuestRequestsController implements Controller {
     }
 
     private _initializeRoutes() {
+        this.router.use(accessTokenGuard);
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
         this.router.post(`${this.path}/:guestId/requests/:requestId`, this.addGuestRequest);
         this.router.get(`${this.path}/:guestId/requests`, this.getGuestRequests);
         this.router.delete(`${this.path}/:guestId/requests/:requestId`, this.deleteGuestRequest);

@@ -3,6 +3,8 @@ import { INVALID_UUID, DUPLICATE_ERR, GUESTS_PATH } from '../../shared/constants
 import Controller from '../../shared/interfaces/controller.interface';
 import { ITimeSlotAddPayload, ITimeSlotUpdatePayload } from './time-slots.interface';
 import TimeSlotsService from './time-slots.service';
+import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
+import { RoleEnum } from '../../shared/enums';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
@@ -18,6 +20,8 @@ export default class TimeSlotsController implements Controller {
     }
 
     private _initializeRoutes() {
+        this.router.use(accessTokenGuard);
+        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
         this.router.post(this.path, this.addTimeSlot);
         this.router.patch(`${this.path}/:id`, this.updateTimeSlot);
         this.router.get(`${this.path}/:id`, this.getTimeSlot);

@@ -1,5 +1,5 @@
-export enum IsVerified {
-    verified = 0,
-    pending  = 1,
-    notVerified = 2,
+export enum IsVerifiedEnum {
+    VERIFIED = "VERIFIED",
+    PENDING = "PENDING",
+    REJECTED = "REJECTED",
 }
