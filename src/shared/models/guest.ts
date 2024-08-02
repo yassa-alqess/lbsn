@@ -2,7 +2,12 @@ import { Table, Model, Column, DataType, BelongsToMany, HasMany } from 'sequeliz
 import Service from './service';
 import GuestRequest from './guest-request'
 import Appointment from './appointment';
+import { IsApprovedEnum } from '../enums';
 
+//3rd party dependencies
+import * as _ from "lodash";
+
+const approveStatueses: string[] = _.values(IsApprovedEnum);
 
 @Table({ schema: 'public', timestamps: false })
 class Guest extends Model {
@@ -47,9 +52,16 @@ class Guest extends Model {
     declare location: string;
 
     @Column({
-        type: DataType.BOOLEAN,
+        type: DataType.ENUM({
+            values: approveStatueses
+        }),
+
+        validate: {
+            isIn: [approveStatueses]
+        },
+        unique: true,
     })
-    declare approved: boolean;
+    declare approved: IsApprovedEnum;
 
     @BelongsToMany(() => Service, () => GuestRequest)
     declare services: Service[];

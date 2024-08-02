@@ -1,5 +1,10 @@
- import { Table, Model, Column, DataType } from 'sequelize-typescript';
+import { Table, Model, Column, DataType } from 'sequelize-typescript';
+import { IsAvailableEnum } from '../enums';
 
+//3rd party dependinces
+import * as _ from "lodash";
+
+const IsAvailableEnumStatuses: string[] = _.values(IsAvailableEnum);
 
 @Table({ schema: 'public', timestamps: false })
 class TimeSlot extends Model {
@@ -16,9 +21,16 @@ class TimeSlot extends Model {
     declare time: Date;
 
     @Column({
-        type: DataType.BOOLEAN,
+        type: DataType.ENUM({
+            values: IsAvailableEnumStatuses
+        }),
+
+        validate: {
+            isIn: [IsAvailableEnumStatuses]
+        },
+        unique: true,
     })
-    declare available: boolean;
+    declare isAvailable: IsAvailableEnum;
 }
 
 export default TimeSlot;

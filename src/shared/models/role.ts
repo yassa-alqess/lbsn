@@ -9,7 +9,11 @@ import UserRole from './user-role';
 import RolePermission from './role-permission';
 import User from './user';
 import Permission from './permission';
+import { RoleEnum } from '../enums';
 
+//3rd party imports
+import * as _ from "lodash";
+const roles: string[] = _.values(RoleEnum);
 @Table({ schema: process.env.SCHEMA })
 class Role extends Model {
     @Column({
@@ -20,9 +24,16 @@ class Role extends Model {
     declare roleId: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.ENUM({
+            values: roles
+        }),
+
+        validate: {
+            isIn: [roles]
+        },
+        unique: true,
     })
-    declare name: string;
+    declare name: RoleEnum;
 
     @BelongsToMany(() => User, () => UserRole)
     declare users: User[];

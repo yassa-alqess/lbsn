@@ -1,4 +1,4 @@
-export enum TaskStatus {
-    Solved = 0,
-    NotSolved = 1,
+export enum TaskStatusEnum {
+    SOLVED = "SOLVED",
+    REJECTED = "REJECTED",
 }

@@ -1,6 +1,11 @@
 import { Table, Model, Column, DataType, BelongsTo, ForeignKey, } from 'sequelize-typescript';
 import Profile from './profile';
+import { LeadStatusEnum } from '../enums';
 
+//3rd party imports
+import * as _ from "lodash";
+
+const statuses: string[] = _.values(LeadStatusEnum);
 
 @Table({ schema: 'public', timestamps: true })
 class Lead extends Model {
@@ -17,9 +22,16 @@ class Lead extends Model {
     declare sheetUrl: string;
 
     @Column({
-        type: DataType.INTEGER,
+        type: DataType.ENUM({
+            values: statuses
+        }),
+
+        validate: {
+            isIn: [statuses]
+        },
+        unique: true,
     })
-    declare status: string;
+    declare status: LeadStatusEnum;
 
     @ForeignKey(() => Profile)
     @Column({
