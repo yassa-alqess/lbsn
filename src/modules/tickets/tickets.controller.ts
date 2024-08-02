@@ -7,13 +7,13 @@ import Controller from '../../shared/interfaces/controller.interface';
 import TicketService from './tickets.service';
 import { RoleEnum } from '../../shared/enums';
 import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
+import upload from '../../config/storage/multer.config'
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 export default class TicketController implements Controller {
-
     path = TICKETS_PATH;
     router = express.Router();
     private _ticketService = new TicketService();
@@ -23,7 +23,7 @@ export default class TicketController implements Controller {
 
     private _initializeRoutes() {
         this.router.use(accessTokenGuard);
-        this.router.post(this.path, this.addTicket);
+        this.router.post(this.path, upload(this.path)!.single("file"), this.addTicket);
         this.router.get(`${this.path}/:id/:status?`, this.getTickets);
 
         this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
