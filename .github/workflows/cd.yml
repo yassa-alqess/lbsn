@@ -19,18 +19,30 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: setup
+    env:
+      SSH_PASS: ${{ secrets.SSH_PASS }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Deploy to Server
-        env:
-          SSH_PASS: ${{ secrets.SSH_PASS }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
+      - name: Setup SSH Key
         run: |
-          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+      - name: Verify SSH Connectivity
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'echo "SSH Connection Successful"'
+
+      - name: Deploy to Server
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
             # Navigate to the directory where the compose file is located
             cd /app
 
@@ -38,7 +50,7 @@ jobs:
             docker-compose -f compose.yml pull
             
             # Stop and remove the existing containers
-            docker-compose -f compose.yml down || true
+            docker-compose -f compose.yml down -v || true
             
             # Start the containers with the new image
             docker-compose -f compose.yml up -d --build
