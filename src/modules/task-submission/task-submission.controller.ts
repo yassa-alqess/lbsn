@@ -5,13 +5,13 @@ import { ITaskSubmissionAddPayload, ItaskSubmissionGetByIdPayload, ItaskSubmissi
 import { TASKS_PATH } from '../../shared/constants';
 import { accessTokenGuard } from '../../shared/middlewares';
 import TaskSubmissionService from './task-submission.service';
+import upload from '../../config/storage/multer.config';
 
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 export default class TaskSubmissionController {
-
     path = TASKS_PATH;
     router = express.Router();
     private _taskSubmissionService = new TaskSubmissionService();
@@ -22,7 +22,7 @@ export default class TaskSubmissionController {
 
     private _initializeRoutes() {
         this.router.use(accessTokenGuard);
-        this.router.post(`${this.path}/:taskId/submission`, this.addTaskSubmisson);
+        this.router.post(`${this.path}/:taskId/submission`, upload(this.path)!.single("file"), this.addTaskSubmisson);
         this.router.patch(`${this.path}/:taskId/submission/:taskSubmissionId`, this.updateTaskSubmisson);
         this.router.get(`${this.path}/:taskId/submission`, this.getTaskSubmissionByTaskId);
     }
