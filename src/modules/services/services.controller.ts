@@ -7,8 +7,7 @@ import ServiceService from './services.service';
 // 3rd party dependencies
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import accessTokenGuard from '../../shared/middlewares/access-token.mw';
-import { requireAnyOfThoseRoles } from '../../shared/middlewares/role.mw';
+import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
 import { RoleEnum } from '../../shared/enums';
 
 export default class ServiceController implements Controller {
