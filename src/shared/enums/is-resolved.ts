@@ -1,4 +1,4 @@
-export enum TicketStatusEnum {
+export enum IsResolvedEnum {
     RESOLVED = "RESOLVED",
     PENDING = "PENDING",
 }
