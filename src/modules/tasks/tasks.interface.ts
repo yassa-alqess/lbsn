@@ -2,7 +2,7 @@ import { TaskStatusEnum } from "../../shared/enums";
 
 export interface ITasksGetPayload {
     profileId: string;
-    status: number;
+    status?: TaskStatusEnum;
 }
 
 export interface ITasksGetRespones {
@@ -13,6 +13,12 @@ export interface ITasksAddPayload {
     profileId: string;
     title: string;
     comment: string;
+}
+
+export interface ITaskUpdatePayload {
+    taskId: string;
+    title?: string;
+    comment?: string;
 }
 
 export interface ITask {
