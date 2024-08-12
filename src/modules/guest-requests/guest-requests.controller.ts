@@ -1,14 +1,17 @@
 // file dependinces
-import { DUPLICATE_ERR, GUESTS_PATH } from '../../shared/constants';
-import Controller from '../../shared/interfaces/controller.interface';
+import { DUPLICATE_ERR, GUESTS_PATH, INVALID_UUID } from '../../shared/constants';
+import { Controller } from '../../shared/interfaces/controller.interface';
 import GuestRequestsService from './guest-requests.service';
 import { RoleEnum } from '../../shared/enums';
-import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
+import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import logger from '../../config/logger';
+import { IGuestRequestAddPayload } from './guest-requests.interface';
+import { CreateGuestRequestDto, UpdateGuestRequestDto } from './guest-requests.dto';
 
 // 3rd party dependencies
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
-
 
 export default class GuestRequestsController implements Controller {
 
@@ -20,58 +23,142 @@ export default class GuestRequestsController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.use(accessTokenGuard);
-        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
-        this.router.post(`${this.path}/:guestId/requests/:requestId`, this.addGuestRequest);
+        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.post(`${this.path}/:guestId/requests/:requestId`, validate(CreateGuestRequestDto), this.addGuestRequest);
         this.router.get(`${this.path}/:guestId/requests`, this.getGuestRequests);
+        this.router.get(`${this.path}/:guestId/requests/:requestId`, this.getGuestRequest);
         this.router.delete(`${this.path}/:guestId/requests/:requestId`, this.deleteGuestRequest);
+        this.router.patch(`${this.path}/:guestId/requests/:requestId`, validate(UpdateGuestRequestDto), this.addGuestRequest);
         this.router.post(`${this.path}/:guestId/requests/:requestId/approve`, this.approveGuestRequest);
     }
 
-    public addGuestRequest = async (req: Request, res: Response) => {
+    public addGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
+        const { guestId, requestId } = req.params;
+        if (!guestId) {
+            return next(new ParamRequiredException('Guest', 'guestId'));
+        }
+        if (!requestId) {
+            return next(new ParamRequiredException('Request', 'requestId'));
+        }
         try {
-            const { guestId, requestId } = req.params;
-            const guestRequest = await this._guestRequestsService.addGuestRequest(guestId, requestId);
-            res.status(StatusCodes.CREATED).json(guestRequest);
-            //eslint-disable-next-line
-        } catch (error: any) {
-            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Guest request already exists' });
+            const guestRequestPayload: IGuestRequestAddPayload = {
+                guestId,
+                requestId,
+                marketingBudget: req.body.marketingBudget,
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            const guestRequest = await this._guestRequestsService.addGuestRequest(guestRequestPayload);
+            res.status(StatusCodes.CREATED).json(guestRequest).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at addGuestRequest action ${error}`);
+            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
+                return next(new AlreadyExistsException('Guest Request', 'requestId', requestId));
+            }
+            if (error instanceof AlreadyExistsException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public getGuestRequests = async (req: Request, res: Response) => {
+    public getGuestRequests = async (req: Request, res: Response, next: NextFunction) => {
+        const { guestId } = req.params;
+        if (!guestId) {
+            return next(new ParamRequiredException('Guest', 'guestId'));
+        }
         try {
-            const { guestId } = req.params;
             const guestRequests = await this._guestRequestsService.getGuestRequests(guestId);
-            res.status(StatusCodes.OK).json(guestRequests);
+            res.status(StatusCodes.OK).json(guestRequests).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at getGuestRequests action ${error}`);
+            if (error instanceof NotFoundException) {
+                return next(new NotFoundException('Guest', 'guestId', guestId));
+            }
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return next(new InvalidIdException('guestId', guestId));
+            }
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public deleteGuestRequest = async (req: Request, res: Response) => {
+    public deleteGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
+        const { guestId, requestId } = req.params;
+        if (!guestId) {
+            return next(new ParamRequiredException('Guest', 'guestId'));
+        }
+        if (!requestId) {
+            return next(new ParamRequiredException('Request', 'requestId'));
+        }
         try {
-            const { guestId, requestId } = req.params;
             await this._guestRequestsService.deleteGuestRequest(guestId, requestId);
-            res.status(StatusCodes.NO_CONTENT).send();
+            res.status(StatusCodes.OK).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at deleteGuestRequest action ${error}`);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid guest id or request id' });
+            }
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public approveGuestRequest = async (req: Request, res: Response) => {
+    public approveGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
+        const { guestId, requestId } = req.params;
+        if (!guestId) {
+            next(new ParamRequiredException('Guest', 'guestId'));
+        }
+        if (!requestId) {
+            next(new ParamRequiredException('Request', 'requestId'));
+        }
         try {
-            const { guestId, requestId } = req.params;
             await this._guestRequestsService.approveGuestRequest(guestId, requestId);
-            res.status(StatusCodes.OK).send();
+            res.status(StatusCodes.OK).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at approveGuestRequest action ${error}`);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid guest id or request id' });
+            }
+            if (error instanceof NotFoundException) {
+                next(error);
+            }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public getGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
+        const { guestId, requestId } = req.params;
+        if (!guestId) {
+            return next(new ParamRequiredException('Guest', 'guestId'));
+        }
+        if (!requestId) {
+            return next(new ParamRequiredException('Request', 'requestId'));
+        }
+        try {
+            const guestRequest = await this._guestRequestsService.getGuestRequest(guestId, requestId);
+            res.status(StatusCodes.OK).json(guestRequest).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at getGuestRequest action ${error}`);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid guest id or request id' });
+            }
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 }
