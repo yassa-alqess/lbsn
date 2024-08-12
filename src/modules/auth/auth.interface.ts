@@ -1,4 +1,4 @@
-import { RoleEnum } from "@/shared/enums";
+import { RoleEnum } from "../../shared/enums";
 
 export interface IAuthPayload {
     id: string;
