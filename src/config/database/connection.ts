@@ -1,7 +1,8 @@
 import { Sequelize } from 'sequelize-typescript';
 import logger from '../logger';
+import { SCHEMA, DB_NAME, DATABASE_URL } from '../../shared/constants';
 
-const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
+const sequelize = new Sequelize(DATABASE_URL as string, {
 
   models: [__dirname + '/../../shared/models/*.ts'],
   logging: (query) => logger.info(query),
@@ -10,10 +11,9 @@ const sequelize = new Sequelize(process.env.DATABASE_URL as string, {
 export const syncDatabase = async () => {
   // propagate the error to the server, so we can catch it later
   // create schema if not exists
-  const schema = process.env.SCHEMA;
-  if (schema) await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${schema};`);
+  if (SCHEMA) await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${SCHEMA};`);
   await sequelize.sync({ alter: true, force: false });
-  logger.debug(`connected to ${process.env.DB_NAME} database`);
+  logger.debug(`connected to ${DB_NAME} database`);
 };
 
 export const ping = async () => {
