@@ -1,4 +1,4 @@
-import { IsLockedEnum, IsVerifiedEnum, RoleEnum } from "@/shared/enums";
+import { IsLockedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
 
 export interface IUserAddPayload {
     email: string;
@@ -11,6 +11,7 @@ export interface IUserAddPayload {
     image?: string;
     password: string;
     isLocked?: IsLockedEnum;
+    roles: RoleEnum[];
 
 }
 
@@ -19,13 +20,12 @@ export interface IUserResponse {
     email: string;
     name: string;
     taxId: string;
-    isVerified: IsVerifiedEnum;
+    isVerified?: IsVerifiedEnum;
     companyName: string;
     phone: string;
     location: string;
     image: string;
-    password: string;
-    isLocked: IsLockedEnum;
+    isLocked?: IsLockedEnum;
     roles: RoleEnum[];
 }
 export interface IUserUpdatePayload {
@@ -40,6 +40,7 @@ export interface IUserUpdatePayload {
     image?: string;
     password?: string;
     isLocked?: IsLockedEnum;
+    roles: RoleEnum[];
 }
 
 export interface IUserBulkAddResponse {
