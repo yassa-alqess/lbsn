@@ -32,7 +32,7 @@ export default class MeetingService {
         const payload = {
             topic,
             type: 2,
-            start_time: "2024-08-01T14:25:00Z",
+            start_time: startTime,
             timeZone: 'GMT+2',
             duration: 60,
             password,
