@@ -1,6 +1,7 @@
 import '../env';
 import sequelize, { syncDatabase } from './connection';
 import logger from '../logger';
+import { DATABASE_NAME } from '../../shared/constants';
 
 jest.mock('../logger', () => ({
   debug: jest.fn(),
@@ -25,6 +26,6 @@ describe('syncDatabase', () => {
     // });
     expect(sequelize.sync).toHaveBeenCalledWith({ alter: true, force: false });
     expect(() => sequelize.sync).not.toThrow();
-    expect(logger.debug).toHaveBeenCalledWith(`connected to ${process.env.DB_NAME} database`); //testing hasn't debug logger, but it's fine, it will not fail.
+    expect(logger.debug).toHaveBeenCalledWith(`connected to ${DATABASE_NAME} database`); //testing hasn't debug logger, but it's fine, it will not fail.
   });
 });

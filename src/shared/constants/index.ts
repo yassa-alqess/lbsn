@@ -45,7 +45,7 @@ export const MAIN_MAIL = `sales@leadbull.net`
 export const ENV = process.env.NODE_ENV || 'dev';
 export const PORT = process.env.PORT || 8000;
 export const DATABASE_URL = process.env.DATABASE_URL || ""
-export const DB_NAME = process.env.DB_NAME || ""
+export const DATABASE_NAME = process.env.DATABASE_NAME || ""
 export const SCHEMA = process.env.SCHEMA || ""
 export const REDIS_URL = process.env.REDIS_URL || ""
 

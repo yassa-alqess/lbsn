@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import logger from '../logger';
-import { SCHEMA, DB_NAME, DATABASE_URL } from '../../shared/constants';
+import { SCHEMA, DATABASE_NAME, DATABASE_URL } from '../../shared/constants';
 
 const sequelize = new Sequelize(DATABASE_URL as string, {
 
@@ -13,7 +13,7 @@ export const syncDatabase = async () => {
   // create schema if not exists
   if (SCHEMA) await sequelize.query(`CREATE SCHEMA IF NOT EXISTS ${SCHEMA};`);
   await sequelize.sync({ alter: true, force: false });
-  logger.debug(`connected to ${DB_NAME} database`);
+  logger.debug(`connected to ${DATABASE_NAME} database`);
 };
 
 export const ping = async () => {
