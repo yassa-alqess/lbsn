@@ -11,7 +11,7 @@ class ResetToken extends Model {
     declare tokenId: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare value: string;
 
@@ -24,7 +24,7 @@ class ResetToken extends Model {
     @Column({
         type: DataType.UUID,
     })
-    declare userId: number;
+    declare userId: string;
 
     @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare user: User;

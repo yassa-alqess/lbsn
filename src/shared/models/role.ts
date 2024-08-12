@@ -31,7 +31,6 @@ class Role extends Model {
         validate: {
             isIn: [roles]
         },
-        unique: true,
     })
     declare name: RoleEnum;
 

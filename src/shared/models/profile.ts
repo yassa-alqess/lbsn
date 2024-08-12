@@ -17,6 +17,7 @@ class Profile extends Model {
 
     @Column({
         type: DataType.STRING(200),
+        unique: true,
     })
     declare name: string;
 

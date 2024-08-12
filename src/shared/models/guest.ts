@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsToMany, HasMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsToMany, HasMany, AllowNull } from 'sequelize-typescript';
 import Service from './service';
 import GuestRequest from './guest-request'
 import Appointment from './appointment';
@@ -30,6 +30,7 @@ class Guest extends Model {
     })
     declare email: string;
 
+    @AllowNull(true)
     @Column({
         type: DataType.STRING(200),
         unique: true,
@@ -59,7 +60,6 @@ class Guest extends Model {
         validate: {
             isIn: [approveStatueses]
         },
-        unique: true,
     })
     declare approved: IsApprovedEnum;
 

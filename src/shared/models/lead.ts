@@ -17,7 +17,7 @@ class Lead extends Model {
     declare leadId: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare sheetUrl: string;
 
@@ -29,7 +29,6 @@ class Lead extends Model {
         validate: {
             isIn: [statuses]
         },
-        unique: true,
     })
     declare status: LeadStatusEnum;
 

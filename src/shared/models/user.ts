@@ -34,16 +34,12 @@ class User extends Model {
   })
   declare email: string;
 
+  @AllowNull(true)
   @Column({
     type: DataType.STRING(200),
     unique: true,
   })
   declare taxId: string;
-
-  @Column({
-    type: DataType.INTEGER,
-  })
-  declare role: number;
 
   @Column({
     type: DataType.ENUM({
@@ -53,7 +49,6 @@ class User extends Model {
     validate: {
       isIn: [isVerifiedEnumStatuses]
     },
-    unique: true,
   })
   declare isVerified: IsVerifiedEnum;
 
@@ -74,7 +69,7 @@ class User extends Model {
 
   @AllowNull(true)
   @Column({
-    type: DataType.STRING(200),
+    type: DataType.TEXT,
   })
   declare image: string;
 
@@ -91,7 +86,6 @@ class User extends Model {
     validate: {
       isIn: [isLockedEnumStatuses]
     },
-    unique: true,
   })
   declare isLocked: IsLockedEnum;
 

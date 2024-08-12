@@ -27,11 +27,9 @@ class Permission extends Model {
         type: DataType.ENUM({
             values: permissions
         }),
-
         validate: {
             isIn: [permissions]
         },
-        unique: true,
     })
     declare name: PermissionEnum;
 

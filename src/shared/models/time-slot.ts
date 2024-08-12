@@ -28,7 +28,6 @@ class TimeSlot extends Model {
         validate: {
             isIn: [IsAvailableEnumStatuses]
         },
-        unique: true,
     })
     declare isAvailable: IsAvailableEnum;
 }
