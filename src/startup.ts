@@ -14,7 +14,6 @@ import loggerMiddleware from './shared/middlewares/logger.mw';
 import { errorMiddleware, notFoundMiddleware, responseFormatter } from './shared/middlewares';
 import restRouter from './modules/routes';
 import { initializeRedisClient } from './config/cache'; // initialize redis client
-// import './shared/utils/xlsx-fake-generator';
 
 // app container & middlewares
 const APP = express();
