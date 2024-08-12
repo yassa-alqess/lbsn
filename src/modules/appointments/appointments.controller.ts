@@ -1,12 +1,17 @@
 // file dependencies
-import { IAppointmentsAddPayload } from './appointment.interface';
-import Controller from '../../shared/interfaces/controller.interface';
+import { Controller } from '../../shared/interfaces/controller.interface';
 import { APPOINTMENTS_PATH } from '../../shared/constants';
 import AppointmentService from './appointments.service';
+import { CreateAppointmentDto } from './appointments.dto';
+import { validate } from '../../shared/middlewares';
+import { IAppointmentsAddPayload } from './appointments.interface';
+import logger from '../../config/logger';
+import { InternalServerException } from '../../shared/exceptions';
 
 // 3rd party dependencies
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+
 
 export default class AppointmentController implements Controller {
 
@@ -18,16 +23,19 @@ export default class AppointmentController implements Controller {
         this._initializeRoutes();
     }
     private _initializeRoutes() {
-        this.router.post(this.path, this.makeAppointment); //  guests can make appointment, so there is no auth required
+        //  guests can make appointment, so there is no auth required
+        this.router.post(this.path, validate(CreateAppointmentDto), this.makeAppointment);
     }
-    public makeAppointment = async (req: Request, res: Response) => {
+    public makeAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const appointmentPayload: IAppointmentsAddPayload = req.body;
             await this._appointmentService.makeAppointment(appointmentPayload);
-            res.status(StatusCodes.CREATED); //not interested in returning anything
+            res.status(StatusCodes.CREATED).end(); //not interested in returning anything
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at makeAppointment action ${error}`);
+            next(new InternalServerException(error.message));
         }
     }
 }

@@ -1,6 +1,13 @@
-import { Column, Table, Model, ForeignKey, DataType } from 'sequelize-typescript';
+import { Column, Table, Model, ForeignKey, DataType, BelongsTo } from 'sequelize-typescript';
 import Guest from './guest';
 import Service from './service';
+import { IsResolvedEnum, MarketingBudgetEnum } from '../enums';
+
+//3rd party dependencies
+import * as _ from "lodash";
+
+const isResolvedStatueses: string[] = _.values(IsResolvedEnum);
+const marketingBudgetEnumValues: string[] = _.values(MarketingBudgetEnum);
 
 @Table({ schema: process.env.SCHEMA, timestamps: true })
 class GuestRequest extends Model {
@@ -23,11 +30,35 @@ class GuestRequest extends Model {
         type: DataType.UUID,
     })
     declare guestId: string;
+
     @Column({
-        type: DataType.BOOLEAN,
-        defaultValue: false,
+        type: DataType.ENUM({
+            values: isResolvedStatueses
+        }),
+
+        validate: {
+            isIn: [isResolvedStatueses]
+        },
     })
-    declare resolved: boolean;
+    declare resolved: IsResolvedEnum;
+
+    @Column({
+        type: DataType.ENUM({
+            values: marketingBudgetEnumValues
+        }),
+
+        validate: {
+            isIn: [marketingBudgetEnumValues]
+        },
+    })
+    declare marketingBudget: MarketingBudgetEnum;
+
+    // Define association
+    @BelongsTo(() => Guest)
+    guest!: Guest;
+
+    @BelongsTo(() => Service)
+    service!: Service;
 }
 
 export default GuestRequest;

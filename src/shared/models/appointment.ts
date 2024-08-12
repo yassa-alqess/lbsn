@@ -21,12 +21,12 @@ class Appointment extends Model {
     declare guestEmail: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare meetingUrl: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare meetingJoinUrl: string;
 
@@ -39,7 +39,7 @@ class Appointment extends Model {
     @Column({
         type: DataType.UUID,
     })
-    declare guestId: number;
+    declare guestId: string;
 
     @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare guest: Guest;
