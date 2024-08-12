@@ -27,6 +27,17 @@ export default class GuestRequestsService {
             const newGuestRequest = await GuestRequest.create({
                 guestId, serviceId: requestId, resolved: IsResolvedEnum.PENDING, marketingBudget
             });
+
+            // Fetch the newly created guest request with the associated service
+            const guestRequestWithService = await GuestRequest.findOne({
+                where: { guestRequestId: newGuestRequest.guestRequestId },
+                include: [{ model: Service, as: 'service' }] // Include the service data
+            });
+
+            if (!guestRequestWithService || !guestRequestWithService.service) {
+                throw new Error("Service not found for the created guest request");
+            }
+
             return {
                 guestRequestId: newGuestRequest.guestRequestId,
                 guestId: newGuestRequest.guestId,
