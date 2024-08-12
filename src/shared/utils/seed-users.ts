@@ -6,7 +6,7 @@ import { RoleEnum } from "../enums"
 export const seedUsers = async () => {
     const _userService = new UserService()
     const userData: IUserAddPayload = {
-        email: "yassa@mgil.com",
+        email: "yassa@gmail.com",
         name: "Yassa",
         companyName: "MGIL",
         phone: "123456789",
