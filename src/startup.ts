@@ -1,46 +1,62 @@
-// file dependinces
-import './config/env'
-import logger from "./config/logger";
-import { closeConnection } from "./config/database/connection";
-import App from './app';
-
-import TicketController from "./modules/tickets/tickets.controller";
-import TaskController from "./modules/tasks/tasks.controller";
-import UserController from "./modules/users/users.controller";
-import TaskSubmissionController from "./modules/task-submission/task-submission.controller";
-import UserProfilesController from './modules/user-profiles/user-profiles.controller';
-import ProfileController from './modules/profiles/profiles.controller';
-import GuestController from './modules/guests/guests.controller';
-import ServiceController from './modules/services/services.controller';
-import TimeSlotsController from './modules/time-slots/time-slots.controller';
-import AppointmentController from './modules/appointments/appointments.controller';
-
 // 3rd-party dependencies
-import { Server } from "http";
+import express, { Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { Server } from 'http';
+
+// src imports & config
+import './config/env'
+import { ENV, PORT } from './shared/constants'; //will also trigger dotenv config procedure
+import { syncDatabase, closeConnection } from './config/database/connection';
+import logger from './config/logger';
+import loggerMiddleware from './shared/middlewares/logger.mw';
+import { errorMiddleware, notFoundMiddleware, responseFormatter } from './shared/middlewares';
+import restRouter from './modules/routes';
+import { initializeRedisClient } from './config/cache'; // initialize redis client
+// import './shared/utils/xlsx-fake-generator';
+
+// app container & middlewares
+const APP = express();
+APP.use(express.json())
+APP.use(express.urlencoded({ extended: true })); // no need for body-parser
+APP.use(cors(
+  {
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization, Origin, X-Requested-With, Accept',
+  },
+));
+APP.use(helmet());
+APP.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+  }),
+);
+APP.set('trust proxy', 1); // trust nginx
 
 
-const app = new App([
+// middlewares & routes
+APP.use(loggerMiddleware)
+APP.use(responseFormatter)
+APP.use('/api/v0.1/', restRouter);
+APP.use(errorMiddleware);
+APP.use(notFoundMiddleware)
 
-  new UserController(),
-  new TicketController(),
-  new TaskController(),
-  new TaskSubmissionController(),
-  new ProfileController(),
-  new GuestController(),
-  new ServiceController(),
-  new UserProfilesController(),
-  new ServiceController(),
-  new TimeSlotsController(),
-  new AppointmentController(),
-
-]);
 // startup script
-let httpServer: Server | null = null;
+let server: Server | null = null;
 
 (async () => {
   try {
-
-    httpServer = app.listen();
+    await syncDatabase(); // sync db & catch errors
+    await initializeRedisClient(); // initialize redis client
+    APP.get('/', (_, res: Response) => {
+      res.sendStatus(200);
+    });
+    server = APP.listen(PORT, () => {
+      logger.info(`⚡️[server]: Server is running at http://localhost:${PORT} in ${ENV} mode`);
+    });
 
   } catch (error) {
     logger.error('Unable to connect,', error);
@@ -50,13 +66,13 @@ let httpServer: Server | null = null;
 
 // graceful shutdown
 process.on('SIGINT', async () => {
-  httpServer!.close(() => {
-    logger.info('httpServer closed gracefully');
+  server!.close(() => {
+    logger.info('Server closed gracefully');
     closeConnection().then(() => {
       process.exit(0);
     });
   });
 });
 
-
+export default APP; // exports for testing
 
