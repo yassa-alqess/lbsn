@@ -1,8 +1,6 @@
 // file dependencies
-import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, AUTH_PATH, REFRESH_TOKEN_SECRET } from '../../shared/constants';
-import { IAuthPayload } from './auth.interface';
+import { ACCESS_TOKEN_SECRET, AUTH_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
-import RefreshToken from '../../shared/models/refresh-token';
 import { validate } from '../../shared/middlewares';
 import AuthService from './auth.service';
 import logger from '../../config/logger';
@@ -85,38 +83,18 @@ export default class AuthController implements Controller {
     }
 
     public refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-        const { token } = req.body;
+        const { refreshToken } = req.body;
         try {
-            const refreshToken = await RefreshToken.findOne({
-                where: {
-                    value: token,
-                },
-            });
-
-            if (!refreshToken)
-                return res.status(StatusCodes.BAD_REQUEST).json('Invalid token').end();
-
-            if (refreshToken.expiresAt < new Date())
-                return res.status(StatusCodes.UNAUTHORIZED).json('Token expired').end();
-
-            jwt.verify(token, REFRESH_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null, user: string | jwt.JwtPayload | undefined) => {
-                if (err)
-                    return res.status(StatusCodes.UNAUTHORIZED).json('Invalid token').end();
-
-
-                const userPayload = user as IAuthPayload;
-
-                const accessToken = jwt.sign(
-                    { id: userPayload.id, roles: userPayload.roles },
-                    ACCESS_TOKEN_SECRET as string,
-                    { expiresIn: ACCESS_TOKEN_EXPIRY }
-                );
-                res.json({ accessToken }).end();
-            });
+            const tokens = await this._authService.refreshToken(refreshToken);
+            res.status(StatusCodes.OK).json({
+                accessToken: tokens[0],
+                refreshToken: tokens[1],
+                type: 'Bearer',
+            }).end();
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at refreshToken action ${error.message}`);
-            next(new InternalServerException(error.message));
+            next(new InternalServerException(`${error.message}`));
         }
 
     }
