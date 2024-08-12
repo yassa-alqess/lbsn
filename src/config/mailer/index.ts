@@ -1,11 +1,11 @@
 //file dependinces
 import { MAIL_HOST, MAIL_PASS, MAIL_PORT, MAIL_USER } from '../../shared/constants';
 import { IEmailOptions } from './email.interface';
-import { pugEngine } from 'nodemailer-pug-engine';
-import path from 'path';
 import logger from '../logger';
 
 //3rd party dependinces
+import { pugEngine } from 'nodemailer-pug-engine';
+import path from 'path';
 import nodemailer from 'nodemailer';
 
 export default class EmailService {
@@ -39,7 +39,7 @@ export default class EmailService {
         options.to.forEach(async (to) => {
             const mailOptions = {
                 from: MAIL_USER,
-                to: to,
+                to: [...to],
                 subject: options.subject,
                 template: options.template,
                 ctx: options.context,
@@ -47,9 +47,10 @@ export default class EmailService {
 
             try {
                 await this._transporter.sendMail(mailOptions);
-                logger.info('Email sent successfully to:', to);
-            } catch (error) {
-                logger.error('Error sending email:', error);
+                logger.info(`Email sent to ${to}`);
+                //eslint-disable-next-line
+            } catch (error: any) {
+                logger.error(`Error sending email to ${to} with error: ${error.message}`);
             }
         });
     };
