@@ -99,20 +99,41 @@ export default class GuestService {
 
             // Check if the guest is already approved
             if (guest.approved) {
-                const existingUser = await this._userService.getUserByEmail(guest.email);
-                if (existingUser) {
-                    logger.info('Guest already approved and user exists');
-                    return existingUser.userId;
-                } else {
-                    logger.info('Guest approved, but no corresponding user found, proceeding to create a new user');
+                try {
+                    const existingUser = await this._userService.getUserByEmail(guest.email);
+                    if (existingUser) {
+                        logger.info('Guest already approved and user exists');
+                        return existingUser?.userId as string;
+                    }
+                } //eslint-disable-next-line
+                catch (error: any) {
+                    if (error instanceof NotFoundException) {
+                        logger.info('Guest approved, but no corresponding user found, proceeding to create a new user');
+                    }
+                    else {
+                        logger.error(`Error getting user: ${error.message}`);
+                        throw new Error(`Error Adding User`);
+                    }
                 }
             }
 
             const email = guest.email;
-            const existingUser = await this._userService.getUserByEmail(email);
-            if (existingUser) {
-                logger.info('User already exists');
-                return existingUser.userId;
+            try {
+                const existingUser = await this._userService.getUserByEmail(email);
+                if (existingUser) {
+                    logger.info('User already exists');
+                    // user exists but don't return and wait to approve the guest
+                }
+
+            } //eslint-disable-next-line
+            catch (error: any) {
+                if (error instanceof NotFoundException) {
+                    logger.info('User does not exist');
+                }
+                else {
+                    logger.error(`Error getting user: ${error.message}`);
+                    throw new Error(`Error Adding User`);
+                }
             }
 
             // generate random password
@@ -132,6 +153,7 @@ export default class GuestService {
             };
 
             const newUser = await User.create({ ...userPayload }, { transaction });
+            logger.debug(`New user created: ${newUser.userId}`);
             const role = await Role.findOne({ where: { name: RoleEnum.USER }, transaction });
 
             await newUser.$set('roles', [role as Role], { transaction });
@@ -146,7 +168,7 @@ export default class GuestService {
             await this._emailService.sendEmail(emailPayload);
 
             // Mark guest as approved
-            await guest.update({ approved: true }, { transaction });
+            await guest.update({ approved: IsApprovedEnum.APPROVED }, { transaction });
 
             await transaction.commit();
             return newUser.userId;
