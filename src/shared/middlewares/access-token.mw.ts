@@ -23,7 +23,7 @@ export async function accessTokenGuard(req: Request, res: Response, next: NextFu
     const isValid = await _redisClient.get(token);
     if (!isValid) {
         logger.info(`Token expired or invalid`);
-        return res.status(401).json('Token has been invalidated or expired');
+        return res.status(401).json('Token invalid or expired');
     }
 
     try {
