@@ -53,7 +53,7 @@ export default class GuestService {
         }
 
     }
-    
+
     public async getGuest(guestId: string): Promise<IGuestResponse | undefined> {
         const guest = await Guest.findByPk(guestId);
         if (!guest)
@@ -99,7 +99,7 @@ export default class GuestService {
             }
 
             // Check if the guest is already approved
-            if (guest.approved) {
+            if (guest.approved === IsApprovedEnum.APPROVED) {
                 try {
                     const existingUser = await this._userService.getUserByEmail(guest.email);
                     if (existingUser) {
