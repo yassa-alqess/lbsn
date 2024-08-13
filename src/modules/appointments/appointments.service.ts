@@ -49,8 +49,8 @@ export default class AppointmentService {
                     }
                 }
             } else {
-                logger.error(`Couldn't Get A Guest: ${err.message}`);
-                throw new Error(`Couldn't Get A Guest`);
+                logger.error(`Couldn't Get A Guest, ${err.message}`);
+                throw new Error(`Couldn't Get A Guest, ${err.message}`);
             }
         }
 
@@ -70,7 +70,7 @@ export default class AppointmentService {
             }
             else {
                 logger.error(`Couldn't Create A Guest Request, ${err.message}`);
-                throw new Error(`Couldn't Create A Guest Request`);
+                throw new Error(`Couldn't Create A Guest Request, ${err.message}`);
             }
         }
 
@@ -96,18 +96,18 @@ export default class AppointmentService {
             logger.error(`Couldn't Create A Meeting, ${err.message}`);
             throw new Error(`Couldn't Create A Meeting`);
         }
-
+        
         // add to apppointment table the url
         try {
-
+            
             await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId });
             //eslint-disable-next-line
         } catch (err: any) {
-
+            
             logger.error(`Couldn't Create An Appointment, ${err.message}`);
             throw new Error(`Couldn't Create An Appointment`);
         }
-
+        
         // get formated (user-readable) Date
         // send email to the user
         // send email to the admin  sales@domain.com
@@ -134,4 +134,4 @@ export default class AppointmentService {
         };
         await this._emailService.sendEmail(emailPayload);
     }
-} 
+}
