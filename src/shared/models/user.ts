@@ -13,7 +13,7 @@ import * as _ from "lodash";
 const isVerifiedEnumStatuses: string[] = _.values(IsVerifiedEnum);
 const isLockedEnumStatuses: string[] = _.values(IsLockedEnum);
 
-@Table({ schema: 'public', timestamps: false })
+@Table({ schema: 'public', timestamps: true })
 class User extends Model {
   @Column({
     primaryKey: true,
