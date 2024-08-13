@@ -2,11 +2,10 @@ import Service from "../../shared/models/service";
 import GuestRequest from "../../shared/models/guest-request";
 import GuestService from "../guests/guests.service";
 import UserProfilesService from "../user-profiles/user-profiles.service";
-import ProfileService from "../profiles/profiles.service";
 import logger from "../../config/logger";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
-import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload } from "./guest-requests.interface";
+import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
 import sequelize from "../../config/database/connection";
 
 // 3rd party dependencies
@@ -15,13 +14,12 @@ import { Transaction } from "sequelize";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
-    private _profileService = new ProfileService();
     private _userProfilesService = new UserProfilesService();
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
         if (guestRequest) {
-            throw new AlreadyExistsException("Guest Request", "serviceId", requestId);
+            throw new Error(`Guest request already exists`);
         }
         try {
             const newGuestRequest = await GuestRequest.create({
@@ -53,6 +51,22 @@ export default class GuestRequestsService {
             throw new Error(`Error adding guest request`);
         }
     }
+
+    public async updateGuestRequest(guestRequestPayload: IGuestRequestUpdatePayload): Promise<void> {
+        const { guestId, requestId, marketingBudget } = guestRequestPayload;
+        const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
+        if (!guestRequest) {
+            throw new Error('Guest Request not found');
+        }
+        try {
+            await guestRequest.update({ marketingBudget });
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error updating guest request: ${error.message}`);
+            throw new Error(`Error updating guest request`);
+        }
+    }
+    
     public async getGuestRequests(guestId: string): Promise<IgetGuestRequestsResponse | undefined> {
         const guestRequests = await GuestRequest.findAll({
             where: { guestId },
@@ -95,7 +109,7 @@ export default class GuestRequestsService {
             }],
         });
         if (!guestRequest) {
-            throw new NotFoundException("Guest Request", "serviceId", requestId);
+            throw new Error(`Guest request not found`);
         }
         return {
             guestRequestId: guestRequest.guestRequestId,

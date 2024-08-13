@@ -6,7 +6,7 @@ import { RoleEnum } from '../../shared/enums';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
-import { IGuestRequestAddPayload } from './guest-requests.interface';
+import { IGuestRequestAddPayload, IGuestRequestUpdatePayload } from './guest-requests.interface';
 import { CreateGuestRequestDto, UpdateGuestRequestDto } from './guest-requests.dto';
 
 // 3rd party dependencies
@@ -23,13 +23,13 @@ export default class GuestRequestsController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(`${this.path}/:guestId/requests/:requestId`, validate(CreateGuestRequestDto), this.addGuestRequest);
         this.router.get(`${this.path}/:guestId/requests`, this.getGuestRequests);
         this.router.get(`${this.path}/:guestId/requests/:requestId`, this.getGuestRequest);
         this.router.delete(`${this.path}/:guestId/requests/:requestId`, this.deleteGuestRequest);
-        this.router.patch(`${this.path}/:guestId/requests/:requestId`, validate(UpdateGuestRequestDto), this.addGuestRequest);
-        this.router.post(`${this.path}/:guestId/requests/:requestId/approve`, this.approveGuestRequest);
+        this.router.patch(`${this.path}/:guestId/requests/:requestId`, validate(UpdateGuestRequestDto), this.updateGuestRequest);
+        this.router.get(`${this.path}/:guestId/requests/:requestId/approve`, this.approveGuestRequest);
     }
 
     public addGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
@@ -56,6 +56,36 @@ export default class GuestRequestsController implements Controller {
                 return next(new AlreadyExistsException('Guest Request', 'requestId', requestId));
             }
             if (error instanceof AlreadyExistsException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public updateGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
+        const { guestId, requestId } = req.params;
+        if (!guestId) {
+            return next(new ParamRequiredException('Guest', 'guestId'));
+        }
+        if (!requestId) {
+            return next(new ParamRequiredException('Request', 'requestId'));
+        }
+        try {
+            const guestRequestPayload: IGuestRequestUpdatePayload = {
+                guestId,
+                requestId,
+                marketingBudget: req.body.marketingBudget,
+            }
+            const guestRequest = await this._guestRequestsService.updateGuestRequest(guestRequestPayload);
+            res.status(StatusCodes.OK).json(guestRequest).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at updateGuestRequest action ${error}`);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return next(new InvalidIdException('guestId', guestId));
+            }
+            if (error instanceof NotFoundException || error instanceof AlreadyExistsException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
