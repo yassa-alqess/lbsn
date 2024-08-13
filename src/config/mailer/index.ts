@@ -66,6 +66,7 @@ export default class EmailService {
                     template: options.template,
                     ctx: options.context,
                 };
+                logger.debug(`Sending email with options: ${JSON.stringify(mailOptions)}`);
                 try {
                     const info = await this._transporter.sendMail(mailOptions);
                     logger.info(`Email sent to ${to} with message ID: ${info.messageId}`);
