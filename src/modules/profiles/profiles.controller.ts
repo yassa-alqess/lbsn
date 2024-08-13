@@ -23,10 +23,10 @@ export default class ProfileController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
-        this.router.patch(`${this.path}/:profileId`, validate(updateProfileDto), this.updateProfile);
-        this.router.get(`${this.path}/:profileId`, this.getProfile);
-        this.router.delete(`${this.path}/:profileId`, this.deleteProfile);
+        this.router.all(`${this.path}*`, accessTokenGuard)
+        this.router.patch(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(updateProfileDto), this.updateProfile);
+        this.router.get(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getProfile);
+        this.router.delete(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteProfile);
     }
 
     public updateProfile = async (req: Request, res: Response, next: NextFunction) => {
