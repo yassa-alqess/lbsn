@@ -7,6 +7,7 @@ import { AlreadyExistsException, NotFoundException } from "../../shared/exceptio
 import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
 import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
 import sequelize from "../../config/database/connection";
+import ServicesService from "../services/services.service";
 
 // 3rd party dependencies
 import { Transaction } from "sequelize";
@@ -14,6 +15,7 @@ import { Transaction } from "sequelize";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
+    private _servicesService = new ServicesService();
     private _userProfilesService = new UserProfilesService();
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
@@ -21,6 +23,13 @@ export default class GuestRequestsService {
         if (guestRequest) {
             throw new Error(`Guest request already exists`);
         }
+
+        // Check if the service exists
+        const service = await Service.findOne({ where: { serviceId: requestId } });
+        if (!service) {
+            throw new NotFoundException("Service", "serviceId", requestId);
+        }
+
         try {
             const newGuestRequest = await GuestRequest.create({
                 guestId, serviceId: requestId, resolved: IsResolvedEnum.PENDING, marketingBudget
@@ -198,11 +207,10 @@ export default class GuestRequestsService {
             }
 
             try {
-
                 // Destroy guest-service record (mark record as approved) [soft delete]
                 await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
             } //eslint-disable-next-line
-            catch(err: any){
+            catch (err: any) {
                 logger.error(`error updating guest request state: ${err.message}`);
                 throw new Error(`error updating guest request state`);
             }
