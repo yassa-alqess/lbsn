@@ -8,15 +8,22 @@ import logger from "../../config/logger";
 
 // 3rd party dependencies
 import { Transaction } from "sequelize";
+import ServicesService from "../services/services.service";
 
 
 export default class UserProfilesService {
 
+    private _serviceService = new ServicesService();
     public async addUserProfile(profilePayload: IProfileAddPayload, txn?: Transaction): Promise<IProfileResponse> {
         // Check if the user exists
         const user = await User.findByPk(profilePayload.userId);
         if (!user) {
             throw new NotFoundException('User', 'userId', profilePayload.userId);
+        }
+
+        const service = await this._serviceService.getServiceByName(profilePayload.name);
+        if (!service) {
+            throw new NotFoundException('Service', 'name', profilePayload.name);
         }
 
         // Check if the profile with the given name already exists

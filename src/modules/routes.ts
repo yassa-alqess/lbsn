@@ -12,6 +12,7 @@ import GuestRequestsController from './guest-requests/guest-requests.controller'
 import ProfileController from './profiles/profiles.controller';
 import RolesController from './roles/roles.controller';
 import AuthController from './auth/auth.controller';
+import UserProfilesController from './user-profiles/user-profiles.controller';
 
 const restRouter = Router();
 restRouter.use('/', new AppointmentController().router);
@@ -24,6 +25,7 @@ restRouter.use('/', new TaskController().router);
 restRouter.use('/', new TicketController().router);
 restRouter.use('/', new TaskSubmissionController().router);
 restRouter.use('/', new ProfileController().router);
+restRouter.use('/', new UserProfilesController().router);
 restRouter.use('/', new RolesController().router);
 restRouter.use('/', new AuthController().router);
 // restRouter.use('/', new LeadsController().router);
