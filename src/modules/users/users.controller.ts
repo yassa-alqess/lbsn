@@ -7,7 +7,7 @@ import { RoleEnum } from '../../shared/enums';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import upload from '../../config/storage/multer.config';
 import { CreateUserDto, UpdateUserDto } from './users.dto';
-import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import { AlreadyExistsException, InternalServerException, InvalidIdException, NoFileUploadedException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
 
 
@@ -60,7 +60,7 @@ export default class UserController implements Controller {
     public bulkAddUsers = async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (!req.file) {
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'No file uploaded' });
+                return next(new NoFileUploadedException());
             }
 
             const users = this._userService.bulkAddUsers(req.file.path); // req.file.filename
@@ -93,7 +93,7 @@ export default class UserController implements Controller {
         } catch (error: any) {
             logger.error(`error at updateUser action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('User', userId));
+                return next(new InvalidIdException('userId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('User', 'email', req.body.email));
@@ -116,7 +116,7 @@ export default class UserController implements Controller {
         } catch (error: any) {
             logger.error(`error at getUser action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('User', userId));
+                return next(new InvalidIdException('userId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -150,7 +150,7 @@ export default class UserController implements Controller {
         } catch (error: any) {
             logger.error('error at deleteUser action', error);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('User', userId));
+                return next(new InvalidIdException('userId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
