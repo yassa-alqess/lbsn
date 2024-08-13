@@ -36,22 +36,44 @@ export default class EmailService {
 
     public sendEmail = async (options: IEmailOptions) => {
         // for each options.to craft email and send.
-        options.to.forEach(async (to) => {
+
+        /**
+         *  options.to.forEach((to) => {
             const mailOptions = {
                 from: MAIL_USER,
-                to: [...to],
+                to,
                 subject: options.subject,
                 template: options.template,
                 ctx: options.context,
             };
 
-            try {
-                await this._transporter.sendMail(mailOptions);
-                logger.info(`Email sent to ${to}`);
-                //eslint-disable-next-line
-            } catch (error: any) {
-                logger.error(`Error sending email to ${to} with error: ${error.message}`);
-            }
+            logger.debug(`Sending email with options: ${JSON.stringify(mailOptions)}`);
+            this._transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    logger.error(`Error sending email to ${mailOptions.to} with error: ${error.message}`);
+                } else {
+                    logger.info(`Email sent to ${mailOptions.to} with message ID: ${info.messageId}`);
+                }
+            });
         });
+        */
+        await Promise.all(
+            options.to.map(async (to) => {
+                const mailOptions = {
+                    from: MAIL_USER,
+                    to,
+                    subject: options.subject,
+                    template: options.template,
+                    ctx: options.context,
+                };
+                try {
+                    const info = await this._transporter.sendMail(mailOptions);
+                    logger.info(`Email sent to ${to} with message ID: ${info.messageId}`);
+                    //eslint-disable-next-line
+                } catch (error: any) {
+                    logger.error(`Error sending email to ${to}: ${error.message}`);
+                }
+            })
+        );
     };
 }
