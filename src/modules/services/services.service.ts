@@ -43,7 +43,7 @@ export default class ServicesService {
         }
 
     }
-    
+
     public async getService(serviceId: string): Promise<IServiceResponse | undefined> {
         const service = await Service.findByPk(serviceId);
         if (!service) {
@@ -76,5 +76,15 @@ export default class ServicesService {
             logger.error(`Error deleting service: ${error.message}`);
             throw new Error(`Error deleting service`);
         }
+    }
+
+    public async getServiceByName(serviceName: string): Promise<IServiceResponse | undefined> {
+        const service = await Service.findOne({ where: { name: serviceName } });
+        if (!service) {
+            throw new NotFoundException("Service", "name", serviceName);
+        }
+        return {
+            ...service.toJSON() as IServiceResponse,
+        };
     }
 }
