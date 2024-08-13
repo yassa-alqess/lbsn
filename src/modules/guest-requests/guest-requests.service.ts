@@ -37,12 +37,12 @@ export default class GuestRequestsService {
             }
 
             return {
-                guestRequestId: newGuestRequest.guestRequestId,
-                guestId: newGuestRequest.guestId,
-                requestId: newGuestRequest.serviceId,
-                name: newGuestRequest.service.name,
-                status: newGuestRequest.resolved as IsResolvedEnum,
-                marketingBudget: newGuestRequest.marketingBudget as MarketingBudgetEnum,
+                guestRequestId: guestRequestWithService.guestRequestId,
+                guestId: guestRequestWithService.guestId,
+                requestId: guestRequestWithService.serviceId,
+                name: guestRequestWithService.service.name,
+                status: guestRequestWithService.resolved as IsResolvedEnum,
+                marketingBudget: guestRequestWithService.marketingBudget as MarketingBudgetEnum
             }
         }
         //eslint-disable-next-line
@@ -59,14 +59,25 @@ export default class GuestRequestsService {
             throw new Error('Guest Request not found');
         }
         try {
-            const nweGestRequest = await guestRequest.update({ marketingBudget });
+            await guestRequest.update({ marketingBudget });
+
+            // Fetch the newly created guest request with the associated service
+            const guestRequestWithService = await GuestRequest.findOne({
+                where: { guestRequestId: guestRequest.guestRequestId },
+                include: [{ model: Service, as: 'service' }] // Include the service data
+            });
+
+            if (!guestRequestWithService || !guestRequestWithService.service) {
+                throw new Error("Service not found for the created guest request");
+            }
+
             return {
-                guestRequestId: nweGestRequest.guestRequestId,
-                guestId: nweGestRequest.guestId,
-                requestId: nweGestRequest.serviceId,
-                name: nweGestRequest.service.name,
-                status: nweGestRequest.resolved as IsResolvedEnum,
-                marketingBudget: nweGestRequest.marketingBudget as MarketingBudgetEnum
+                guestRequestId: guestRequestWithService.guestRequestId,
+                guestId: guestRequestWithService.guestId,
+                requestId: guestRequestWithService.serviceId,
+                name: guestRequestWithService.service.name,
+                status: guestRequestWithService.resolved as IsResolvedEnum,
+                marketingBudget: guestRequestWithService.marketingBudget as MarketingBudgetEnum
             }
             //eslint-disable-next-line
         } catch (error: any) {
@@ -109,7 +120,7 @@ export default class GuestRequestsService {
             throw new Error(`Error deleting guest request`);
         }
     }
-    
+
     public async getGuestRequest(guestId: string, requestId: string): Promise<IGuestRequest | undefined> {
         const guestRequest = await GuestRequest.findOne({
             where: { guestId, serviceId: requestId },
@@ -186,8 +197,15 @@ export default class GuestRequestsService {
                 }
             }
 
-            // Destroy guest-service record (mark record as approved) [soft delete]
-            await guestRequest.update({ resolved: true }, { transaction });
+            try {
+
+                // Destroy guest-service record (mark record as approved) [soft delete]
+                await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
+            } //eslint-disable-next-line
+            catch(err: any){
+                logger.error(`error updating guest request state: ${err.message}`);
+                throw new Error(`error updating guest request state`);
+            }
 
             await transaction.commit(); // Commit the transaction
 
