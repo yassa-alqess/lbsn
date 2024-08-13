@@ -1,3 +1,4 @@
+import { IEmailOptions } from "../../config/mailer/email.interface";
 import { IsApprovedEnum } from "../../shared/enums";
 
 export interface IGuestAddPayload {
@@ -31,4 +32,10 @@ export interface IGuestUpdatePayload {
 
 export interface IGuestsGetResponse {
     guests: IGuestResponse[]
+}
+
+export interface ApproveGuestResponse {
+    userId: string;
+    sendEmail: boolean;
+    emailPayload?: IEmailOptions;
 }

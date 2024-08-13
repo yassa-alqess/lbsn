@@ -8,15 +8,18 @@ import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
 import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
 import sequelize from "../../config/database/connection";
 import ServicesService from "../services/services.service";
+import { ApproveGuestResponse } from "../guests/guests.interface";
+import EmailService from "../../config/mailer";
+import { IEmailOptions } from "../../config/mailer/email.interface";
 
 // 3rd party dependencies
 import { Transaction } from "sequelize";
-
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
     private _servicesService = new ServicesService();
     private _userProfilesService = new UserProfilesService();
+    private _emailService = new EmailService();
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
@@ -163,22 +166,18 @@ export default class GuestRequestsService {
             // Update guest-service status
             await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
 
-            // Add guest to users table (if not already exist)
-            // Send email to the user with the username and password [delegated to approveGuest service]
-            // Get user id as it will be used later to add profile to the user at user-profiles table
-            let userId: string = "";
+            // Approve guest and return necessary data for email
+            let approvalResult: ApproveGuestResponse | null = null;
             try {
-                userId = await this._guestService.approveGuest(guestId, transaction);
+                approvalResult = await this._guestService.approveGuest(guestId, transaction);
+                logger.debug(`Guest approved: ${approvalResult?.sendEmail}`);
                 //eslint-disable-next-line
             } catch (err: any) {
                 if (err instanceof NotFoundException) {
-                    // Critical error, stop processing
                     throw new Error(err.message);
                 } else if (err instanceof AlreadyExistsException) {
-                    // Log and continue processing
                     logger.info(err.message);
                 } else {
-                    // Log and continue processing for other errors
                     logger.error(`Couldn't approve the guest: ${err.message}`);
                     throw new Error(`Couldn't approve the guest`);
                 }
@@ -190,39 +189,33 @@ export default class GuestRequestsService {
                 throw new NotFoundException("Service", "serviceId", requestId);
             }
 
-            // Create profile & add service/request data to profile (if not already exist) [call addUserProfile action from UserProfiles Service]
+            // Create profile & add service/request data to profile
             try {
-                await this._userProfilesService.addUserProfile({ userId, name: requestData.name }, transaction);
-
+                await this._userProfilesService.addUserProfile({ userId: approvalResult?.userId as string, name: requestData.name }, transaction);
                 //eslint-disable-next-line
             } catch (err: any) {
                 if (err instanceof AlreadyExistsException) {
-                    // Log and continue processing
                     logger.info(err.message);
                 } else {
-                    // Log and continue processing for other errors
                     logger.error(`Couldn't create a profile: ${err.message}`);
                     throw new Error(`Couldn't create a profile`);
                 }
             }
 
-            try {
-                // Destroy guest-service record (mark record as approved) [soft delete]
-                await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
-            } //eslint-disable-next-line
-            catch (err: any) {
-                logger.error(`error updating guest request state: ${err.message}`);
-                throw new Error(`error updating guest request state`);
-            }
-
             await transaction.commit(); // Commit the transaction
 
-            //eslint-disable-next-line
+            // Send the email after committing the transaction
+            if (approvalResult?.sendEmail) {
+                await this._emailService.sendEmail(approvalResult.emailPayload as IEmailOptions);
+            }
+
+            // eslint-disable-next-line
         } catch (error: any) {
-            await transaction.rollback(); // Rollback the transaction in case of error
+            await transaction.rollback();
             logger.error(`Error approving guest request: ${error.message}`);
             throw new Error(`Error approving guest request`);
         }
     }
+
 
 }

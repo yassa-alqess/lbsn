@@ -1,11 +1,10 @@
-import { IGuestAddPayload, IGuestResponse, IGuestsGetResponse, IGuestUpdatePayload } from "./guests.interface";
+import { ApproveGuestResponse, IGuestAddPayload, IGuestResponse, IGuestsGetResponse, IGuestUpdatePayload } from "./guests.interface";
 import { IUserAddPayload } from "../users/users.interface";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import { generateRandomPassword } from "../../shared/utils";
 import Guest from "../../shared/models/guest";
 import { IsApprovedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
 import UserService from "../users/users.service";
-import EmailService from "../../config/mailer";
 import Role from "../../shared/models/role";
 import User from "../../shared/models/user";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
@@ -18,7 +17,6 @@ import { Transaction } from "sequelize";
 
 export default class GuestService {
     private _userService = new UserService();
-    private _emailService = new EmailService();
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
         const guest = await Guest.findOne({ where: { email: guestPayload.email } });
         if (guest)
@@ -89,7 +87,7 @@ export default class GuestService {
         }
     }
 
-    public async approveGuest(guestId: string, txn?: Transaction): Promise<string> {
+    public async approveGuest(guestId: string, txn?: Transaction): Promise<ApproveGuestResponse> {
         const transaction = txn || await sequelize.transaction();
 
         try {
@@ -98,20 +96,21 @@ export default class GuestService {
                 throw new NotFoundException('Guest', 'guestId', guestId);
             }
 
+            let sendEmail = false;
+
             // Check if the guest is already approved
             if (guest.approved === IsApprovedEnum.APPROVED) {
                 try {
                     const existingUser = await this._userService.getUserByEmail(guest.email);
                     if (existingUser) {
                         logger.info('Guest already approved and user exists');
-                        return existingUser?.userId as string;
+                        return { userId: existingUser.userId, sendEmail: false };
                     }
-                } //eslint-disable-next-line
-                catch (error: any) {
+                    //eslint-disable-next-line
+                } catch (error: any) {
                     if (error instanceof NotFoundException) {
                         logger.info('Guest approved, but no corresponding user found, proceeding to create a new user');
-                    }
-                    else {
+                    } else {
                         logger.error(`Error getting user: ${error.message}`);
                         throw new Error(`Error Adding User`);
                     }
@@ -123,21 +122,19 @@ export default class GuestService {
                 const existingUser = await this._userService.getUserByEmail(email);
                 if (existingUser) {
                     logger.info('User already exists');
-                    // user exists but don't return and wait to approve the guest
+                    return { userId: existingUser.userId, sendEmail: false };
                 }
-
-            } //eslint-disable-next-line
-            catch (error: any) {
+                //eslint-disable-next-line
+            } catch (error: any) {
                 if (error instanceof NotFoundException) {
                     logger.info('User does not exist');
-                }
-                else {
+                } else {
                     logger.error(`Error getting user: ${error.message}`);
                     throw new Error(`Error Adding User`);
                 }
             }
 
-            // generate random password
+            // Generate random password
             const password = generateRandomPassword();
             const hashedPassword = bcrypt.hashSync(password, 10);
 
@@ -159,21 +156,20 @@ export default class GuestService {
 
             await newUser.$set('roles', [role as Role], { transaction });
 
-            // Send an email with login credentials
+            // Prepare the email payload to be sent later
+            sendEmail = true;
             const emailPayload: IEmailOptions = {
                 to: [email],
                 subject: 'Account approved',
                 template: 'approve-guest',
                 context: { email, password },
             };
-            await this._emailService.sendEmail(emailPayload);
 
             // Mark guest as approved
             await guest.update({ approved: IsApprovedEnum.APPROVED }, { transaction });
 
             await transaction.commit();
-            return newUser.userId;
-
+            return { userId: newUser.userId, sendEmail, emailPayload };
             //eslint-disable-next-line
         } catch (error: any) {
             await transaction.rollback();
@@ -181,6 +177,7 @@ export default class GuestService {
             throw new Error(`Error approving guest`);
         }
     }
+
 
     public async getGuestByEmail(email: string): Promise<IGuestResponse | undefined> {
         const guest = await Guest.findOne({ where: { email } });

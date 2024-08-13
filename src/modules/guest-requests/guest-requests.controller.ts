@@ -154,7 +154,7 @@ export default class GuestRequestsController implements Controller {
             next(new ParamRequiredException('Request', 'requestId'));
         }
         try {
-            await this._guestRequestsService.approveGuestRequest(guestId, requestId);
+            await this._guestRequestsService.approveGuestRequest(guestId, requestId); //not interested in the response
             res.status(StatusCodes.OK).end();
 
             //eslint-disable-next-line
