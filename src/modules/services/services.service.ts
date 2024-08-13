@@ -79,12 +79,26 @@ export default class ServicesService {
     }
 
     public async getServiceByName(serviceName: string): Promise<IServiceResponse | undefined> {
-        const service = await Service.findOne({ where: { name: serviceName } });
-        if (!service) {
-            throw new NotFoundException("Service", "name", serviceName);
+        try {
+            const service = await Service.findOne({ where: { name: serviceName } });
+
+            if (!service) {
+                throw new NotFoundException("Service", "name", serviceName);
+            }
+
+            return {
+                ...service.toJSON() as IServiceResponse,
+            };
+            
+            //eslint-disable-next-line
+        } catch (err: any) {
+            if (err instanceof NotFoundException) {
+                throw err; // Re-throw NotFoundException to be handled elsewhere
+            }
+
+            // Handle unexpected errors
+            throw new Error(`Couldn't find service with name ${serviceName}`);
         }
-        return {
-            ...service.toJSON() as IServiceResponse,
-        };
     }
+
 }
