@@ -6,7 +6,7 @@ import { Controller } from '../../shared/interfaces/controller.interface';
 import TaskService from './tasks.service';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import { RoleEnum, TaskStatusEnum } from '../../shared/enums';
-import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import { AlreadyExistsException, InternalServerException, InvalidEnumValueException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
 import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
 
@@ -30,7 +30,6 @@ export default class TaskController implements Controller {
         this.router.post(this.path, validate(CreateTaskDto), this.addTask);
         this.router.patch(`${this.path}/:taskId`, validate(UpdateTaskDto), this.updateTask);
         this.router.delete(`${this.path}/:taskId`, this.deleteTask);
-
     }
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
@@ -57,10 +56,14 @@ export default class TaskController implements Controller {
         if (!profileId) {
             return next(new ParamRequiredException('Task', 'profileId'));
         }
+        const { status } = req.query;
+        if (status && !Object.values(TaskStatusEnum).includes(status as TaskStatusEnum)) {
+            return next(new InvalidEnumValueException('TaskStatus'));
+        }
         try {
             const payload: ITasksGetPayload = {
                 profileId: profileId as string,
-                status: req.query.status ? req.query.status as TaskStatusEnum : undefined
+                status: status as TaskStatusEnum
             };
             const tasks = await this._taskService.getTasks(payload);
             res.status(StatusCodes.OK).json(tasks).end();

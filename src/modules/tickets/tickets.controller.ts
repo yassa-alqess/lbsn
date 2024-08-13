@@ -8,7 +8,7 @@ import TicketService from './tickets.service';
 import { RoleEnum, TicketStatusEnum } from '../../shared/enums';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import upload from '../../config/storage/multer.config'
-import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import { AlreadyExistsException, InternalServerException, InvalidEnumValueException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
 import { CreateTicketDto, UpdateTicketDto } from './tickets.dto';
 
@@ -63,11 +63,16 @@ export default class TicketController implements Controller {
         if (!profileId) {
             return next(new ParamRequiredException('Task', 'profileId'));
         }
+
+        const {status} = req.query;
+        if (status && !Object.values(TicketStatusEnum).includes(status as TicketStatusEnum)) {
+            return next(new InvalidEnumValueException('TicketStatus'));
+        }
         try {
 
             const payload: ITicketsGetPayload = {
                 profileId: profileId as string,
-                status: req.query.status ? req.query.status as TicketStatusEnum : undefined
+                status: status as TicketStatusEnum
             }
             const tickets = await this._ticketService.getTickets(payload);
             res.status(StatusCodes.OK).json(tickets).end();

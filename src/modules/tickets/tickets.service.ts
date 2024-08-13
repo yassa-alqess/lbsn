@@ -25,7 +25,7 @@ export default class TicketService {
         const tickets = await Ticket.findAll({
             where: {
                 profileId: payload.profileId,
-                status: payload.status
+                ...(payload.status && { status: payload.status }),
             }
         });
         return {

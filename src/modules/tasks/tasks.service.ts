@@ -13,13 +13,7 @@ export default class TaskService {
         try {
             const task = await Task.create({ ...taskPayload, status: TaskStatusEnum.PENDING });
             return {
-                taskId: task.taskId,
-                profileId: task.profile.profileId,
-                title: task.title,
-                comment: task.comment,
-                status: task.status,
-                createdAt: task.createdAt,
-                updatedAt: task.updatedAt
+               ...task.toJSON() as ITask
             };
         } //eslint-disable-next-line
         catch (err: any) {
@@ -32,18 +26,12 @@ export default class TaskService {
         const tasks = await Task.findAll({
             where: {
                 profileId: payload.profileId,
-                status: payload.status ? payload.status : undefined
+                ...(payload.status && { status: payload.status }),
             }
         });
         return {
             tasks: tasks.map(task => ({
-                taskId: task.taskId,
-                profileId: task.profile.profileId,
-                title: task.title,
-                comment: task.comment,
-                status: task.status,
-                createdAt: task.createdAt,
-                updatedAt: task.updatedAt
+               ...task.toJSON() as ITask
             }))
         };
     }
