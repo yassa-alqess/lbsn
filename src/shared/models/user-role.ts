@@ -8,7 +8,7 @@ import {
 import Role from './role';
 import User from './user';
 
-@Table({ schema: process.env.SCHEMA })
+@Table({ schema: 'public', timestamps: true })
 class UserRole extends Model {
     @Column({
         primaryKey: true,

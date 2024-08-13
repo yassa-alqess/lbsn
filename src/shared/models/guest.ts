@@ -9,7 +9,7 @@ import * as _ from "lodash";
 
 const approveStatueses: string[] = _.values(IsApprovedEnum);
 
-@Table({ schema: 'public', timestamps: false })
+@Table({ schema: 'public', timestamps: true })
 class Guest extends Model {
     @Column({
         primaryKey: true,

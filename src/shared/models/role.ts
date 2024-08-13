@@ -14,7 +14,8 @@ import { RoleEnum } from '../enums';
 //3rd party imports
 import * as _ from "lodash";
 const roles: string[] = _.values(RoleEnum);
-@Table({ schema: process.env.SCHEMA })
+
+@Table({ schema: 'public', timestamps: true })
 class Role extends Model {
     @Column({
         primaryKey: true,
