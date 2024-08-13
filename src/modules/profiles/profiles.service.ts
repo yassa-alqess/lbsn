@@ -2,14 +2,22 @@ import { IProfileResponse, IProfileUpdatePayload } from "./profiles.interface";
 import Profile from "../../shared/models/profile";
 import { NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
+import ServicesService from "../services/services.service";
 
 export default class ProfileService {
+    private _servicesService = new ServicesService();
     public async updateProfile(profilePayload: IProfileUpdatePayload): Promise<IProfileResponse | undefined> {
         const { profileId } = profilePayload;
         const profile = await Profile.findByPk(profileId);
         if (!profile) {
             throw new NotFoundException('Profile', 'profileId', profileId);
         }
+        
+        const service = await this._servicesService.getServiceByName(profilePayload.name as string);
+        if (!service) {
+            throw new NotFoundException('Serice', 'name', service!.name);
+        }
+
         try {
             await profile.update({ ...profilePayload });
             return {

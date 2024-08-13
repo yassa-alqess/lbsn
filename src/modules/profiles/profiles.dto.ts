@@ -1,5 +1,5 @@
 import Joi from 'joi';
 
 export const updateProfileDto = Joi.object({
-  name: Joi.string().optional(),
+  name: Joi.string().required(),
 });
