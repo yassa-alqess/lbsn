@@ -34,7 +34,6 @@ export const SERVICES_PATH = "/services"
 export const PROFILES_PATH = "/profiles"
 export const TIME_SLOTS_PATH = "/time-slots"
 export const ROLES_PATH = "/roles"
-// export const GUEST_SERVICES_PATH = "/guest-services"
 
 
 export const DOMAIN = process.env.DOMAIN || "localhost"

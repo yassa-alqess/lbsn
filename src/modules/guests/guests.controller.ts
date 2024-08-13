@@ -23,14 +23,15 @@ export default class GuestController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, validate(CreateGuestDto), this.addGuest);
         this.router.patch(`${this.path}/:guestId`, validate(UpdateGuestDto), this.updateGuest);
         this.router.get(`${this.path}/:guestId`, this.getGuest);
         this.router.get(this.path, this.getGuests);
         this.router.delete(`${this.path}/:guestId`, this.deleteGuest);
-        this.router.post(`${this.path}/:guestId/approve`, this.approveGuest);
+        this.router.get(`${this.path}/:guestId/approve`, this.approveGuest);
     }
+
     public addGuest = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const guestAddPayload: IGuestAddPayload = req.body;

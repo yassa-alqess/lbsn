@@ -24,7 +24,7 @@ export default class UserProfilesController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.use(accessTokenGuard);
+        this.router.all(`${this.path}*`, accessTokenGuard);
         this.router.get(`${this.path}`, this.getUserProfiles);
         
         this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));

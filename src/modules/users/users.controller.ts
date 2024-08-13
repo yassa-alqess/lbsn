@@ -26,7 +26,7 @@ export default class UserController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, upload(`${this.path}/images`)!.single("file"), validate(CreateUserDto), this.addUser);
         this.router.post(`${this.path}/bulk`, upload(this.path)!.single("file"), this.bulkAddUsers);
         this.router.patch(`${this.path}/:userId`, upload(`${this.path}/images`)!.single("file"), validate(UpdateUserDto), this.updateUser);

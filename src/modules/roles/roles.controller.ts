@@ -23,7 +23,7 @@ export default class RolesController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, validate(CreateRoleDto), this.addRole);
         this.router.patch(`${this.path}/:roleId`, validate(UpdateRoleDto), this.updateRole);
         this.router.get(`${this.path}/:roleId`, this.getRole);

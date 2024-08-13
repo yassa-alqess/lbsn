@@ -25,7 +25,7 @@ export default class TaskSubmissionController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard);
+        this.router.all(`${this.path}*`, accessTokenGuard);
         this.router.post(`${this.path}/:taskId/submission`, upload(this.path)!.single("file"),
             validate(CreateTaskSubmissionDto), this.addTaskSubmission);
         this.router.patch(`${this.path}/:taskId/submission/`, upload(this.path)!.single("file"),

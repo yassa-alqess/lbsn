@@ -27,7 +27,7 @@ export default class TimeSlotsController implements Controller {
         this.router.get(`${this.path}/:timeSlotId`, this.getTimeSlot);
         this.router.get(`${this.path}`, this.getTimeSlots);
 
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
         this.router.post(this.path, validate(CreateTimeSlotDto), this.addTimeSlot);
         this.router.patch(`${this.path}/:timeSlotId`, validate(UpdateTimeSlotDto), this.updateTimeSlot);
         this.router.delete(`${this.path}/:timeSlotId`, this.deleteTimeSlot);

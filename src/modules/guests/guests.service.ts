@@ -53,6 +53,7 @@ export default class GuestService {
         }
 
     }
+    
     public async getGuest(guestId: string): Promise<IGuestResponse | undefined> {
         const guest = await Guest.findByPk(guestId);
         if (!guest)

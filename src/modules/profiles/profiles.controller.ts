@@ -23,7 +23,7 @@ export default class ProfileController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.patch(`${this.path}/:profileId`, validate(updateProfileDto), this.updateProfile);
         this.router.get(`${this.path}/:profileId`, this.getProfile);
         this.router.delete(`${this.path}/:profileId`, this.deleteProfile);

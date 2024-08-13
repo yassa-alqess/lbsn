@@ -26,7 +26,7 @@ export default class TaskController implements Controller {
         this.router.get(`${this.path}`, accessTokenGuard, this.getTasks);
         this.router.get(`${this.path}/:taskId`, accessTokenGuard, this.getTask);
 
-        this.router.all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, validate(CreateTaskDto), this.addTask);
         this.router.patch(`${this.path}/:taskId`, validate(UpdateTaskDto), this.updateTask);
         this.router.delete(`${this.path}/:taskId`, this.deleteTask);

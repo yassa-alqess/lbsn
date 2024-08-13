@@ -25,7 +25,7 @@ export default class TicketController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}/*`, accessTokenGuard)
+        this.router.all(`${this.path}*`, accessTokenGuard)
         this.router.post(this.path, upload(this.path)!.single("file"), validate(CreateTicketDto), this.addTicket);
         this.router.get(`${this.path}`, this.getTickets);
         this.router.get(`${this.path}/:ticketId`, this.getTicket);

@@ -27,7 +27,7 @@ export default class ServiceController implements Controller {
         this.router.get(this.path, this.getServices);
 
         this.router
-            .all(`${this.path}/*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+            .all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, validate(CreateServiceDto), this.addService);
         this.router.patch(`${this.path}/:serviceId`, validate(UpdateServiceDto), this.updateService);
         this.router.delete(`${this.path}/:serviceId`, this.deleteService);
