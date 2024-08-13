@@ -83,7 +83,7 @@ export default class TaskController implements Controller {
         } catch (error: any) {
             logger.error(`error at GetTask action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Task', taskId));
+                return next(new InvalidIdException('taskId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -107,7 +107,7 @@ export default class TaskController implements Controller {
         } catch (error: any) {
             logger.error(`error at UpdateTask action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Task', taskId));
+                return next(new InvalidIdException('taskId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.time.toString()));
@@ -129,7 +129,7 @@ export default class TaskController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Task', taskId));
+                return next(new InvalidIdException('taskId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

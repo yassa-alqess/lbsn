@@ -55,7 +55,7 @@ export default class TaskSubmissionController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Task', taskId));
+                return next(new InvalidIdException('taskId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task Submission', 'taskISubmissionId', taskSubmission!.taskSubmissionId));
@@ -88,7 +88,7 @@ export default class TaskSubmissionController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid taskId" });
+                return next(new InvalidIdException('taskId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task Submission', 'taskISubmissionId', taskSubmission!.taskSubmissionId));
@@ -116,7 +116,7 @@ export default class TaskSubmissionController implements Controller {
         } //eslint-disable-next-line
         catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                next(new InvalidIdException('Task', taskId));
+                next(new InvalidIdException('taskId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -135,7 +135,7 @@ export default class TaskSubmissionController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Task', taskId));
+                return next(new InvalidIdException('taskId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -154,7 +154,7 @@ export default class TaskSubmissionController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Task', taskId));
+                return next(new InvalidIdException('taskId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

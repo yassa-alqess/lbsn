@@ -26,7 +26,7 @@ export default class UserProfilesController implements Controller {
     private _initializeRoutes() {
         this.router.all(`${this.path}*`, accessTokenGuard);
         this.router.get(`${this.path}`, this.getUserProfiles);
-        
+
         this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
         this.router.post(`${this.path}`, validate(createProfileDto), this.addUserProfile);
     }
@@ -45,7 +45,7 @@ export default class UserProfilesController implements Controller {
         } catch (error: any) {
             logger.error(`error at addUserProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('User', userId));
+                return next(new InvalidIdException('userId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Profile', 'name', req.body.name));
@@ -67,7 +67,7 @@ export default class UserProfilesController implements Controller {
         } catch (error: any) {
             logger.error(`error at getUserProfiles action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('User', userId));
+                return next(new InvalidIdException('userId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

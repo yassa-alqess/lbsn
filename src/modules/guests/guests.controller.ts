@@ -66,7 +66,7 @@ export default class GuestController implements Controller {
         } catch (error: any) {
             logger.error(`error at updateGuest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Guest', guestId));
+                return next(new InvalidIdException('guestId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Guest', 'email', req.body.email));
@@ -90,7 +90,7 @@ export default class GuestController implements Controller {
         } catch (error: any) {
             logger.error(`error at getGuest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Guest', guestId));
+                return next(new InvalidIdException('guestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -122,7 +122,7 @@ export default class GuestController implements Controller {
         } catch (error: any) {
             logger.error(`error at deleteGuest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Guest', guestId));
+                return next(new InvalidIdException('guestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -142,7 +142,7 @@ export default class GuestController implements Controller {
         } catch (error: any) {
             logger.error(`error at approveGuest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Guest', guestId));
+                return next(new InvalidIdException('guestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

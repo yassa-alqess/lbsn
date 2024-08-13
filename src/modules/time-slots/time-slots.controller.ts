@@ -67,7 +67,7 @@ export default class TimeSlotsController implements Controller {
         } catch (error: any) {
             logger.error(`error at UpdateTimeSlot action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('TimeSlot', timeSlotId));
+                return next(new InvalidIdException('timeSlotId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('TimeSlot', 'time', req.body.time.toString()));
@@ -90,7 +90,7 @@ export default class TimeSlotsController implements Controller {
         } catch (error: any) {
             logger.error(`error at GetTimeSlot action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('TimeSlot', timeSlotId));
+                return next(new InvalidIdException('timeSlotId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -127,7 +127,7 @@ export default class TimeSlotsController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('TimeSlot', timeSlotId));
+                return next(new InvalidIdException('timeSlotId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

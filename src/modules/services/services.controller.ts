@@ -67,7 +67,7 @@ export default class ServiceController implements Controller {
         } catch (error: any) {
             logger.error(`error at UpdateService action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Service', serviceId));
+                return next(new InvalidIdException('serviceId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Service', 'name', req.body.name));
@@ -92,7 +92,7 @@ export default class ServiceController implements Controller {
         } catch (error: any) {
             logger.error(`error at GetService action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Service', serviceId));
+                return next(new InvalidIdException('serviceId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -125,7 +125,7 @@ export default class ServiceController implements Controller {
         } catch (error: any) {
             logger.error(`error at DeleteService action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid serviceId' });
+                return next(new InvalidIdException('serviceId'));
             }
             if (error instanceof NotFoundException) {
                 return next(new NotFoundException('Service', 'serviceId', serviceId));

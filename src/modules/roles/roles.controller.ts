@@ -65,7 +65,7 @@ export default class RolesController implements Controller {
         } catch (error: any) {
             logger.error(`error at UpdateRole action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Role', roleId));
+                return next(new InvalidIdException('roleId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Role', 'name', req.body.name.toString()));
@@ -88,7 +88,7 @@ export default class RolesController implements Controller {
         } catch (error: any) {
             logger.error(`error at GetRole action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Role', roleId));
+                return next(new InvalidIdException('roleId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -119,7 +119,7 @@ export default class RolesController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Role', roleId));
+                return next(new InvalidIdException('roleId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

@@ -52,6 +52,9 @@ export default class GuestRequestsController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at addGuestRequest action ${error}`);
+            if (error?.original?.code === INVALID_UUID) { //invalid input syntax for type uuid
+                return next(new InvalidIdException('guestId or requestId'));
+            }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Guest Request', 'requestId', requestId));
             }
@@ -83,7 +86,7 @@ export default class GuestRequestsController implements Controller {
         } catch (error: any) {
             logger.error(`error at updateGuestRequest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('guestId', guestId));
+                return next(new InvalidIdException('guestId or requestId'));
             }
             if (error instanceof NotFoundException || error instanceof AlreadyExistsException) {
                 return next(error);
@@ -108,7 +111,7 @@ export default class GuestRequestsController implements Controller {
                 return next(new NotFoundException('Guest', 'guestId', guestId));
             }
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('guestId', guestId));
+                return next(new InvalidIdException('guestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -133,7 +136,7 @@ export default class GuestRequestsController implements Controller {
         } catch (error: any) {
             logger.error(`error at deleteGuestRequest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid guest id or request id' });
+                return next(new InvalidIdException('guestId or requestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -158,7 +161,7 @@ export default class GuestRequestsController implements Controller {
         } catch (error: any) {
             logger.error(`error at approveGuestRequest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid guest id or request id' });
+                return next(new InvalidIdException('guestId or requestId'));
             }
             if (error instanceof NotFoundException) {
                 next(error);
@@ -183,7 +186,7 @@ export default class GuestRequestsController implements Controller {
         } catch (error: any) {
             logger.error(`error at getGuestRequest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: 'Invalid guest id or request id' });
+                return next(new InvalidIdException('guestId or requestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

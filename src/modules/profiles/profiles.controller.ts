@@ -46,7 +46,7 @@ export default class ProfileController implements Controller {
         } catch (error: any) {
             logger.error(`error at updateProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Profile', profileId));
+                return next(new InvalidIdException('profileId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Profile', 'name', req.body.name));
@@ -71,7 +71,7 @@ export default class ProfileController implements Controller {
         } catch (error: any) {
             logger.error(`error at getProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Profile', profileId));
+                return next(new InvalidIdException('profileId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -93,7 +93,7 @@ export default class ProfileController implements Controller {
         } catch (error: any) {
             logger.error(`error at deleteProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Profile', profileId));
+                return next(new InvalidIdException('profileId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

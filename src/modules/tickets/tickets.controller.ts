@@ -93,7 +93,7 @@ export default class TicketController implements Controller {
                 return next(error);
             }
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Ticket', ticketId));
+                return next(new InvalidIdException('ticketId'));
             }
             next(new InternalServerException(error.message));
         }
@@ -110,7 +110,7 @@ export default class TicketController implements Controller {
         } catch (error: any) {
             logger.error('error at getTicket action', error);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Ticket', ticketId));
+                return next(new InvalidIdException('ticketId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -134,7 +134,7 @@ export default class TicketController implements Controller {
         } catch (error: any) {
             logger.error('error at updateTicket action', error);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Ticket', ticketId));
+                return next(new InvalidIdException('ticketId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Ticket', 'title', req.body.time.toString()));
@@ -157,7 +157,7 @@ export default class TicketController implements Controller {
         } catch (error: any) {
             logger.error('error at deleteTicket action', error);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('Ticket', ticketId));
+                return next(new InvalidIdException('ticketId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
