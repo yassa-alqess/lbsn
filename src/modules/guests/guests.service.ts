@@ -168,16 +168,15 @@ export default class GuestService {
             // Mark guest as approved
             await guest.update({ approved: IsApprovedEnum.APPROVED }, { transaction });
 
-            await transaction.commit();
+            if (!txn) await transaction.commit();
             return { userId: newUser.userId, sendEmail, emailPayload };
             //eslint-disable-next-line
         } catch (error: any) {
-            await transaction.rollback();
+            if (!txn) await transaction.rollback();
             logger.error(`Error approving guest: ${error.message}`);
             throw new Error(`Error approving guest`);
         }
     }
-
 
     public async getGuestByEmail(email: string): Promise<IGuestResponse | undefined> {
         const guest = await Guest.findOne({ where: { email } });

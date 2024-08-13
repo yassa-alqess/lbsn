@@ -170,7 +170,6 @@ export default class GuestRequestsService {
             let approvalResult: ApproveGuestResponse | null = null;
             try {
                 approvalResult = await this._guestService.approveGuest(guestId, transaction);
-                logger.debug(`Guest approved: ${approvalResult?.sendEmail}`);
                 //eslint-disable-next-line
             } catch (err: any) {
                 if (err instanceof NotFoundException) {
@@ -205,13 +204,15 @@ export default class GuestRequestsService {
             await transaction.commit(); // Commit the transaction
 
             // Send the email after committing the transaction
-            if (approvalResult?.sendEmail) {
-                await this._emailService.sendEmail(approvalResult.emailPayload as IEmailOptions);
+            if (approvalResult?.sendEmail == true) {
+                await this._emailService.sendEmail(approvalResult?.emailPayload as IEmailOptions);
             }
 
             // eslint-disable-next-line
         } catch (error: any) {
-            await transaction.rollback();
+            if (!txn) {
+                await transaction.rollback(); // Rollback the transaction only if it wasn't provided
+            }
             logger.error(`Error approving guest request: ${error.message}`);
             throw new Error(`Error approving guest request`);
         }

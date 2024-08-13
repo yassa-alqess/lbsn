@@ -15,8 +15,10 @@ export default class UserProfilesService {
 
     private _serviceService = new ServicesService();
     public async addUserProfile(profilePayload: IProfileAddPayload, txn?: Transaction): Promise<IProfileResponse> {
+        const transaction = txn || await sequelize.transaction(); // start a new transaction 
+
         // Check if the user exists
-        const user = await User.findByPk(profilePayload.userId);
+        const user = await User.findByPk(profilePayload.userId, { transaction });
         if (!user) {
             throw new NotFoundException('User', 'userId', profilePayload.userId);
         }
@@ -27,12 +29,10 @@ export default class UserProfilesService {
         }
 
         // Check if the profile with the given name already exists
-        const profile = await Profile.findOne({ where: { name: profilePayload.name } });
+        const profile = await Profile.findOne({ where: { name: profilePayload.name }, transaction });
         if (profile) {
             throw new AlreadyExistsException('Profile', 'name', profilePayload.name);
         }
-
-        const transaction = txn || await sequelize.transaction(); // start a new transaction 
 
         try {
             // Create the new profile
@@ -42,7 +42,7 @@ export default class UserProfilesService {
             await user.$add('profile', newProfile, { transaction });
 
             // Commit the transaction
-            await transaction.commit();
+            if (!txn) await transaction.commit();
 
             return {
                 profileId: newProfile.profileId,
@@ -50,7 +50,7 @@ export default class UserProfilesService {
             };
             //eslint-disable-next-line
         } catch (error: any) {
-            await transaction.rollback(); // Rollback the transaction in case of error
+            if (!txn) await transaction.rollback(); // Rollback the transaction in case of error
             logger.error(`Error adding profile: ${error.message}`);
             throw new Error(`Error adding profile`);
         }
