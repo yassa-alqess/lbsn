@@ -87,7 +87,7 @@ export default class UserService {
         }
     }
 
-    public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse> {
+    public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
         const { userId, roles: newRoles, email, taxId, password } = userPayload;
         const user = await User.findByPk(userId, {
             include: [{ model: Role, as: 'roles' }],
@@ -177,7 +177,7 @@ export default class UserService {
         }
     }
 
-    public async bulkAddUsers(filePath: string): Promise<IUserBulkAddResponse> {
+    public async bulkAddUsers(filePath: string): Promise<IUserBulkAddResponse | undefined> {
 
         let data;
         try {
@@ -325,7 +325,7 @@ export default class UserService {
         };
     }
 
-    public async getUsers(): Promise<IUsersGetResponse> {
+    public async getUsers(): Promise<IUsersGetResponse | undefined> {
         const users = await User.findAll({
             include: [{ model: Role, as: 'roles' }], // Include roles
         });
@@ -345,7 +345,6 @@ export default class UserService {
             })),
         };
     }
-
 
     public async deleteUser(userId: string): Promise<void> {
         const user = await User.findByPk(userId, {

@@ -23,7 +23,7 @@ export default class ServicesService {
 
     }
 
-    public async updateService(servicePayload: IServiceUpdatePayload): Promise<IServiceResponse> {
+    public async updateService(servicePayload: IServiceUpdatePayload): Promise<IServiceResponse | undefined> {
         const { serviceId } = servicePayload;
         const service = await Service.findByPk(serviceId);
         if (!service) {
@@ -32,7 +32,7 @@ export default class ServicesService {
         try {
             await service.update({ ...servicePayload });
             return {
-                ...service.toJSON(),
+                ...service.toJSON() as IServiceResponse,
             };
         }
 
@@ -43,6 +43,7 @@ export default class ServicesService {
         }
 
     }
+    
     public async getService(serviceId: string): Promise<IServiceResponse | undefined> {
         const service = await Service.findByPk(serviceId);
         if (!service) {

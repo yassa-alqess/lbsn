@@ -4,7 +4,7 @@ import { NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
 
 export default class ProfileService {
-    public async updateProfile(profilePayload: IProfileUpdatePayload): Promise<IProfileResponse> {
+    public async updateProfile(profilePayload: IProfileUpdatePayload): Promise<IProfileResponse | undefined> {
         const { profileId } = profilePayload;
         const profile = await Profile.findByPk(profileId);
         if (!profile) {
@@ -22,6 +22,7 @@ export default class ProfileService {
             throw new Error(`Error updating profile`);
         }
     }
+
     public async getProfile(profileId: string): Promise<IProfileResponse | undefined> {
         const profile = await Profile.findByPk(profileId);
         if (!profile) {

@@ -62,7 +62,7 @@ export default class TicketService {
         };
     }
 
-    public async updateTicket(ticketPayload: ITicketsUpdatePayload): Promise<ITicket> {
+    public async updateTicket(ticketPayload: ITicketsUpdatePayload): Promise<ITicket | undefined> {
         const { ticketId } = ticketPayload;
         const ticket = await Ticket.findByPk(ticketId);
         if (!ticket) {

@@ -40,7 +40,8 @@ export default class TaskSubmissionService {
             throw new Error('Error adding task submission');
         }
     }
-    public async updateTaskSubmission(taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload): Promise<ITaskSubmission> {
+
+    public async updateTaskSubmission(taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload): Promise<ITaskSubmission | undefined> {
         const taskSubmission = await TaskSubmission.findOne({ where: { taskId: taskSubmissionUpdatePayload.taskId } });
         if (!taskSubmission) {
             throw new NotFoundException('Task Submission', 'taskId', taskSubmissionUpdatePayload.taskId);
@@ -54,6 +55,7 @@ export default class TaskSubmissionService {
             ...taskSubmission.toJSON() as ITaskSubmission
         };
     }
+    
     public async getTaskSubmissionByTaskId(taskSubmissionGetByTaskIdPayload: ItaskSubmissionGetByTaskIdPayload): Promise<ItaskSubmissionGetByTaskIdResponse | undefined> {
         const taskSubmission = await TaskSubmission.findOne({
             where: {
@@ -96,7 +98,6 @@ export default class TaskSubmissionService {
             throw new Error('Error deleting task submission');
         }
     }
-
 
     public async approveTaskSubmission(taskId: string): Promise<void> {
         const taskSubmission = await TaskSubmission.findOne({ where: { taskId } });

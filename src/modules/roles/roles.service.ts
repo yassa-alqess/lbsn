@@ -21,7 +21,7 @@ export default class RoleService {
         }
     }
 
-    public async updateRole(rolePayload: IRoleUpdatePayload): Promise<IRoleResponse> {
+    public async updateRole(rolePayload: IRoleUpdatePayload): Promise<IRoleResponse | undefined> {
         const { roleId } = rolePayload;
         const role = await Role.findByPk(roleId);
         if (!role) {
@@ -40,6 +40,7 @@ export default class RoleService {
         }
 
     }
+    
     public async getRole(roleId: string): Promise<IRoleResponse | undefined> {
         const role = await Role.findByPk(roleId);
         if (!role) {

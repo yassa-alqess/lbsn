@@ -64,7 +64,7 @@ export default class GuestService {
         };
     }
 
-    public async getGuests(): Promise<IGuestsGetResponse> {
+    public async getGuests(): Promise<IGuestsGetResponse | undefined> {
         const guests = await Guest.findAll();
         return {
             guests:
@@ -182,7 +182,7 @@ export default class GuestService {
         }
     }
 
-    public async getGuestByEmail(email: string): Promise<IGuestResponse> {
+    public async getGuestByEmail(email: string): Promise<IGuestResponse | undefined> {
         const guest = await Guest.findOne({ where: { email } });
         if (!guest) {
             throw new NotFoundException('Guest', 'email', email);

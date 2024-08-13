@@ -22,7 +22,7 @@ export default class TimeSlotService {
         }
     }
 
-    public async updateTimeSlot(timeSlotPayload: ITimeSlotUpdatePayload): Promise<ITimeSlotResponse> {
+    public async updateTimeSlot(timeSlotPayload: ITimeSlotUpdatePayload): Promise<ITimeSlotResponse | undefined> {
         const { timeSlotId } = timeSlotPayload;
         const timeSlot = await TimeSlot.findByPk(timeSlotId);
         if (!timeSlot) {
@@ -41,6 +41,7 @@ export default class TimeSlotService {
         }
 
     }
+
     public async getTimeSlot(timeSlotId: string): Promise<ITimeSlotResponse | undefined> {
         const timeSlot = await TimeSlot.findByPk(timeSlotId);
         if (!timeSlot) {

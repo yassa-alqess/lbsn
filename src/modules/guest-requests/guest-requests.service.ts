@@ -52,21 +52,29 @@ export default class GuestRequestsService {
         }
     }
 
-    public async updateGuestRequest(guestRequestPayload: IGuestRequestUpdatePayload): Promise<void> {
+    public async updateGuestRequest(guestRequestPayload: IGuestRequestUpdatePayload): Promise<IGuestRequest | undefined> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
         if (!guestRequest) {
             throw new Error('Guest Request not found');
         }
         try {
-            await guestRequest.update({ marketingBudget });
+            const nweGestRequest = await guestRequest.update({ marketingBudget });
+            return {
+                guestRequestId: nweGestRequest.guestRequestId,
+                guestId: nweGestRequest.guestId,
+                requestId: nweGestRequest.serviceId,
+                name: nweGestRequest.service.name,
+                status: nweGestRequest.resolved as IsResolvedEnum,
+                marketingBudget: nweGestRequest.marketingBudget as MarketingBudgetEnum
+            }
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating guest request: ${error.message}`);
             throw new Error(`Error updating guest request`);
         }
     }
-    
+
     public async getGuestRequests(guestId: string): Promise<IgetGuestRequestsResponse | undefined> {
         const guestRequests = await GuestRequest.findAll({
             where: { guestId },
@@ -87,6 +95,7 @@ export default class GuestRequestsService {
 
         return { gestRequests: guestRequestsResponse };
     }
+
     public async deleteGuestRequest(guestId: string, requestId: string): Promise<void> {
         const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
         if (!guestRequest) {
@@ -100,6 +109,7 @@ export default class GuestRequestsService {
             throw new Error(`Error deleting guest request`);
         }
     }
+    
     public async getGuestRequest(guestId: string, requestId: string): Promise<IGuestRequest | undefined> {
         const guestRequest = await GuestRequest.findOne({
             where: { guestId, serviceId: requestId },

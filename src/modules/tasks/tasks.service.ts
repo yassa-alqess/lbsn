@@ -48,7 +48,7 @@ export default class TaskService {
         };
     }
 
-    public async updateTask(taskPayload: ITaskUpdatePayload): Promise<ITask> {
+    public async updateTask(taskPayload: ITaskUpdatePayload): Promise<ITask | undefined> {
         const { taskId } = taskPayload;
         const task = await Task.findByPk(taskId);
         if (!task) {
@@ -67,6 +67,7 @@ export default class TaskService {
         }
 
     }
+
     public async getTask(taskId: string): Promise<ITask | undefined> {
         const task = await Task.findByPk(taskId);
         if (!task) {
