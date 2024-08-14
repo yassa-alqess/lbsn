@@ -96,18 +96,18 @@ export default class AppointmentService {
             logger.error(`Couldn't Create A Meeting, ${err.message}`);
             throw new Error(`Couldn't Create A Meeting`);
         }
-        
+
         // add to apppointment table the url
         try {
-            
+
             await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId });
             //eslint-disable-next-line
         } catch (err: any) {
-            
+
             logger.error(`Couldn't Create An Appointment, ${err.message}`);
             throw new Error(`Couldn't Create An Appointment`);
         }
-        
+
         // get formated (user-readable) Date
         // send email to the user
         // send email to the admin  sales@domain.com
@@ -121,11 +121,11 @@ export default class AppointmentService {
             hour12: true // Use 12-hour time format
         });
         const emailPayload: IEmailOptions = {
-            to: [guest!.email, MAIN_MAIL, ACQUISITION_MAIL],
+            to: guest!.email,
+            cc: [MAIN_MAIL, ACQUISITION_MAIL], // Optional CC recipients
             template: "appointment",
             subject: 'Appointment Confirmation',
             context: {
-                // name: appointmentPayload.name,
                 joinUrl: meeting.join_url,
                 meetingPassword,
                 meetingTime: formatedDate,

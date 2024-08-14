@@ -159,7 +159,7 @@ export default class GuestService {
             // Prepare the email payload to be sent later
             sendEmail = true;
             const emailPayload: IEmailOptions = {
-                to: [email],
+                to: email,
                 subject: 'Account approved',
                 template: 'approve-guest',
                 context: { email, password },
