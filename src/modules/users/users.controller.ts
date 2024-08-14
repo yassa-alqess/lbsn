@@ -1,14 +1,20 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, USERS_PATH } from '../../shared/constants';
 import { IUserAddPayload, IUserUpdatePayload } from './users.interface';
-import Controller from '../../shared/interfaces/controller.interface';
+import { Controller } from '../../shared/interfaces/controller.interface';
 import UserService from './users.service';
 import { RoleEnum } from '../../shared/enums';
-import { accessTokenGuard, requireAnyOfThoseRoles } from '../../shared/middlewares';
+import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import upload from '../../config/storage/multer.config';
+import { CreateUserDto, UpdateUserDto } from './users.dto';
+import { AlreadyExistsException, InternalServerException, InvalidIdException, NoFileUploadedException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import logger from '../../config/logger';
+
 
 // 3rd party dependencies
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
+
 
 export default class UserController implements Controller {
 
@@ -20,106 +26,136 @@ export default class UserController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.use(accessTokenGuard);
-        this.router.use(requireAnyOfThoseRoles([RoleEnum.SUPER_ADMIN]));
-        this.router.post(this.path, this.addUser);
-        this.router.post(`${this.path}/bulk`, this.bulkAddUsers);
-        this.router.patch(`${this.path}/:id`, this.updateUser);
-        this.router.get(`${this.path}/:id`, this.getUser);
+        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.post(this.path, upload(`${this.path}/images`)!.single("file"), validate(CreateUserDto), this.addUser);
+        this.router.post(`${this.path}/bulk`, upload(this.path)!.single("file"), this.bulkAddUsers);
+        this.router.patch(`${this.path}/:userId`, upload(`${this.path}/images`)!.single("file"), validate(UpdateUserDto), this.updateUser);
+        this.router.get(`${this.path}/:userId`, this.getUser);
         this.router.get(this.path, this.getUsers);
-        this.router.delete(`${this.path}/:id`, this.deleteUser);
+        this.router.delete(`${this.path}/:userId`, this.deleteUser);
     }
 
-    public addUser = async (req: Request, res: Response) => {
+    public addUser = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userAddPayload: IUserAddPayload = req.body;
+            const path = req.file ? req.file.filename : '';
+            logger.debug(`req.file.filename: ${JSON.stringify(req.file?.filename)}`);
+            const userAddPayload: IUserAddPayload = {
+                ...req.body,
+                image: path
+            };
             const user = await this._userService.addUser(userAddPayload);
-            res.status(StatusCodes.CREATED).json(user);
+            res.status(StatusCodes.CREATED).json(user).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at AddUser action ${error}`);
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'User already exists' });
+                return next(new AlreadyExistsException('User', 'email', req.body.email));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-            // next(error);
+            next(new InternalServerException(error.message));
         }
     }
 
     // get xlsx sheet and get all the users from it and add them to the database (all required feilds should be present in the sheet)
-    public bulkAddUsers = async (req: Request, res: Response) => {
+    public bulkAddUsers = async (req: Request, res: Response, next: NextFunction) => {
         try {
             if (!req.file) {
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'No file uploaded' });
-            }
-            const { role } = req.body;
-            if (!role) {
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Role is required' });
+                return next(new NoFileUploadedException());
             }
 
-            const users = this._userService.bulkAddUsers(req.file.path, role); // req.file.filename
-            res.status(StatusCodes.CREATED).json(users);
+            const users = this._userService.bulkAddUsers(req.file.path); // req.file.filename
+            res.status(StatusCodes.CREATED).json(users).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at bulkAddUsers action ${error}`);
+            next(new InternalServerException(error.message));
         }
     }
 
-    public updateUser = async (req: Request, res: Response) => {
+    public updateUser = async (req: Request, res: Response, next: NextFunction) => {
+        const { userId } = req.params;
+        if (!userId) {
+            return next(new ParamRequiredException('user', 'userId'));
+        }
         try {
-            const { id } = req.params;
+            const path = req.file ? req.file.filename : '';
             const userUpdatePayload: IUserUpdatePayload = {
                 ...req.body,
-                userId: id
+                userId,
+                image: path
             }
+            logger.debug(`req.file.filename: ${JSON.stringify(req.file)}`);
             const user = await this._userService.updateUser(userUpdatePayload);
-            res.status(StatusCodes.OK).json(user);
+            res.status(StatusCodes.OK).json(user).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at updateUser action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid userId' });
+                return next(new InvalidIdException('userId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'User already exists' });
+                return next(new AlreadyExistsException('User', 'email', req.body.email));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public getUser = async (req: Request, res: Response) => {
+    public getUser = async (req: Request, res: Response, next: NextFunction) => {
+        const { userId } = req.params;
+        if (!userId) return next(new ParamRequiredException('user', 'userId'));
         try {
-            const { id } = req.params;
-            const user = await this._userService.getUser(id);
-            res.status(StatusCodes.OK).json(user);
+            const user = await this._userService.getUser(userId);
+            res.status(StatusCodes.OK).json(user).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at getUser action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid userId' });
+                return next(new InvalidIdException('userId'));
             }
-            res.status(StatusCodes.NOT_FOUND).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public getUsers = async (req: Request, res: Response) => {
+    public getUsers = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const users = await this._userService.getUsers();
-            res.status(StatusCodes.OK).json(users);
+            res.status(StatusCodes.OK).json(users).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at getUsers action ${error}`);
+            next(new InternalServerException(error.message));
         }
     }
 
-    public deleteUser = async (req: Request, res: Response) => {
+    public deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+        const { userId } = req.params;
+        if (!userId) {
+            return next(new ParamRequiredException('user', 'userId'));
+        }
         try {
-            const { id } = req.params;
-            await this._userService.deleteUser(id);
-            res.status(StatusCodes.OK).json({ id });
+            await this._userService.deleteUser(userId);
+            res.status(StatusCodes.OK).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error('error at deleteUser action', error);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid userId' });
+                return next(new InvalidIdException('userId'));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 }

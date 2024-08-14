@@ -1,16 +1,17 @@
 //file dependinces
 import { IGuestAddPayload } from "../guests/guests.interface";
-import { IAppointmentsAddPayload } from "./appointment.interface";
+import { IAppointmentsAddPayload } from "./appointments.interface";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import GuestService from "../guests/guests.service";
 import logger from "../../config/logger";
-import { GuestAlreadyExistsError } from "../../shared/errors";
 import EmailService from "../../config/mailer";
-import { ACQUISITION_MAIL } from "../../shared/constants";
 import GuestRequestsService from "../guest-requests/guest-requests.service";
 import MeetingService from "../meetings/meeting.service";
-import generateRandomPassword from "../../shared/utils/random-password";
+import { generateRandomPassword } from "../../shared/utils";
 import Appointment from "../../shared/models/appointment";
+import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
+import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
+import { ACQUISITION_MAIL, MAIN_MAIL } from "../../shared/constants";
 
 // 3rd party dependencies
 import bcrypt from "bcrypt";
@@ -24,51 +25,113 @@ export default class AppointmentService {
 
         // add to table guests
         const guestData: IGuestAddPayload = {
-            email: appointmentPayload.email,
-            name: appointmentPayload.name,
-            taxId: appointmentPayload.taxId,
-            companyName: appointmentPayload.companyName,
-            phone: appointmentPayload.phone,
-            location: appointmentPayload.location,
+            ...appointmentPayload,
         }
 
         let guest;
         try {
-            guest = await this._guestService.addGuest(guestData);
-        } catch (err) {
-            if (err instanceof GuestAlreadyExistsError) {
-                logger.info('Guest already exists');
+            guest = await this._guestService.getGuestByEmail(appointmentPayload.email);
+            //eslint-disable-next-line
+        } catch (err: any) {
+            if (err instanceof NotFoundException) {
+                logger.info(err.message);
+                // Guest not found, so we should proceed to create a new guest.
+                try {
+                    guest = await this._guestService.addGuest(guestData);
+                    logger.debug(`Guest created with ID: ${guest.guestId}`);
+                    //eslint-disable-next-line
+                } catch (err: any) {
+                    if (err instanceof AlreadyExistsException) {
+                        logger.info("Guest already exists, proceeding.");
+                    } else {
+                        logger.error(`Couldn't create a guest: ${err.message}`);
+                        throw new Error(`Couldn't create a guest`);
+                    }
+                }
+            } else {
+                logger.error(`Couldn't Get A Guest, ${err.message}`);
+                throw new Error(`Couldn't Get A Guest, ${err.message}`);
             }
         }
 
         // add to table guest-services
-        this._guestRequestsService.addGuestRequest(guest!.guestId, appointmentPayload.serviceId);
+        try {
+            logger.debug(`Adding Guest Request for ${guest!.guestId} and service ${appointmentPayload.serviceId}`);
+            const guestRequest: IGuestRequestAddPayload = {
+                guestId: guest!.guestId,
+                requestId: appointmentPayload.serviceId,
+                marketingBudget: appointmentPayload.marketingBudget
+            }
+            await this._guestRequestsService.addGuestRequest(guestRequest);
+            //eslint-disable-next-line
+        } catch (err: any) {
+            if (err instanceof AlreadyExistsException) {
+                logger.info(err.message);
+            }
+            else {
+                logger.error(`Couldn't Create A Guest Request, ${err.message}`);
+                throw new Error(`Couldn't Create A Guest Request, ${err.message}`);
+            }
+        }
+
 
         // generate random password for meeting
         const meetingPassword = generateRandomPassword();
-        const hashedPassword = await bcrypt.hash(meetingPassword, 10);
+        let hashedPassword;
+        try {
+            hashedPassword = await bcrypt.hash(meetingPassword, 10);
+            //eslint-disable-next-line
+        } catch (err: any) {
+            logger.error(`Couldn't Hash The Password, ${err.message}`);
+            throw new Error(`Couldn't Hash The Password`);
+        }
 
-        // create a zoom meeting with requested time    
-        const meeting = await this._meetingService.sheduleMeeting("meeting invitation", appointmentPayload.timeSlot, meetingPassword);
+        // create a zoom meeting with requested time  
+        let meeting;
+        try {
+
+            meeting = await this._meetingService.scheduleMeeting("meeting invitation", appointmentPayload.timeSlot, meetingPassword);
+            //eslint-disable-next-line
+        } catch (err: any) {
+            logger.error(`Couldn't Create A Meeting, ${err.message}`);
+            throw new Error(`Couldn't Create A Meeting`);
+        }
 
         // add to apppointment table the url
-        await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId });
+        try {
 
+            await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId });
+            //eslint-disable-next-line
+        } catch (err: any) {
 
+            logger.error(`Couldn't Create An Appointment, ${err.message}`);
+            throw new Error(`Couldn't Create An Appointment`);
+        }
+
+        // get formated (user-readable) Date
         // send email to the user
         // send email to the admin  sales@domain.com
+        const formatedDate = new Date(appointmentPayload.timeSlot).toLocaleString('en-US', {
+            weekday: 'long', // e.g., 'Thursday'
+            year: 'numeric', // e.g., '2024'
+            month: 'long', // e.g., 'August'
+            day: 'numeric', // e.g., '8'
+            hour: 'numeric', // e.g., '7 AM'
+            minute: 'numeric', // e.g., '00'
+            hour12: true // Use 12-hour time format
+        });
         const emailPayload: IEmailOptions = {
-            to: [guest!.email, ACQUISITION_MAIL],
+            to: guest!.email,
+            cc: [MAIN_MAIL, ACQUISITION_MAIL], // Optional CC recipients
             template: "appointment",
             subject: 'Appointment Confirmation',
             context: {
-                name: appointmentPayload.name,
                 joinUrl: meeting.join_url,
                 meetingPassword,
-                meetingTime: appointmentPayload.timeSlot,
+                meetingTime: formatedDate,
                 meetingDuration: '1 hr',
             },
         };
         await this._emailService.sendEmail(emailPayload);
     }
-} 
+}

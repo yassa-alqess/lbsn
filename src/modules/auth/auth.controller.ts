@@ -1,15 +1,15 @@
-
 // file dependencies
-import { ACCESS_TOKEN_EXPIRY, ACCESS_TOKEN_SECRET, AUTH_PATH, REFRESH_TOKEN_SECRET } from '../../shared/constants';
-import { IAuthPayload } from './auth.interface';
-import Controller from '../../shared/interfaces/controller.interface';
-import RefreshToken from '../../shared/models/refresh-token';
-import { accessTokenGuard } from '../../shared/middlewares';
+import { ACCESS_TOKEN_SECRET, AUTH_PATH } from '../../shared/constants';
+import { Controller } from '../../shared/interfaces/controller.interface';
+import { validate } from '../../shared/middlewares';
 import AuthService from './auth.service';
+import logger from '../../config/logger';
+import { LoginSchema, LogoutSchema, RefreshTokenSchema } from './auth.dto';
+import { InternalServerException, NotFoundException, WrongCredentialsException } from '../../shared/exceptions';
 
 // 3rd party dependencies
 import jwt from 'jsonwebtoken';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 export default class AuthController implements Controller {
@@ -21,119 +21,65 @@ export default class AuthController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.post(`${this.path}/login`, this.login);
-        this.router.post(`${this.path}/logout`, accessTokenGuard, this.logout); // require authentication
-        this.router.post(`${this.path}/forget-password`, this.forgetPassword);
-        this.router.post(`${this.path}/reset-password`, this.resetPassword);
-        this.router.post(`${this.path}/verify-email`, this.verifyEmail);
-        this.router.post(`${this.path}/verify-otp`, this.verifyOtp);
-        this.router.post(`${this.path}/refresh-token`, this.refreshToken);
-
+        this.router.post(`${this.path}/login`, validate(LoginSchema), this.login);
+        this.router.post(`${this.path}/logout`, validate(LogoutSchema), this.logout);
+        this.router.post(`${this.path}/refresh-token`, validate(RefreshTokenSchema), this.refreshToken);
     }
-    public async login(req: Request, res: Response): Promise<void> {
+    public login = async (req: Request, res: Response, next: NextFunction) => {
+        const { email, password } = req.body;
         try {
-            const { email, password } = req.body;
             const tokens = await this._authService.login(email, password);
-            res.status(StatusCodes.OK).json(tokens);
+            res.status(StatusCodes.OK).json({
+                accessToken: tokens[0],
+                refreshToken: tokens[1],
+                type: 'Bearer',
+            }).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at login action ${error.message}`);
+            if (error instanceof NotFoundException || error instanceof WrongCredentialsException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public async logout(req: Request, res: Response): Promise<void> {
+    public logout = async (req: Request, res: Response, next: NextFunction) => {
+        const { accessToken, refreshToken } = req.body;
+
+        jwt.verify(accessToken, ACCESS_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null) => {
+            if (err)
+                return res.status(StatusCodes.UNAUTHORIZED).json('Invalid token').end();
+        });
+
         try {
-            const { token } = req.body;
-            await this._authService.logout(token);
-            res.status(StatusCodes.OK).json({ message: 'Logout successfully' });
+            await this._authService.logout(accessToken, refreshToken);
+            res.status(StatusCodes.OK).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at logout action ${error.message}`);
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public async forgetPassword(req: Request, res: Response): Promise<void> {
+    public refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+        const { refreshToken } = req.body;
         try {
-            const { email } = req.body;
-            await this._authService.forgetPassword(email);
-            res.status(StatusCodes.OK).json({ message: 'Email sent' });
+            const tokens = await this._authService.refreshToken(refreshToken);
+            res.status(StatusCodes.OK).json({
+                accessToken: tokens[0],
+                refreshToken: tokens[1],
+                type: 'Bearer',
+            }).end();
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-        }
-    }
-
-    public async verifyOtp(req: Request, res: Response): Promise<void> {
-        try {
-            const { otp } = req.body;
-            await this._authService.verifyOtp(otp);
-            res.status(StatusCodes.OK).json({ message: 'matched' });
-            //eslint-disable-next-line
-        } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-        }
-    }
-
-    public async resetPassword(req: Request, res: Response): Promise<void> {
-        try {
-            const { email, password } = req.body;
-            await this._authService.resetPassword(email, password);
-            res.status(StatusCodes.OK).json({ message: 'Password reset successfully' });
-            //eslint-disable-next-line
-        } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-        }
-    }
-
-    public async verifyEmail(req: Request, res: Response): Promise<void> {
-        try {
-            const { email } = req.body;
-            await this._authService.verifyEmail(email);
-            res.status(StatusCodes.OK).json({ message: 'Email sent' });
-            //eslint-disable-next-line
-        } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-        }
-    }
-
-    public async refreshToken(req: Request, res: Response) {
-        try {
-            const { token } = req.body;
-
-            if (!token)
-                return res.sendStatus(StatusCodes.BAD_REQUEST);
-
-
-            const refreshToken = await RefreshToken.findOne({
-                where: {
-                    value: token,
-                },
-            });
-
-            if (!refreshToken)
-                return res.sendStatus(StatusCodes.UNAUTHORIZED);
-
-
-            if (refreshToken.expiresAt < new Date())
-                return res.sendStatus(StatusCodes.UNAUTHORIZED);
-
-
-            jwt.verify(token, REFRESH_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null, user: string | jwt.JwtPayload | undefined) => {
-                if (err)
-                    return res.sendStatus(StatusCodes.UNAUTHORIZED);
-
-
-                const userPayload = user as IAuthPayload;
-
-                const accessToken = jwt.sign(
-                    { id: userPayload.id, roles: userPayload.roles },
-                    ACCESS_TOKEN_SECRET as string,
-                    { expiresIn: ACCESS_TOKEN_EXPIRY }
-                );
-                res.json({ accessToken });
-            });
-        } catch (error) {
-            res.sendStatus(StatusCodes.INTERNAL_SERVER_ERROR);
+            logger.error(`error at refreshToken action ${error.message}`);
+            next(new InternalServerException(`${error.message}`));
         }
 
     }

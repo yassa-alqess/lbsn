@@ -1,107 +1,136 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, SERVICES_PATH } from '../../shared/constants';
 import { IServiceAddPayload, IServiceUpdatePayload } from './services.interface';
-import Controller from '../../shared/interfaces/controller.interface';
-import ServiceService from './services.service';
+import { Controller } from '../../shared/interfaces/controller.interface';
+import ServicesService from './services.service';
+import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { RoleEnum } from '../../shared/enums';
+import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import { CreateServiceDto, UpdateServiceDto } from './services.dto';
+import logger from '../../config/logger';
 
 // 3rd party dependencies
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import accessTokenGuard from '../../shared/middlewares/access-token.mw';
-import { requireAnyOfThoseRoles } from '../../shared/middlewares/role.mw';
-import { RoleEnum } from '../../shared/enums';
 
 export default class ServiceController implements Controller {
 
     path = SERVICES_PATH;
     router = express.Router();
-    private _serviceService = new ServiceService();
+    private _servicesService = new ServicesService();
     constructor() {
         this._initializeRoutes();
     }
 
     private _initializeRoutes() {
-        this.router.get(`${this.path}/:id`, this.getService);
+        this.router.get(`${this.path}/:serviceId`, this.getService);
         this.router.get(this.path, this.getServices);
 
-        this.router.use(accessTokenGuard);
-        this.router.use(requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]));
-        this.router.post(this.path, this.addService);
-        this.router.patch(`${this.path}/:id`, this.updateService);
-        this.router.delete(`${this.path}/:id`, this.deleteService);
+        this.router
+            .all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
+        this.router.post(this.path, validate(CreateServiceDto), this.addService);
+        this.router.patch(`${this.path}/:serviceId`, validate(UpdateServiceDto), this.updateService);
+        this.router.delete(`${this.path}/:serviceId`, this.deleteService);
     }
 
-    public addService = async (req: Request, res: Response) => {
+    public addService = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const serviceAddPayload: IServiceAddPayload = req.body;
-            const service = await this._serviceService.addService(serviceAddPayload);
-            res.status(StatusCodes.CREATED).json(service);
+            const service = await this._servicesService.addService(serviceAddPayload);
+            res.status(StatusCodes.CREATED).json(service).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at AddService action ${error}`);
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Service already exists' });
+                return next(new AlreadyExistsException('Service', 'name', req.body.name));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
-            // next(error);
+            if (error instanceof AlreadyExistsException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public updateService = async (req: Request, res: Response) => {
+    public updateService = async (req: Request, res: Response, next: NextFunction) => {
+        const { serviceId } = req.params;
+        if (!serviceId) return next(new ParamRequiredException('Service', 'serviceId'));
         try {
-            const { id } = req.params;
             const serviceUpdatePayload: IServiceUpdatePayload = {
                 ...req.body,
-                serviceId: id
+                serviceId
             }
-            const service = await this._serviceService.updateService(serviceUpdatePayload);
-            res.status(StatusCodes.OK).json(service);
+            const service = await this._servicesService.updateService(serviceUpdatePayload);
+            res.status(StatusCodes.OK).json(service).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at UpdateService action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid serviceId' });
+                return next(new InvalidIdException('serviceId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Service already exists' });
+                return next(new AlreadyExistsException('Service', 'name', req.body.name));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public getService = async (req: Request, res: Response) => {
+    public getService = async (req: Request, res: Response, next: NextFunction) => {
+
+        const { serviceId } = req.params;
+        if (!serviceId) return next(new ParamRequiredException('Service', 'serviceId'));
+
         try {
-            const { id } = req.params;
-            const service = await this._serviceService.getService(id);
-            res.status(StatusCodes.OK).json(service);
+            const service = await this._servicesService.getService(serviceId);
+            res.status(StatusCodes.OK).json(service).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at GetService action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid serviceId' });
+                return next(new InvalidIdException('serviceId'));
             }
-            res.status(StatusCodes.NOT_FOUND).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public getServices = async (req: Request, res: Response) => {
+    public getServices = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const services = await this._serviceService.getServices();
-            res.status(StatusCodes.OK).json(services);
+            const services = await this._servicesService.getServices();
+            res.status(StatusCodes.OK).json(services).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            logger.error(`error at GetServices action ${error}`);
+            next(new InternalServerException(error.message));
         }
     }
 
-    public deleteService = async (req: Request, res: Response) => {
+    public deleteService = async (req: Request, res: Response, next: NextFunction) => {
+        const { serviceId } = req.params;
+        if (!serviceId) return next(new ParamRequiredException('Service', 'serviceId'));
+
         try {
-            const { id } = req.params;
-            await this._serviceService.deleteService(id);
-            res.status(StatusCodes.OK).json({ id });
+            await this._servicesService.deleteService(serviceId);
+            res.status(StatusCodes.OK).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at DeleteService action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid serviceId' });
+                return next(new InvalidIdException('serviceId'));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(new NotFoundException('Service', 'serviceId', serviceId));
+            }
+            next(new InternalServerException(error.message));
         }
     }
 }

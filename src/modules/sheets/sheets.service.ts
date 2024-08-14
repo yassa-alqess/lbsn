@@ -13,25 +13,40 @@ export default class SheetsService {
         const auth = new google.auth.GoogleAuth({
             scopes: SCOPES
         });
-        const authToken = await auth.getClient();
-        return authToken;
+        try {
+            const authToken = await auth.getClient();
+            return authToken;
+        } //eslint-disable-next-line
+        catch (error: any) {
+            throw new Error(`Error getting google auth token: ${error.message}`);
+        }
     }
     public getSpreadSheet = async (spreadsheetId: string) => {
         const auth = await this._getAuthToken();
-        const res = await this.sheets!.spreadsheets.get({
-            spreadsheetId,
-            auth,
-        });
-        return res;
+        try {
+            const res = await this.sheets!.spreadsheets.get({
+                spreadsheetId,
+                auth,
+            });
+            return res;
+        } //eslint-disable-next-line
+        catch (error: any) {
+            throw new Error(`Error getting spreadsheet: ${error.message}`);
+        }
     }
 
     public getSpreadSheetValues = async ({ spreadsheetId, sheetName }: { spreadsheetId: string, sheetName: string }) => {
         const auth = await this._getAuthToken();
-        const res = await this.sheets!.spreadsheets.values.get({
-            spreadsheetId,
-            auth,
-            range: sheetName
-        });
-        return res;
+        try {
+            const res = await this.sheets!.spreadsheets.values.get({
+                spreadsheetId,
+                auth,
+                range: sheetName
+            });
+            return res;
+        } //eslint-disable-next-line
+        catch (error: any) {
+            throw new Error(`Error getting spreadsheet values: ${error.message}`);
+        }
     }
 }

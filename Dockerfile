@@ -73,9 +73,16 @@ CMD npm run start
 
 ################################################################################
 FROM base as development
+
+# Create a new user with UID and GID
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
 WORKDIR /usr/app
 
-RUN mkdir -p /usr/app/.logs && chown -R node:node /usr/app
+# Create the upload directory and set ownership
+RUN mkdir -p /usr/app/upload 
+RUN mkdir -p /usr/app/.logs 
+RUN chown -R appuser:appgroup /usr/app
 
 COPY package*.json ./
 
@@ -86,6 +93,7 @@ ARG NODE_ENV
 
 COPY . .
 
-CMD [ "npm", "run", "dev" ]
-USER node
+# Switch to the new user
+USER appuser
 
+CMD [ "npm", "run", "dev" ]

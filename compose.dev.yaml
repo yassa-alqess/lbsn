@@ -14,6 +14,8 @@ services:
       - ./src:/usr/app/src/
       - /node_modules
       - /.logs
+      - ./upload:/app/upload
+    user: 'appuser:appgroup'
 
   sql-db:
     ports:
@@ -25,5 +27,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  cache:
+    ports:
+      - 6379:6379
+    volumes:
+      - cache_data:/data
+
 volumes:
   postgres_data: #/var/lib/docker/volumes/postgres_data/_data
+  cache_data: #/var/lib/docker/volumes/cache_data/_data

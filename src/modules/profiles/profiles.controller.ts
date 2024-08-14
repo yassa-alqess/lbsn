@@ -1,17 +1,21 @@
 // file dependinces
-import { INVALID_UUID, DUPLICATE_ERR, SERVICES_PATH } from '../../shared/constants';
+import { INVALID_UUID, DUPLICATE_ERR, PROFILES_PATH } from '../../shared/constants';
 import { IProfileUpdatePayload } from './profiles.interface';
-import Controller from '../../shared/interfaces/controller.interface';
+import { Controller } from '../../shared/interfaces/controller.interface';
 import ProfileService from './profiles.service';
-import { accessTokenGuard } from '../../shared/middlewares';
+import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
+import { updateProfileDto } from './profiles.dto';
+import { RoleEnum } from '../../shared/enums';
+import logger from '../../config/logger';
 
 // 3rd party dependencies
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 export default class ProfileController implements Controller {
 
-    path = SERVICES_PATH;
+    path = PROFILES_PATH;
     router = express.Router();
     private _profileProfile = new ProfileService();
     constructor() {
@@ -19,58 +23,82 @@ export default class ProfileController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.use(accessTokenGuard);
-        this.router.get(`${this.path}/:id`, this.getProfile);
-        this.router.patch(`${this.path}/:id`, this.updateProfile);
-        this.router.delete(`${this.path}/:id`, this.deleteProfile);
+        this.router.all(`${this.path}*`, accessTokenGuard)
+        this.router.patch(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(updateProfileDto), this.updateProfile);
+        this.router.get(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getProfile);
+        this.router.delete(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteProfile);
     }
 
-    public updateProfile = async (req: Request, res: Response) => {
+    public updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+        const { profileId } = req.params;
+        if (!profileId) {
+            return next(new ParamRequiredException('Profile', 'profileId'));
+        }
         try {
-            const { id } = req.params;
             const profileUpdatePayload: IProfileUpdatePayload = {
                 ...req.body,
-                profileId: id
+                profileId
             }
             const profile = await this._profileProfile.updateProfile(profileUpdatePayload);
-            res.status(StatusCodes.OK).json(profile);
+            res.status(StatusCodes.OK).json(profile).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at updateProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid profileId' });
+                return next(new InvalidIdException('profileId'));
             }
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Profile already exists' });
+                return next(new AlreadyExistsException('Profile', 'name', req.body.name));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public getProfile = async (req: Request, res: Response) => {
+    public getProfile = async (req: Request, res: Response, next: NextFunction) => {
+        const { profileId } = req.params;
+        if (!profileId) {
+            return next(new ParamRequiredException('Profile', 'profileId'));
+        }
         try {
-            const { id } = req.params;
-            const profile = await this._profileProfile.getProfile(id);
-            res.status(StatusCodes.OK).json(profile);
+            const profile = await this._profileProfile.getProfile(profileId);
+            res.status(StatusCodes.OK).json(profile).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at getProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid profileId' });
+                return next(new InvalidIdException('profileId'));
             }
-            res.status(StatusCodes.NOT_FOUND).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public deleteProfile = async (req: Request, res: Response) => {
+    public deleteProfile = async (req: Request, res: Response, next: NextFunction) => {
+        const { profileId } = req.params;
+        if (!profileId) {
+            return next(new ParamRequiredException('Profile', 'profileId'));
+        }
         try {
-            const { id } = req.params;
-            await this._profileProfile.deleteProfile(id);
-            res.status(StatusCodes.OK).json({ id });
+            await this._profileProfile.deleteProfile(profileId);
+            res.status(StatusCodes.OK).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at deleteProfile action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return res.status(StatusCodes.BAD_REQUEST).json({ error: 'Invalid profileId' });
+                return next(new InvalidIdException('profileId'));
             }
-            res.status(StatusCodes.BAD_REQUEST).json({ error: error.message });
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 }

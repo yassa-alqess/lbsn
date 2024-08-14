@@ -1,4 +1,4 @@
 export enum TaskStatusEnum {
-    SOLVED = "SOLVED",
-    REJECTED = "REJECTED",
+    SUBMITTED = "SUBMITTED",
+    PENDING = "PENDING",
 }

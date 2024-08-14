@@ -1,7 +1,11 @@
 import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
-// import Profile from './profile';
 import Task from './task';
+import { TaskSubmissionStatusEnum } from '../enums';
 
+//3rd party dependinces
+import * as _ from "lodash";
+
+const statueses: string[] = _.values(TaskSubmissionStatusEnum);
 
 @Table({ schema: 'public', timestamps: true })
 class TaskSubmission extends Model {
@@ -13,7 +17,7 @@ class TaskSubmission extends Model {
     declare taskSubmissionId: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare documentUrl: string;
 
@@ -23,15 +27,26 @@ class TaskSubmission extends Model {
     declare title: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare comment: string;
+
+    @Column({
+        type: DataType.ENUM({
+            values: statueses
+        }),
+
+        validate: {
+            isIn: [statueses]
+        },
+    })
+    declare status: TaskSubmissionStatusEnum;
 
     @ForeignKey(() => Task)
     @Column({
         type: DataType.UUID,
     })
-    declare taskId: number;
+    declare taskId: string;
 
     @BelongsTo(() => Task, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare task: Task;

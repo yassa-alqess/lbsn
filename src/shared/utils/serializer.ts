@@ -10,9 +10,16 @@ import * as XLSX from 'xlsx';
 
 // read xlsx file to json
 export const readXlsx = (path: string) => {
-    const workbook = XLSX.readFile(path);
-    const sheet_name_list = workbook.SheetNames;
-    const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
-    return data;
+    try {
+        const workbook = XLSX.readFile(path);
+        const sheet_name_list = workbook.SheetNames;
+        const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+        return data;
+    }
+    //eslint-disable-next-line
+    catch (error: any) {
+        throw new Error(`Error reading xlsx file: ${error.message}`);
+    }
+
 }
 

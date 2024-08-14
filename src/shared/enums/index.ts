@@ -5,5 +5,8 @@ export * from './is-locked';
 export * from './is-verified';
 export * from './is-approved'
 export * from './is-available'
+export * from './is-resolved'
 export * from './role';
 export * from './permission'
+export * from './marketing-budget'
+export * from './task-submission-status'

@@ -1,36 +1,40 @@
-import { IProfileAddPayload, IProfileResponse, IProfileUpdatePayload } from "./profiles.interface";
+import { IProfileResponse, IProfileUpdatePayload } from "./profiles.interface";
 import Profile from "../../shared/models/profile";
-import { ProfileAlreadyExistsError } from "../../shared/errors";
+import { NotFoundException } from "../../shared/exceptions";
+import logger from "../../config/logger";
+import ServicesService from "../services/services.service";
 
 export default class ProfileService {
-    public async addProfile(profilePayload: IProfileAddPayload): Promise<IProfileResponse> {
-        const profile = await Profile.findOne({ where: { name: profilePayload.name } });
-        if (profile) {
-            throw new ProfileAlreadyExistsError('Profile already exists');
-        }
-        const newProfile = await Profile.create({ ...profilePayload });
-        return {
-            profileId: newProfile.profileId,
-            name: newProfile.name,
-        };
-    }
-
-    public async updateProfile(profilePayload: IProfileUpdatePayload): Promise<IProfileResponse> {
+    private _servicesService = new ServicesService();
+    public async updateProfile(profilePayload: IProfileUpdatePayload): Promise<IProfileResponse | undefined> {
         const { profileId } = profilePayload;
         const profile = await Profile.findByPk(profileId);
         if (!profile) {
-            throw new Error('Profile not found');
+            throw new NotFoundException('Profile', 'profileId', profileId);
         }
-        await profile.update({ ...profilePayload });
-        return {
-            profileId: profile.profileId,
-            name: profile.name,
-        };
+        
+        const service = await this._servicesService.getServiceByName(profilePayload.name as string);
+        if (!service) {
+            throw new NotFoundException('Serice', 'name', service!.name);
+        }
+
+        try {
+            await profile.update({ ...profilePayload });
+            return {
+                profileId: profile.profileId,
+                name: profile.name,
+            };
+        } //eslint-disable-next-line
+        catch (error: any) {
+            logger.error(`Error updating profile: ${error.message}`);
+            throw new Error(`Error updating profile`);
+        }
     }
-    public async getProfile(profileId: string): Promise<IProfileResponse> {
+
+    public async getProfile(profileId: string): Promise<IProfileResponse | undefined> {
         const profile = await Profile.findByPk(profileId);
         if (!profile) {
-            throw new Error('Profile not found');
+            throw new NotFoundException('Profile', 'profileId', profileId);
         }
         return {
             profileId: profile.profileId,
@@ -40,8 +44,15 @@ export default class ProfileService {
     public async deleteProfile(profileId: string): Promise<void> {
         const profile = await Profile.findByPk(profileId);
         if (!profile) {
-            throw new Error('Profile not found');
+            throw new NotFoundException('Profile', 'profileId', profileId);
         }
-        await profile.destroy();
+        try {
+
+            await profile.destroy();
+        } //eslint-disable-next-line
+        catch (error: any) {
+            logger.error(`Error deleting profile: ${error.message}`);
+            throw new Error(`Error deleting profile`);
+        }
     }
 }

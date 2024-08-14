@@ -14,7 +14,7 @@ import * as _ from "lodash";
 
 const permissions: string[] = _.values(PermissionEnum);
 
-@Table({ schema: process.env.SCHEMA })
+@Table({ schema: 'public', timestamps: true })
 class Permission extends Model {
     @Column({
         primaryKey: true,
@@ -27,11 +27,9 @@ class Permission extends Model {
         type: DataType.ENUM({
             values: permissions
         }),
-
         validate: {
             isIn: [permissions]
         },
-        unique: true,
     })
     declare name: PermissionEnum;
 

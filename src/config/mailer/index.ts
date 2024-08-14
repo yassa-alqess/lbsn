@@ -1,11 +1,11 @@
 //file dependinces
 import { MAIL_HOST, MAIL_PASS, MAIL_PORT, MAIL_USER } from '../../shared/constants';
 import { IEmailOptions } from './email.interface';
-import { pugEngine } from 'nodemailer-pug-engine';
-import path from 'path';
 import logger from '../logger';
 
 //3rd party dependinces
+import { pugEngine } from 'nodemailer-pug-engine';
+import path from 'path';
 import nodemailer from 'nodemailer';
 
 export default class EmailService {
@@ -35,22 +35,24 @@ export default class EmailService {
     }
 
     public sendEmail = async (options: IEmailOptions) => {
-        // for each options.to craft email and send.
-        options.to.forEach(async (to) => {
-            const mailOptions = {
-                from: MAIL_USER,
-                to: to,
-                subject: options.subject,
-                template: options.template,
-                ctx: options.context,
-            };
+        // for each options.to craft email and send it
+        const mailOptions = {
+            from: MAIL_USER,
+            to: options.to, // Single recipient
+            cc: options.cc, // Optional array for CC recipients
+            subject: options.subject,
+            template: options.template,
+            ctx: options.context,
+        };
 
-            try {
-                await this._transporter.sendMail(mailOptions);
-                logger.info('Email sent successfully to:', to);
-            } catch (error) {
-                logger.error('Error sending email:', error);
-            }
-        });
-    };
+        logger.debug(`Sending email with options: ${JSON.stringify(mailOptions)}`);
+
+        try {
+            const info = await this._transporter.sendMail(mailOptions);
+            logger.info(`Email sent to ${options.to} with message ID: ${info.messageId}`);
+            // eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error sending email to ${options.to}: ${error.message}`);
+        }
+    }
 }

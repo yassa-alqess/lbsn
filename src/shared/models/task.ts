@@ -22,7 +22,7 @@ class Task extends Model {
   declare title: string;
 
   @Column({
-    type: DataType.STRING(200),
+    type: DataType.TEXT,
   })
   declare comment: string;
 
@@ -34,7 +34,6 @@ class Task extends Model {
     validate: {
       isIn: [statueses]
     },
-    unique: true,
   })
   declare status: TaskStatusEnum;
 
@@ -42,7 +41,7 @@ class Task extends Model {
   @Column({
     type: DataType.UUID,
   })
-  declare profileId: number;
+  declare profileId: string;
 
   @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   declare profile: Profile;

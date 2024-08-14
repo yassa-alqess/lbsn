@@ -17,7 +17,7 @@ class Ticket extends Model {
     declare ticketId: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare documentUrl: string;
 
@@ -27,7 +27,7 @@ class Ticket extends Model {
     declare title: string;
 
     @Column({
-        type: DataType.STRING(200),
+        type: DataType.TEXT,
     })
     declare comment: string;
 
@@ -39,7 +39,6 @@ class Ticket extends Model {
         validate: {
             isIn: [statueses]
         },
-        unique: true,
     })
     declare status: TicketStatusEnum;
 
@@ -47,7 +46,7 @@ class Ticket extends Model {
     @Column({
         type: DataType.UUID,
     })
-    declare profileId: number;
+    declare profileId: string;
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare profile: Profile;

@@ -2,7 +2,7 @@ import { TicketStatusEnum } from "../../shared/enums";
 
 export interface ITicketsGetPayload {
     profileId: string;
-    status: number;
+    status?: TicketStatusEnum;
 }
 
 export interface ITicketsGetResponse {
@@ -13,7 +13,7 @@ export interface ITicketsGetResponse {
 export interface ITicket {
     ticketId: string;
     documentUrl: string;
-    // profileId: string;
+    profileId: string;
     title: string;
     comment: string;
     status: TicketStatusEnum;
@@ -24,10 +24,13 @@ export interface ITicket {
 export interface ITicketsAddPayload {
     profileId: string;
     title: string;
-    comment: string;
+    comment?: string;
+    documentUrl?: string;
 }
 
-export interface ITicketResolvePayload {
+export interface ITicketsUpdatePayload {
     ticketId: string;
-    status: number;
+    title?: string;
+    comment?: string;
+    documentUrl?: string;
 }
