@@ -1,7 +1,7 @@
 
 
 // file dependinces
-import { ITaskSubmissionAddPayload, ItaskSubmissionGetByTaskIdPayload, ItaskSubmissionGetByTaskIdResponse, ITaskSubmissionUpdatePayload } from './task-submission.interface';
+import { ITaskSubmissionAddPayload, ItaskSubmissionGetByTaskIdPayload, ITaskSubmission, ITaskSubmissionUpdatePayload } from './task-submission.interface';
 import { DUPLICATE_ERR, INVALID_UUID, TASKS_PATH } from '../../shared/constants';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import TaskSubmissionService from './task-submission.service';
@@ -34,7 +34,7 @@ export default class TaskSubmissionController implements Controller {
         this.router.get(`${this.path}/:taskId/submission/`, this.getTaskSubmissionByTaskId);
         this.router.delete(`${this.path}/:taskId/submission`, this.deleteTaskSubmission);
 
-        this.router.post(`${this.path}/:taskId/submission/approve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.approveTaskSubmission);
+        this.router.patch(`${this.path}/:taskId/submission/approve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.approveTaskSubmission);
     }
     public addTaskSubmission = async (req: Request, res: Response, next: NextFunction) => {
         const { taskId } = req.params;
@@ -113,7 +113,7 @@ export default class TaskSubmissionController implements Controller {
             const taskSubmissionGetByIdPayload: ItaskSubmissionGetByTaskIdPayload = {
                 taskId,
             }
-            const taskSubmissionGetByIdResponse: ItaskSubmissionGetByTaskIdResponse = await this._taskSubmissionService.getTaskSubmissionByTaskId(taskSubmissionGetByIdPayload) as ItaskSubmissionGetByTaskIdResponse;
+            const taskSubmissionGetByIdResponse: ITaskSubmission = await this._taskSubmissionService.getTaskSubmissionByTaskId(taskSubmissionGetByIdPayload) as ITaskSubmission;
 
             res.status(StatusCodes.OK).json(taskSubmissionGetByIdResponse);
         } //eslint-disable-next-line

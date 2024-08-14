@@ -1,4 +1,4 @@
-import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetByTaskIdPayload, ItaskSubmissionGetByTaskIdResponse, ITaskSubmissionUpdatePayload } from "./task-submission.interface";
+import { ITaskSubmission, ITaskSubmissionAddPayload, ItaskSubmissionGetByTaskIdPayload, ITaskSubmissionUpdatePayload } from "./task-submission.interface";
 import TaskSubmission from "../../shared/models/task-submission";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TaskStatusEnum, TaskSubmissionStatusEnum } from "../../shared/enums";
@@ -55,8 +55,8 @@ export default class TaskSubmissionService {
             ...taskSubmission.toJSON() as ITaskSubmission
         };
     }
-    
-    public async getTaskSubmissionByTaskId(taskSubmissionGetByTaskIdPayload: ItaskSubmissionGetByTaskIdPayload): Promise<ItaskSubmissionGetByTaskIdResponse | undefined> {
+
+    public async getTaskSubmissionByTaskId(taskSubmissionGetByTaskIdPayload: ItaskSubmissionGetByTaskIdPayload): Promise<ITaskSubmission | undefined> {
         const taskSubmission = await TaskSubmission.findOne({
             where: {
                 taskId: taskSubmissionGetByTaskIdPayload.taskId
@@ -66,9 +66,7 @@ export default class TaskSubmissionService {
             throw new NotFoundException('Task Submission', 'taskId', taskSubmissionGetByTaskIdPayload.taskId);
         }
         return {
-            taskSubmissionGetByTaskIdResponse: {
-                ...taskSubmission.toJSON() as ITaskSubmission
-            }
+            ...taskSubmission.toJSON() as ITaskSubmission
         };
     }
 

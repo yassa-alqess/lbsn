@@ -18,12 +18,6 @@ export interface ItaskSubmissionGetByTaskIdPayload {
     taskId: string;
 }
 
-
-export interface ItaskSubmissionGetByTaskIdResponse {
-
-    taskSubmissionGetByTaskIdResponse: ITaskSubmission
-}
-
 export interface ITaskSubmission {
     taskSubmissionId: string;
     taskId: string;
