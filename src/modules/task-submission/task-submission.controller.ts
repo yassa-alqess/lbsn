@@ -10,6 +10,7 @@ import { Controller } from '../../shared/interfaces';
 import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import { CreateTaskSubmissionDto, UpdateTaskSubmissionDto } from './task-submission.dto';
 import { RoleEnum } from '../../shared/enums';
+import logger from '../../config/logger';
 
 // 3rd party dependencies
 import express, { Request, Response, NextFunction } from 'express';
@@ -54,6 +55,7 @@ export default class TaskSubmissionController implements Controller {
 
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at addTaskSubmission action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
@@ -87,6 +89,7 @@ export default class TaskSubmissionController implements Controller {
 
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at updateTaskSubmission action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
@@ -115,6 +118,7 @@ export default class TaskSubmissionController implements Controller {
             res.status(StatusCodes.OK).json(taskSubmissionGetByIdResponse);
         } //eslint-disable-next-line
         catch (error: any) {
+            logger.error(`error at GetTaskSubmissionByTaskId action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 next(new InvalidIdException('taskId'));
             }
@@ -134,6 +138,7 @@ export default class TaskSubmissionController implements Controller {
 
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at DeleteTaskSubmission action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
@@ -153,6 +158,7 @@ export default class TaskSubmissionController implements Controller {
 
             //eslint-disable-next-line
         } catch (error: any) {
+            logger.error(`error at ApproveTaskSubmission action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
