@@ -35,8 +35,8 @@ export default class TaskController implements Controller {
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const taskPayload: ITasksAddPayload = req.body;
-            await this._taskService.addTask(taskPayload);
-            res.status(StatusCodes.CREATED).end();
+            const task = await this._taskService.addTask(taskPayload);
+            res.status(StatusCodes.CREATED).json(task).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

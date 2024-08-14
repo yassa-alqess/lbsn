@@ -32,7 +32,7 @@ export default class TicketController implements Controller {
         this.router.patch(`${this.path}/:ticketId`, upload(this.path)!.single("file"), validate(UpdateTicketDto), this.updateTicket);
         this.router.delete(`${this.path}/:ticketId`, this.deleteTicket);
 
-        this.router.patch(`${this.path}/:ticketId/resolve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
+        this.router.get(`${this.path}/:ticketId/resolve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
     }
 
     public addTicket = async (req: Request, res: Response, next: NextFunction) => {
@@ -42,8 +42,8 @@ export default class TicketController implements Controller {
                 ...req.body,
                 documentUrl: path
             }
-            await this._ticketService.addTicket(ticketPayload);
-            res.status(StatusCodes.CREATED).end();
+            const ticket = await this._ticketService.addTicket(ticketPayload);
+            res.status(StatusCodes.CREATED).json(ticket).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -64,7 +64,7 @@ export default class TicketController implements Controller {
             return next(new ParamRequiredException('Task', 'profileId'));
         }
 
-        const {status} = req.query;
+        const { status } = req.query;
         if (status && !Object.values(TicketStatusEnum).includes(status as TicketStatusEnum)) {
             return next(new InvalidEnumValueException('TicketStatus'));
         }
@@ -132,8 +132,8 @@ export default class TicketController implements Controller {
                 ...req.body,
                 ticketId
             }
-            await this._ticketService.updateTicket(ticketUpdatePayload);
-            res.status(StatusCodes.OK).end();
+            const ticket = await this._ticketService.updateTicket(ticketUpdatePayload);
+            res.status(StatusCodes.OK).json(ticket).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
