@@ -29,7 +29,7 @@ export default class GuestController implements Controller {
         this.router.get(`${this.path}/:guestId`, this.getGuest);
         this.router.get(this.path, this.getGuests);
         this.router.delete(`${this.path}/:guestId`, this.deleteGuest);
-        this.router.get(`${this.path}/:guestId/approve`, this.approveGuest);
+        this.router.patch(`${this.path}/:guestId/approve`, this.approveGuest);
     }
 
     public addGuest = async (req: Request, res: Response, next: NextFunction) => {

@@ -29,7 +29,7 @@ export default class GuestRequestsController implements Controller {
         this.router.get(`${this.path}/:guestId/requests/:requestId`, this.getGuestRequest);
         this.router.delete(`${this.path}/:guestId/requests/:requestId`, this.deleteGuestRequest);
         this.router.patch(`${this.path}/:guestId/requests/:requestId`, validate(UpdateGuestRequestDto), this.updateGuestRequest);
-        this.router.get(`${this.path}/:guestId/requests/:requestId/approve`, this.approveGuestRequest);
+        this.router.patch(`${this.path}/:guestId/requests/:requestId/approve`, this.approveGuestRequest);
     }
 
     public addGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
