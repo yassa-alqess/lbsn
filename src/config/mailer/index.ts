@@ -35,28 +35,7 @@ export default class EmailService {
     }
 
     public sendEmail = async (options: IEmailOptions) => {
-        // for each options.to craft email and send.
-
-        /**
-         *  options.to.forEach((to) => {
-            const mailOptions = {
-                from: MAIL_USER,
-                to,
-                subject: options.subject,
-                template: options.template,
-                ctx: options.context,
-            };
-
-            logger.debug(`Sending email with options: ${JSON.stringify(mailOptions)}`);
-            this._transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                    logger.error(`Error sending email to ${mailOptions.to} with error: ${error.message}`);
-                } else {
-                    logger.info(`Email sent to ${mailOptions.to} with message ID: ${info.messageId}`);
-                }
-            });
-        });
-        */
+        // for each options.to craft email and send it
         await Promise.all(
             options.to.map(async (to) => {
                 const mailOptions = {
