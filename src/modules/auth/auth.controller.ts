@@ -23,22 +23,7 @@ export default class AuthController implements Controller {
     private _initializeRoutes() {
         this.router.post(`${this.path}/login`, validate(LoginSchema), this.login);
         this.router.post(`${this.path}/logout`, validate(LogoutSchema), this.logout);
-        this.router.post(`${this.path}/refresh-token`, validate(RefreshTokenSchema), this.refreshToken); //used to refresh the access token
-
-        /**
-         * @TODO 
-         * !to be Implemented
-         *  this.router.post(`${this.path}/forget-password`, this.forgetPassword); //send email with token
-            this.router.get(`${this.path}/forget-password`, this.forgetPassword); //validate the token and redirect to FE
-            this.router.post(`${this.path}/reset-password`, this.resetPassword); //FE send the new password 
-
-            this.router.post(`${this.path}/change-password`,accessTokenGuard, this.changePassword); //FE send old and new password
-
-            this.router.post(`${this.path}/verify-email`, this.verifyEmail); //send email with token to user email
-            this.router.get(`${this.path}/verify-email`, this.verifyToken); //verify email and redirect the user to FE
-
-            this.router.post(`${this.path}/verify-otp`, this.verifyOtp); //used in 2FA
-         */
+        this.router.post(`${this.path}/refresh-token`, validate(RefreshTokenSchema), this.refreshToken);
     }
     public login = async (req: Request, res: Response, next: NextFunction) => {
         const { email, password } = req.body;
