@@ -1,6 +1,7 @@
-import { Table, Model, Column, DataType, BelongsToMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsToMany, HasMany } from 'sequelize-typescript';
 import GuestRequest from './guest-request';
 import Guest from './guest';
+import Appointment from './appointment';
 
 
 @Table({ schema: 'public', timestamps: true })
@@ -17,6 +18,9 @@ class Service extends Model {
         unique: true,
     })
     declare name: string;
+
+    @HasMany(() => Appointment)
+    declare appointments: Appointment[];
 
 
     @BelongsToMany(() => Guest, () => GuestRequest)
