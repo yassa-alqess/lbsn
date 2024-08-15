@@ -119,7 +119,7 @@ export default class ServiceController implements Controller {
 
         try {
             await this._servicesService.deleteService(serviceId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

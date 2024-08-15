@@ -114,7 +114,7 @@ export default class RolesController implements Controller {
         if (!roleId) return next(new ParamRequiredException('Role', 'roleId'));
         try {
             await this._rolesService.deleteRole(roleId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
