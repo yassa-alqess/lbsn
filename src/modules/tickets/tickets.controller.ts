@@ -89,7 +89,7 @@ export default class TicketController implements Controller {
         if (!ticketId) return next(new ParamRequiredException('Ticket', 'ticketId'));
         try {
             await this._ticketService.resolveTicket(ticketId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -156,7 +156,7 @@ export default class TicketController implements Controller {
         if (!ticketId) return next(new ParamRequiredException('Ticket', 'ticketId'));
         try {
             await this._ticketService.deleteTicket(ticketId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

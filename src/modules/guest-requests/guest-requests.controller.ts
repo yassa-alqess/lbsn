@@ -130,7 +130,7 @@ export default class GuestRequestsController implements Controller {
         }
         try {
             await this._guestRequestsService.deleteGuestRequest(guestId, requestId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -155,7 +155,7 @@ export default class GuestRequestsController implements Controller {
         }
         try {
             await this._guestRequestsService.approveGuestRequest(guestId, requestId); //not interested in the response
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

@@ -144,7 +144,7 @@ export default class UserController implements Controller {
         }
         try {
             await this._userService.deleteUser(userId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

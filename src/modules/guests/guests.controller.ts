@@ -116,7 +116,7 @@ export default class GuestController implements Controller {
         if (!guestId) return next(new ParamRequiredException('Guest', 'guestId'));
         try {
             await this._guestService.deleteGuest(guestId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -136,7 +136,7 @@ export default class GuestController implements Controller {
 
         try {
             await this._guestService.approveGuest(guestId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

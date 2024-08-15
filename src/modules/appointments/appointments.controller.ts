@@ -30,7 +30,7 @@ export default class AppointmentController implements Controller {
         try {
             const appointmentPayload: IAppointmentsAddPayload = req.body;
             await this._appointmentService.makeAppointment(appointmentPayload);
-            res.status(StatusCodes.CREATED).end(); //not interested in returning anything
+            res.status(StatusCodes.CREATED).json({}).end(); //not interested in returning anything
 
             //eslint-disable-next-line
         } catch (error: any) {

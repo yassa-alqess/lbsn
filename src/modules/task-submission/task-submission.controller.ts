@@ -134,7 +134,7 @@ export default class TaskSubmissionController implements Controller {
         if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
         try {
             await this._taskSubmissionService.deleteTaskSubmission(taskId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -154,7 +154,7 @@ export default class TaskSubmissionController implements Controller {
         if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
         try {
             await this._taskSubmissionService.approveTaskSubmission(taskId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
