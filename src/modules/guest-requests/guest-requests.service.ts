@@ -6,7 +6,6 @@ import logger from "../../config/logger";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
 import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
-import ServicesService from "../services/services.service";
 import { ApproveGuestResponse } from "../guests/guests.interface";
 import EmailService from "../../config/mailer";
 import { IEmailOptions } from "../../config/mailer/email.interface";
@@ -19,7 +18,6 @@ import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
-    private _servicesService = new ServicesService();
     private _userProfilesService = new UserProfilesService();
     private _emailService = new EmailService();
     private sequelize: Sequelize | null = null;
@@ -131,17 +129,70 @@ export default class GuestRequestsService {
         return { gestRequests: guestRequestsResponse };
     }
 
-    public async deleteGuestRequest(guestId: string, requestId: string): Promise<void> {
-        const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
-        if (!guestRequest) {
-            throw new Error(`couldn't fine the guest request`);
-        }
+    public async deleteGuestRequest(guestId: string, requestId: string, txn?: Transaction | null): Promise<void> {
+        const transaction = txn || await sequelize.transaction();
+
         try {
-            await GuestRequest.destroy({ where: { guestId, serviceId: requestId } });
-        } //eslint-disable-next-line
-        catch (error: any) {
+            // Find the specific guest request
+            const guestRequest = await GuestRequest.findOne({
+                where: { guestId, serviceId: requestId },
+                transaction,
+            });
+
+            if (!guestRequest) {
+                throw new Error(`Guest request not found`);
+            }
+
+            // Delete the guest request
+            await guestRequest.destroy({ transaction });
+
+            // Check if there are any remaining requests for this guest
+            const remainingRequests = await GuestRequest.count({ where: { guestId }, transaction });
+
+            // If no requests remain, delete the guest
+            if (remainingRequests === 0) {
+                await this._guestService.deleteGuest(guestId, transaction);
+            }
+
+            // Commit the transaction if it was created within this method
+            if (!txn) {
+                await transaction.commit();
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            // Rollback the transaction if it was created within this method
+            if (!txn) {
+                await transaction.rollback();
+            }
             logger.error(`Error deleting guest request: ${error.message}`);
             throw new Error(`Error deleting guest request`);
+        }
+    }
+
+    public async deleteAllGuestRequests(guestId: string, txn?: Transaction | null): Promise<void> {
+        const transaction = txn || await sequelize.transaction();
+
+        try {
+            // Find all guest requests for the given guest
+            const guestRequests = await GuestRequest.findAll({ where: { guestId }, transaction });
+
+            // Delete all guest requests
+            await Promise.all(guestRequests.map(async request => {
+                await request.destroy({ transaction });
+            }));
+
+            // Commit the transaction if it was created within this method
+            if (!txn) {
+                await transaction.commit();
+            }
+            //eslint-disable-next-line
+        } catch (error: any) {
+            // Rollback the transaction if it was created within this method
+            if (!txn) {
+                await transaction.rollback();
+            }
+            logger.error(`Error deleting all guest requests: ${error.message}`);
+            throw new Error(`Error deleting all guest requests`);
         }
     }
 
@@ -251,6 +302,4 @@ export default class GuestRequestsService {
             throw new Error(`Error approving guest request`);
         }
     }
-
-
 }

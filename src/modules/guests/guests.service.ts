@@ -76,18 +76,37 @@ export default class GuestService {
         }
     }
 
-    public async deleteGuest(guestId: string): Promise<void> {
-        const guest = await Guest.findByPk(guestId);
-        if (!guest) {
-            throw new NotFoundException('Guest', 'guestId', guestId);
-        }
-        try {
+    public async deleteGuest(guestId: string, txn?: Transaction | null): Promise<void> {
+        const transaction = txn || await sequelize.transaction();
 
-            await guest.destroy();
+        try {
+            // Find the guest
+            const guest = await Guest.findByPk(guestId, { transaction });
+            if (!guest) {
+                throw new NotFoundException('Guest', 'guestId', guestId);
+            }
+
+            // Delete all guest requests for this guest
+            // await this._guestRequestsService.deleteAllGuestRequests(guestId, transaction);
+            await guest.$set('services', [], { transaction });
+            
+            await guest.$set('appointments', [], { transaction });
+
+            // Delete the guest
+            await guest.destroy({ transaction });
+
+            // Commit the transaction if it was created within this method
+            if (!txn) {
+                await transaction.commit();
+            }
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`Error deleting guest: ${error.message}`);
-            throw new Error(`Error deleting guest`);
+            // Rollback the transaction if it was created within this method
+            if (!txn) {
+                await transaction.rollback();
+            }
+            logger.error(`Error deleting guest & it's requests: ${error.message}`);
+            throw new Error(`Error deleting guest & it's requests`);
         }
     }
 
