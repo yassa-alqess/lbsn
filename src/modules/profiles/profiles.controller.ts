@@ -87,7 +87,7 @@ export default class ProfileController implements Controller {
         }
         try {
             await this._profileProfile.deleteProfile(profileId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

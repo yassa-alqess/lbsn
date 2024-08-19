@@ -122,7 +122,7 @@ export default class TimeSlotsController implements Controller {
         if (!timeSlotId) return next(new ParamRequiredException('TimeSlot', 'timeSlotId'));
         try {
             await this._timeSlotsService.deleteTimeSlot(timeSlotId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

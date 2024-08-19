@@ -127,7 +127,7 @@ export default class TaskController implements Controller {
         if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
         try {
             await this._taskService.deleteTask(taskId);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
