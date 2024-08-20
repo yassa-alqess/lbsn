@@ -49,8 +49,7 @@ export default class UserProfilesService {
             if (!txn) await transaction.commit();
 
             return {
-                profileId: newProfile.profileId,
-                name: newProfile.name,
+                ...newProfile.toJSON() as IProfileResponse,
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -70,8 +69,7 @@ export default class UserProfilesService {
         const profiles = await user.$get('profiles');
         return {
             profiles: profiles.map(profile => ({
-                profileId: profile.profileId,
-                name: profile.name,
+                ...profile.toJSON() as IProfileResponse
             }))
         };
     }

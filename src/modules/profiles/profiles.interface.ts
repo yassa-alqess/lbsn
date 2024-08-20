@@ -1,11 +1,17 @@
+import { MarketingBudgetEnum } from "../../shared/enums";
+
 export interface IProfileResponse {
     profileId: string;
     name: string;
-    // userId: string; I'm not interested in getting all the uses that rqeuest this service (profile)
+    marketingBudget: MarketingBudgetEnum;
+    sheetUrl: string;
+    userId: string;
 }
 export interface IProfileUpdatePayload {
     profileId: string;
     name?: string;
+    marketingBudget?: MarketingBudgetEnum;
+    sheetUrl?: string;
 }
 
 export interface IProfilesGetResponse {

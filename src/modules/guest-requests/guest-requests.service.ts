@@ -11,6 +11,8 @@ import { ApproveGuestResponse } from "../guests/guests.interface";
 import EmailService from "../../config/mailer";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import DatabaseManager from "../../config/database/db-manager";
+import { IProfileAddPayload } from "../user-profiles/user-profiles.interface";
+import SheetsService from "../sheets/sheets.service";
 
 // 3rd party dependencies
 import { Sequelize, Transaction } from "sequelize";
@@ -21,6 +23,7 @@ export default class GuestRequestsService {
     private _userProfilesService = new UserProfilesService();
     private _emailService = new EmailService();
     private sequelize: Sequelize | null = null;
+    private _sheetsService = new SheetsService();
     constructor() {
 
         this.sequelize = DatabaseManager.getSQLInstance();
@@ -193,9 +196,28 @@ export default class GuestRequestsService {
                 throw new NotFoundException("Service", "serviceId", requestId);
             }
 
+            //create new sheet & add the user to the sheet as editor
+            let sheetUrl: string = '';
+            try {
+
+                const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`);
+                sheetUrl = sheet.spreadsheetId;
+                await this._sheetsService.shareSheetWithEmail(sheetUrl, approvalResult?.email as string);
+            } //eslint-disable-next-line
+            catch (error: any) {
+                logger.error(`Error creating sheet: ${error.message}`);
+                throw new Error(`Error creating sheet`);
+            }
+
             // Create profile & add service/request data to profile
             try {
-                await this._userProfilesService.addUserProfile({ userId: approvalResult?.userId as string, name: requestData.name }, transaction);
+                const profilePayload: IProfileAddPayload = {
+                    userId: approvalResult?.userId as string,
+                    name: requestData.name,
+                    marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`
+                }
+                await this._userProfilesService.addUserProfile(profilePayload, transaction);
                 //eslint-disable-next-line
             } catch (err: any) {
                 if (err instanceof AlreadyExistsException) {

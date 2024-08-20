@@ -108,7 +108,7 @@ export default class GuestService {
                     const existingUser = await this._userService.getUserByEmail(guest.email);
                     if (existingUser) {
                         logger.info('Guest already approved and user exists');
-                        return { userId: existingUser.userId, sendEmail: false };
+                        return { userId: existingUser.userId, email: guest.email, sendEmail: false };
                     }
                     //eslint-disable-next-line
                 } catch (error: any) {
@@ -126,7 +126,7 @@ export default class GuestService {
                 const existingUser = await this._userService.getUserByEmail(email);
                 if (existingUser) {
                     logger.info('User already exists');
-                    return { userId: existingUser.userId, sendEmail: false };
+                    return { userId: existingUser.userId, email: guest.email, sendEmail: false };
                 }
                 //eslint-disable-next-line
             } catch (error: any) {
@@ -173,7 +173,7 @@ export default class GuestService {
             await guest.update({ approved: IsApprovedEnum.APPROVED }, { transaction });
 
             if (!txn) await transaction.commit();
-            return { userId: newUser.userId, sendEmail, emailPayload };
+            return { userId: newUser.userId, email: guest.email, sendEmail, emailPayload };
             //eslint-disable-next-line
         } catch (error: any) {
             if (!txn) await transaction.rollback();

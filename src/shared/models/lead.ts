@@ -17,11 +17,6 @@ class Lead extends Model {
     declare leadId: string;
 
     @Column({
-        type: DataType.TEXT,
-    })
-    declare sheetUrl: string;
-
-    @Column({
         type: DataType.ENUM({
             values: statuses
         }),
@@ -31,6 +26,11 @@ class Lead extends Model {
         },
     })
     declare status: LeadStatusEnum;
+
+    @Column({
+        type: DataType.JSONB,
+    })
+    declare record: object; // binary json
 
     @ForeignKey(() => Profile)
     @Column({

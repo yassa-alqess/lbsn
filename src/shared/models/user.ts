@@ -1,5 +1,4 @@
 import { Table, Model, Column, DataType, BelongsToMany, AllowNull, HasMany } from 'sequelize-typescript';
-import UserProfile from './user-profile';
 import Profile from './profile';
 import RefreshToken from './refresh-token';
 import ResetToken from './reset-token';
@@ -89,7 +88,7 @@ class User extends Model {
   })
   declare isLocked: IsLockedEnum;
 
-  @BelongsToMany(() => Profile, () => UserProfile)
+  @HasMany(() => Profile)
   declare profiles: Profile[];
 
   @HasMany(() => RefreshToken)
