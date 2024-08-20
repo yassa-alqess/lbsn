@@ -6,7 +6,7 @@ import logger from "../../config/logger";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
 import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
-import sequelize from "../../config/database/connection";
+import sequelize from "../../config/database/sql/sql-connection";
 import ServicesService from "../services/services.service";
 import { ApproveGuestResponse } from "../guests/guests.interface";
 import EmailService from "../../config/mailer";

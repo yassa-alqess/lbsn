@@ -3,7 +3,7 @@ import TaskSubmission from "../../shared/models/task-submission";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TaskStatusEnum, TaskSubmissionStatusEnum } from "../../shared/enums";
 import Task from "../../shared/models/task";
-import sequelize from "../../config/database/connection";
+import sequelize from "../../config/database/sql/sql-connection";
 import logger from "../../config/logger";
 
 export default class TaskSubmissionService {

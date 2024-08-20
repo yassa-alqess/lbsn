@@ -1,7 +1,7 @@
-import '../env';
-import sequelize, { syncDatabase } from './connection';
-import logger from '../logger';
-import { DATABASE_NAME } from '../../shared/constants';
+import '../../env';
+import sequelize, { syncDatabase } from './sql-connection';
+import logger from '../../logger';
+import { DATABASE_NAME } from '../../../shared/constants';
 
 jest.mock('../logger', () => ({
   debug: jest.fn(),

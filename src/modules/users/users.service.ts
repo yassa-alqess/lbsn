@@ -3,7 +3,7 @@ import User from "../../shared/models/user";
 import { readXlsx } from "../../shared/utils";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsLockedEnum, IsVerifiedEnum } from "../../shared/enums";
-import sequelize from "../../config/database/connection";
+import sequelize from "../../config/database/sql/sql-connection";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 

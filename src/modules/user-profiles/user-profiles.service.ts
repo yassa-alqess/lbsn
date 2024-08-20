@@ -3,7 +3,7 @@ import { IProfileResponse, IProfilesGetResponse } from "../profiles/profiles.int
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IProfileAddPayload } from "./user-profiles.interface";
 import User from "../../shared/models/user";
-import sequelize from "../../config/database/connection";
+import sequelize from "../../config/database/sql/sql-connection";
 import logger from "../../config/logger";
 
 // 3rd party dependencies

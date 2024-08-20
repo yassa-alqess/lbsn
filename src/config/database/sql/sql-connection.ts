@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
-import logger from '../logger';
-import { SCHEMA, DATABASE_NAME, DATABASE_URL } from '../../shared/constants';
+import logger from '../../logger';
+import { SCHEMA, DATABASE_NAME, DATABASE_URL } from '../../../shared/constants';
 
 const sequelize = new Sequelize(DATABASE_URL as string, {
 

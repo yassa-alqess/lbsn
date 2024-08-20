@@ -9,7 +9,7 @@ import Role from "../../shared/models/role";
 import User from "../../shared/models/user";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
-import sequelize from "../../config/database/connection";
+import sequelize from "../../config/database/sql/sql-connection";
 
 //3rd party dependencies
 import bcrypt from 'bcrypt';

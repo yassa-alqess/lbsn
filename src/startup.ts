@@ -8,7 +8,7 @@ import { Server } from 'http';
 // src imports & config
 import './config/env'
 import { ENV, PORT } from './shared/constants'; //will also trigger dotenv config procedure
-import { syncDatabase, closeConnection } from './config/database/connection';
+import { syncDatabase, closeConnection } from './config/database/sql/sql-connection';
 import logger from './config/logger';
 import loggerMiddleware from './shared/middlewares/logger.mw';
 import { errorMiddleware, notFoundMiddleware, responseFormatter } from './shared/middlewares';
