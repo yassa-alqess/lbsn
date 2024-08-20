@@ -10,12 +10,10 @@ services:
       - .env.dev
     ports:
       - 8087:8087
+    user: 'appuser:appgroup'
     volumes:
       - ./src:/usr/app/src/
-      - /node_modules
-      - /.logs
-      - ./upload:/app/upload
-    user: 'appuser:appgroup'
+      - ./node_modules:/usr/app/node_modules
 
   sql-db:
     ports:
@@ -27,6 +25,25 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  no-sql-db:
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+
+  no-sql-db-client:
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+      ME_CONFIG_MONGODB_SERVER: no-sql-db
+      ME_CONFIG_MONGODB_PORT: '27017'
+    ports:
+      - '8081:8081'
+
   cache:
     ports:
       - 6379:6379
@@ -36,3 +53,5 @@ services:
 volumes:
   postgres_data: #/var/lib/docker/volumes/postgres_data/_data
   cache_data: #/var/lib/docker/volumes/cache_data/_data
+  mongo_data: #/var/lib/docker/volumes/mongo_data/_data
+  mongo_config: #/var/lib/docker/volumes/mongo_config/_data
