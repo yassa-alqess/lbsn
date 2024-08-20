@@ -46,7 +46,7 @@ export const DATABASE_URL = process.env.DATABASE_URL || ""
 export const DATABASE_NAME = process.env.DATABASE_NAME || ""
 export const SCHEMA = process.env.SCHEMA || ""
 export const REDIS_URL = process.env.REDIS_URL || ""
-
+export const NOSQL_DB_URL = process.env.NOSQL_DB_URL || ""
 
 export const MEETING_API_URL = "https://zoom.us/v2/users/me/meetings"
 export const MEETING_AUTH_API_URL = "https://zoom.us"

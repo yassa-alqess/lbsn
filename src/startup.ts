@@ -8,7 +8,7 @@ import { Server } from 'http';
 // src imports & config
 import './config/env'
 import { ENV, PORT } from './shared/constants'; //will also trigger dotenv config procedure
-import { syncDatabase, closeConnection } from './config/database/sql/sql-connection';
+import { initDatabases, closeConnections } from './config/database/db-factory'; // close db connection
 import logger from './config/logger';
 import loggerMiddleware from './shared/middlewares/logger.mw';
 import { errorMiddleware, notFoundMiddleware, responseFormatter } from './shared/middlewares';
@@ -48,7 +48,8 @@ let server: Server | null = null;
 
 (async () => {
   try {
-    await syncDatabase(); // sync db & catch errors
+
+    await initDatabases(); // initialize db connections
     await initializeRedisClient(); // initialize redis client
     APP.get('/', (_, res: Response) => {
       res.sendStatus(200);
@@ -67,7 +68,7 @@ let server: Server | null = null;
 process.on('SIGINT', async () => {
   server!.close(() => {
     logger.info('Server closed gracefully');
-    closeConnection().then(() => {
+    closeConnections().then(() => {
       process.exit(0);
     });
   });

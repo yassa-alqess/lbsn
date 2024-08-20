@@ -9,14 +9,18 @@ import Role from "../../shared/models/role";
 import User from "../../shared/models/user";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
-import sequelize from "../../config/database/sql/sql-connection";
+import DatabaseManager from "../../config/database/db-manager";
 
 //3rd party dependencies
 import bcrypt from 'bcrypt';
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestService {
     private _userService = new UserService();
+    private sequelize: Sequelize | null = null;
+    constructor() {
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
         const guest = await Guest.findOne({ where: { email: guestPayload.email } });
         if (guest)
@@ -88,7 +92,7 @@ export default class GuestService {
     }
 
     public async approveGuest(guestId: string, txn?: Transaction): Promise<ApproveGuestResponse> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this.sequelize!.transaction();
 
         try {
             const guest = await Guest.findByPk(guestId, { transaction });

@@ -3,17 +3,22 @@ import TaskSubmission from "../../shared/models/task-submission";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TaskStatusEnum, TaskSubmissionStatusEnum } from "../../shared/enums";
 import Task from "../../shared/models/task";
-import sequelize from "../../config/database/sql/sql-connection";
 import logger from "../../config/logger";
+import { Sequelize } from "sequelize";
+import DatabaseManager from "../../config/database/db-manager";
 
 export default class TaskSubmissionService {
+    private sequelize: Sequelize | null = null;
+    constructor() {
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addTaskSubmission(taskSubmissionAddPayload: ITaskSubmissionAddPayload): Promise<ITaskSubmission> {
         const taskSubmission = await TaskSubmission.findOne({ where: { taskId: taskSubmissionAddPayload.taskId } });
         if (taskSubmission) {
             throw new AlreadyExistsException('Task Submission', 'taskId', taskSubmissionAddPayload.taskId);
         }
 
-        const transaction = await sequelize.transaction();
+        const transaction = await this.sequelize!.transaction();
 
         try {
             // Create new task submission
@@ -76,7 +81,7 @@ export default class TaskSubmissionService {
             throw new NotFoundException('Task Submission', 'taskId', taskId);
         }
 
-        const transaction = await sequelize.transaction();
+        const transaction = await this.sequelize!.transaction();
 
         try {
             // Delete the task submission

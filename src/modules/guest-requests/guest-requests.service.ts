@@ -6,20 +6,25 @@ import logger from "../../config/logger";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
 import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
-import sequelize from "../../config/database/sql/sql-connection";
 import ServicesService from "../services/services.service";
 import { ApproveGuestResponse } from "../guests/guests.interface";
 import EmailService from "../../config/mailer";
 import { IEmailOptions } from "../../config/mailer/email.interface";
+import DatabaseManager from "../../config/database/db-manager";
 
 // 3rd party dependencies
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
     private _servicesService = new ServicesService();
     private _userProfilesService = new UserProfilesService();
     private _emailService = new EmailService();
+    private sequelize: Sequelize | null = null;
+    constructor() {
+
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
@@ -155,7 +160,7 @@ export default class GuestRequestsService {
     }
 
     public async approveGuestRequest(guestId: string, requestId: string, txn?: Transaction): Promise<void> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this.sequelize!.transaction();
 
         try {
             const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId }, transaction });

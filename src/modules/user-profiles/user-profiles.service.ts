@@ -3,19 +3,23 @@ import { IProfileResponse, IProfilesGetResponse } from "../profiles/profiles.int
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IProfileAddPayload } from "./user-profiles.interface";
 import User from "../../shared/models/user";
-import sequelize from "../../config/database/sql/sql-connection";
 import logger from "../../config/logger";
+import DatabaseManager from "../../config/database/db-manager";
 
 // 3rd party dependencies
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 import ServicesService from "../services/services.service";
 
 
 export default class UserProfilesService {
 
     private _serviceService = new ServicesService();
+    private sequelize: Sequelize | null = null;
+    constructor() {
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addUserProfile(profilePayload: IProfileAddPayload, txn?: Transaction): Promise<IProfileResponse> {
-        const transaction = txn || await sequelize.transaction(); // start a new transaction 
+        const transaction = txn || await this.sequelize!.transaction(); // start a new transaction 
 
         // Check if the user exists
         const user = await User.findByPk(profilePayload.userId, { transaction });
