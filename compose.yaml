@@ -8,14 +8,6 @@ services:
     image: postgres:latest
     restart: always
 
-  no-sql-db:
-    image: mongo:latest
-
-  no-sql-db-client:
-    image: mongo-express:latest
-    depends_on:
-      - no-sql-db
-
   cache:
     image: redis:latest
     restart: always
