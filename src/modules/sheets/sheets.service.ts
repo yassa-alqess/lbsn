@@ -31,12 +31,19 @@ export default class SheetsService {
         }
     }
 
-    public createSpreadSheet = async (title: string) => {
+    public createSpreadSheet = async (title: string, sheetName: string = "Sheet1") => {
         const auth = await this._getAuthToken();
         const resource = {
             properties: {
                 title,
             },
+            sheets: [
+                {
+                    properties: {
+                        title: sheetName, // Set the name of the sheet here
+                    },
+                },
+            ],
         };
         const spreadsheet = await this.sheets.spreadsheets.create({
             resource,
@@ -67,9 +74,49 @@ export default class SheetsService {
                 auth,
                 range: sheetName
             });
-            return res;
-        }
-        catch (error: any) {
+
+            // Extract values from the response
+            const values = res.data.values || [];
+
+            // If there are no values, return an empty array
+            if (values.length === 0) return [];
+
+            // Use the first row as headers
+            const headers = values[0];
+            const records: { [key: string]: any }[] = [];
+
+            // Find indices of Timestamp and Phone columns
+            const timestampIndex = headers.indexOf('Timestamp');
+            const phoneIndex = headers.indexOf('Phone');
+
+            // Add a new header for the combined column
+            // const newHeaders = ['_id', ...headers];
+
+            // Iterate over remaining rows and create objects with key-value pairs
+            for (let i = 1; i < values.length; i++) {
+                const row = values[i];
+                const record: { [key: string]: any } = {};
+
+                // Add the combined value to the record
+                if (timestampIndex >= 0 && phoneIndex >= 0) {
+                    const timestamp = row[timestampIndex] || 'No Timestamp'; // Provide default value
+                    const phone = row[phoneIndex] || 'No Phone'; // Provide default value
+                    record['_id'] = `${timestamp}-${phone}`;
+                } else {
+                    record['_id'] = 'N/A'; // Handle the case where Timestamp or Phone is missing
+                }
+
+                // Add the existing columns
+                for (let j = 0; j < headers.length; j++) {
+                    record[headers[j]] = row[j] || ''; // Default to empty string if missing
+                }
+
+                // Add the record to the list
+                records.push(record);
+            }
+
+            return records;
+        } catch (error: any) {
             throw new Error(`Error getting spreadsheet values: ${error.message}`);
         }
     }
@@ -85,7 +132,7 @@ export default class SheetsService {
                     type: 'anyone',
                 },
             });
-        
+            //eslint-disable-next-line
         } catch (error: any) {
             throw new Error(`Error sharing spreadsheet with anyone: ${error.message}`);
         }
