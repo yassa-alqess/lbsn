@@ -21,7 +21,6 @@ class Profile extends Model {
 
     @Column({
         type: DataType.STRING(200),
-        unique: true,
     })
     declare name: string;
 
@@ -29,6 +28,11 @@ class Profile extends Model {
         type: DataType.TEXT,
     })
     declare sheetUrl: string;
+
+    @Column({
+        type: DataType.STRING(200),
+    })
+    declare sheetName: string;
 
     @Column({
         type: DataType.ENUM({
