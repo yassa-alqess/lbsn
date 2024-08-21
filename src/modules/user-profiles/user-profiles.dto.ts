@@ -3,9 +3,10 @@ import _ from 'lodash';
 import { MarketingBudgetEnum } from '../../shared/enums';
 
 export const createProfileDto = Joi.object({
-    name: Joi.string().optional(),
+    name: Joi.string().required(),
     marketingBudget: Joi.string()
         .valid(..._.values(MarketingBudgetEnum))
-        .optional(),
-    sheetUrl: Joi.string().optional(),
+        .required(),
+    sheetUrl: Joi.string().required(),
+    sheetName: Joi.string().required(),
 });

@@ -1,6 +1,6 @@
 import Profile from "../../shared/models/profile";
 import { IProfileResponse, IProfilesGetResponse } from "../profiles/profiles.interface";
-import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
+import { NotFoundException } from "../../shared/exceptions";
 import { IProfileAddPayload } from "./user-profiles.interface";
 import User from "../../shared/models/user";
 import logger from "../../config/logger";
@@ -30,12 +30,6 @@ export default class UserProfilesService {
         const service = await this._serviceService.getServiceByName(profilePayload.name);
         if (!service) {
             throw new NotFoundException('Service', 'name', profilePayload.name);
-        }
-
-        // Check if the profile with the given name already exists
-        const profile = await Profile.findOne({ where: { name: profilePayload.name }, transaction });
-        if (profile) {
-            throw new AlreadyExistsException('Profile', 'name', profilePayload.name);
         }
 
         try {

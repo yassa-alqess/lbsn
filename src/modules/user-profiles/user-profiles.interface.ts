@@ -5,4 +5,5 @@ export interface IProfileAddPayload {
     name: string;
     marketingBudget: MarketingBudgetEnum;
     sheetUrl: string;
+    sheetName: string;
 }

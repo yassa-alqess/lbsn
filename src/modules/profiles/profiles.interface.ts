@@ -5,6 +5,7 @@ export interface IProfileResponse {
     name: string;
     marketingBudget: MarketingBudgetEnum;
     sheetUrl: string;
+    sheetName: string;
     userId: string;
 }
 export interface IProfileUpdatePayload {
@@ -12,6 +13,7 @@ export interface IProfileUpdatePayload {
     name?: string;
     marketingBudget?: MarketingBudgetEnum;
     sheetUrl?: string;
+    sheetName?: string;
 }
 
 export interface IProfilesGetResponse {

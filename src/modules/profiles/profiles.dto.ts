@@ -8,4 +8,5 @@ export const updateProfileDto = Joi.object({
     .valid(..._.values(MarketingBudgetEnum))
     .optional(),
   sheetUrl: Joi.string().optional(),
+  sheetName: Joi.string().optional(),
 });
