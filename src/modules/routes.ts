@@ -13,6 +13,7 @@ import ProfileController from './profiles/profiles.controller';
 import RolesController from './roles/roles.controller';
 import AuthController from './auth/auth.controller';
 import UserProfilesController from './user-profiles/user-profiles.controller';
+import LeadsController from './leads/leads.controller';
 
 const restRouter = Router();
 restRouter.use('/', new AppointmentController().router);
@@ -28,7 +29,6 @@ restRouter.use('/', new ProfileController().router);
 restRouter.use('/', new UserProfilesController().router);
 restRouter.use('/', new RolesController().router);
 restRouter.use('/', new AuthController().router);
-// restRouter.use('/', new LeadsController().router);
-
+restRouter.use('/', new LeadsController().router);
 
 export default restRouter;
