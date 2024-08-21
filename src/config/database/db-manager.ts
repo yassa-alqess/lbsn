@@ -1,27 +1,12 @@
-import mongoose, { Mongoose } from 'mongoose';
 import { Sequelize } from 'sequelize-typescript';
 import logger from '../logger';
-import { NOSQL_DB_URL, SCHEMA, DATABASE_NAME, DATABASE_URL } from '../../shared/constants';
+import { SCHEMA, DATABASE_NAME, DATABASE_URL } from '../../shared/constants';
 
 class DatabaseManager {
-    private static mongoInstance: Mongoose | null = null;
     private static sqlInstance: Sequelize | null = null;
 
     private constructor() {
 
-    }
-
-    public static async getMongoInstance(): Promise<Mongoose> {
-        if (!DatabaseManager.mongoInstance) {
-            try {
-                DatabaseManager.mongoInstance = await mongoose.connect(NOSQL_DB_URL, {});
-                logger.info(`MongoDB Connected: ${DatabaseManager.mongoInstance.connection.host}`);
-            } catch (error) {
-                logger.error('Unable to connect to MongoDB:', error);
-                process.exit(1);
-            }
-        }
-        return DatabaseManager.mongoInstance;
     }
 
     public static getSQLInstance(): Sequelize {
@@ -51,13 +36,6 @@ class DatabaseManager {
         const sequelize = DatabaseManager.getSQLInstance();
         await sequelize.close();
         logger.info('SQL Connection has been closed gracefully');
-    }
-
-    public static async closeMongoConnection() {
-        if (DatabaseManager.mongoInstance) {
-            await DatabaseManager.mongoInstance.connection.close();
-            logger.info('MongoDB Connection has been closed gracefully');
-        }
     }
 }
 

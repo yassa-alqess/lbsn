@@ -1,5 +1,5 @@
 // 3rd-party dependencies
-import express, { Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -12,51 +12,50 @@ import { initDatabases, closeConnections } from './config/database/db-factory'; 
 import logger from './config/logger';
 import loggerMiddleware from './shared/middlewares/logger.mw';
 import { errorMiddleware, notFoundMiddleware, responseFormatter } from './shared/middlewares';
-import restRouter from './modules/routes';
 import { initializeRedisClient } from './config/cache'; // initialize redis client
+import { initWebSocket } from './config/ws';
+
 
 // app container & middlewares
 const APP = express();
-APP.use(express.json())
-APP.use(express.urlencoded({ extended: true })); // no need for body-parser
-APP.use(cors(
-  {
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Authorization, Origin, X-Requested-With, Accept',
-  },
-));
-APP.use(helmet());
-APP.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-  }),
-);
-APP.set('trust proxy', 1); // trust nginx
-
-
-// middlewares & routes
-APP.use(loggerMiddleware)
-APP.use(responseFormatter)
-APP.use('/api/v0.1/', restRouter);
-APP.use(errorMiddleware);
-APP.use(notFoundMiddleware)
-
 // startup script
 let server: Server | null = null;
+server = APP.listen(PORT, () => {
+  logger.info(`⚡️[server]: Server is running at http://localhost:${PORT} in ${ENV} mode`);
+});
+const WSS = initWebSocket(server); // initialize websocket server
 
 (async () => {
   try {
 
+    APP.use(express.json())
+    APP.use(express.urlencoded({ extended: true })); // no need for body-parser
+    APP.use(cors(
+      {
+        origin: '*',
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        allowedHeaders: 'Content-Type, Authorization, Origin, X-Requested-With, Accept',
+      },
+    ));
+    APP.use(helmet());
+    APP.use(
+      rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+      }),
+    );
+    APP.set('trust proxy', 1); // trust nginx
+
+    // middlewares & routes
+    APP.use(loggerMiddleware)
+    APP.use(responseFormatter)
+    const { default: restRouter } = await import('./modules/routes');
+    APP.use('/api/v0.1/', restRouter);
+    APP.use(errorMiddleware);
+    APP.use(notFoundMiddleware);
+
     await initDatabases(); // initialize db connections
     await initializeRedisClient(); // initialize redis client
-    APP.get('/', (_, res: Response) => {
-      res.sendStatus(200);
-    });
-    server = APP.listen(PORT, () => {
-      logger.info(`⚡️[server]: Server is running at http://localhost:${PORT} in ${ENV} mode`);
-    });
 
   } catch (error) {
     logger.error('Unable to connect,', error);
@@ -74,5 +73,6 @@ process.on('SIGINT', async () => {
   });
 });
 
-export default APP; // exports for testing
-
+export const APP_SERVER = APP; // exports for testing
+export const SERVER = server; // exports for ws
+export const WSS_SERVER = WSS; // exports for ws

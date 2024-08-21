@@ -1,25 +1,7 @@
-import WebSocket, { Server as WebSocketServer } from 'ws';
-import logger from '../logger';
+import { ExtendedWebSocketServer } from '../../shared/interfaces';
+import { Server } from 'http';
 
-class CustomWebSocketServer extends WebSocketServer {
-    public broadcast(data: string) {
-        this.clients.forEach((client: WebSocket) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(data);
-            }
-        });
-    }
+export const initWebSocket = (server: Server) => {
+    const WSS = new ExtendedWebSocketServer({ server });
+    return WSS;
 }
-
-
-const wss = new CustomWebSocketServer({ port: 8080 });
-
-wss.on('connection', () => {
-    logger.info('New client connected');
-});
-
-wss.on('close', () => {
-    logger.info('Client disconnected');
-});
-
-export default wss;
