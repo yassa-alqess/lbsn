@@ -11,8 +11,7 @@ const statuses: string[] = _.values(LeadStatusEnum);
 class Lead extends Model {
     @Column({
         primaryKey: true,
-        type: DataType.UUID,
-        defaultValue: DataType.UUIDV4,
+        type: DataType.STRING(200),
     })
     declare leadId: string;
 
