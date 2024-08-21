@@ -28,13 +28,21 @@ export default class UserService {
             }
 
             // Validate and get the roles from the database
-            const roles = await Role.findAll({
-                where: {
-                    name: {
-                        [Op.in]: userPayload.roles,
-                    },
-                },
-            });
+            let roles;
+
+            try {
+                roles = await Role.findAll({
+                    where: {
+                        name: {
+                            [Op.in]: userPayload.roles,
+                        },
+                    }, transaction,
+                });
+            } //eslint-disable-next-line
+            catch (error: any) {
+                logger.error(`Couldn't Fetch Roles, ${error.message}`);
+                throw new Error(`Couldn't Fetch Roles`);
+            }
 
             if (roles.length !== userPayload.roles.length) {
                 logger.error('One or more roles are invalid');
@@ -45,7 +53,6 @@ export default class UserService {
             const { isVerified, isLocked } = userPayload;
             if (!isVerified) userPayload.isVerified = IsVerifiedEnum.PENDING;
             if (!isLocked) userPayload.isLocked = IsLockedEnum.UNLOCKED;
-
 
             let hashedPassword;
             try {
@@ -86,8 +93,8 @@ export default class UserService {
             };
             //eslint-disable-next-line
         } catch (error: any) {
-            await transaction.rollback(); // Rollback in case of error
             logger.error(`Couldn't Add User, ${error.message}`);
+            await transaction.rollback(); // Rollback in case of error
             throw new Error(`Couldn't Add User`);
         }
     }
