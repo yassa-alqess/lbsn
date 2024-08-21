@@ -57,12 +57,14 @@ export default class GuestRequestsService {
             }
 
             return {
+                // ...guestRequestWithService.toJSON() as IGuestRequest,
                 guestRequestId: guestRequestWithService.guestRequestId,
                 guestId: guestRequestWithService.guestId,
                 requestId: guestRequestWithService.serviceId,
                 name: guestRequestWithService.service.name,
                 status: guestRequestWithService.resolved as IsResolvedEnum,
                 marketingBudget: guestRequestWithService.marketingBudget as MarketingBudgetEnum
+
             }
         }
         //eslint-disable-next-line
@@ -92,6 +94,7 @@ export default class GuestRequestsService {
             }
 
             return {
+                // ...guestRequestWithService.toJSON() as IGuestRequest,
                 guestRequestId: guestRequestWithService.guestRequestId,
                 guestId: guestRequestWithService.guestId,
                 requestId: guestRequestWithService.serviceId,
@@ -116,6 +119,7 @@ export default class GuestRequestsService {
         });
 
         const guestRequestsResponse: IGuestRequest[] = guestRequests.map(request => ({
+            // ...request.toJSON() as IGuestRequest,
             guestRequestId: request.guestRequestId,
             guestId: request.guestId,
             requestId: request.serviceId,
@@ -153,6 +157,7 @@ export default class GuestRequestsService {
             throw new Error(`Guest request not found`);
         }
         return {
+            // ...guestRequest.toJSON() as IGuestRequest,
             guestRequestId: guestRequest.guestRequestId,
             guestId: guestRequest.guestId,
             requestId: guestRequest.serviceId,
@@ -200,9 +205,10 @@ export default class GuestRequestsService {
             let sheetUrl: string = '';
             try {
 
-                const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`);
+                const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`, requestData.name);
                 sheetUrl = sheet.spreadsheetId;
                 await this._sheetsService.shareSheetWithEmail(sheetUrl, approvalResult?.email as string);
+
             } //eslint-disable-next-line
             catch (error: any) {
                 logger.error(`Error creating sheet: ${error.message}`);
@@ -215,7 +221,8 @@ export default class GuestRequestsService {
                     userId: approvalResult?.userId as string,
                     name: requestData.name,
                     marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
-                    sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`,
+                    sheetName: requestData.name,
                 }
                 await this._userProfilesService.addUserProfile(profilePayload, transaction);
                 //eslint-disable-next-line
