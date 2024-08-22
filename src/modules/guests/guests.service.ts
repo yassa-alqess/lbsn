@@ -17,9 +17,9 @@ import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestService {
     private _userService = new UserService();
-    private sequelize: Sequelize | null = null;
+    private _sequelize: Sequelize | null = null;
     constructor() {
-        this.sequelize = DatabaseManager.getSQLInstance();
+        this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
         const guest = await Guest.findOne({ where: { email: guestPayload.email } });
@@ -77,7 +77,7 @@ export default class GuestService {
     }
 
     public async deleteGuest(guestId: string, txn?: Transaction | null): Promise<void> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this._sequelize!.transaction();
 
         try {
             // Find the guest
@@ -89,7 +89,7 @@ export default class GuestService {
             // Delete all guest requests for this guest
             // await this._guestRequestsService.deleteAllGuestRequests(guestId, transaction);
             await guest.$set('services', [], { transaction });
-            
+
             await guest.$set('appointments', [], { transaction });
 
             // Delete the guest
@@ -111,7 +111,7 @@ export default class GuestService {
     }
 
     public async approveGuest(guestId: string, txn?: Transaction): Promise<ApproveGuestResponse> {
-        const transaction = txn || await this.sequelize!.transaction();
+        const transaction = txn || await this._sequelize!.transaction();
 
         try {
             const guest = await Guest.findByPk(guestId, { transaction });

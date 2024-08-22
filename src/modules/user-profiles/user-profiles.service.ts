@@ -14,12 +14,12 @@ import ServicesService from "../services/services.service";
 export default class UserProfilesService {
 
     private _serviceService = new ServicesService();
-    private sequelize: Sequelize | null = null;
+    private _sequelize: Sequelize | null = null;
     constructor() {
-        this.sequelize = DatabaseManager.getSQLInstance();
+        this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addUserProfile(profilePayload: IProfileAddPayload, txn?: Transaction): Promise<IProfileResponse> {
-        const transaction = txn || await this.sequelize!.transaction(); // start a new transaction 
+        const transaction = txn || await this._sequelize!.transaction(); // start a new transaction 
 
         // Check if the user exists
         const user = await User.findByPk(profilePayload.userId, { transaction });

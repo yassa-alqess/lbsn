@@ -20,11 +20,11 @@ export default class GuestRequestsService {
     private _guestService = new GuestService();
     private _userProfilesService = new UserProfilesService();
     private _emailService = new EmailService();
-    private sequelize: Sequelize | null = null;
+    private _sequelize: Sequelize | null = null;
     private _sheetsService = new SheetsService();
     constructor() {
 
-        this.sequelize = DatabaseManager.getSQLInstance();
+        this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
@@ -130,7 +130,7 @@ export default class GuestRequestsService {
     }
 
     public async deleteGuestRequest(guestId: string, requestId: string, txn?: Transaction | null): Promise<void> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this._sequelize!.transaction();
 
         try {
             // Find the specific guest request
@@ -170,7 +170,7 @@ export default class GuestRequestsService {
     }
 
     public async deleteAllGuestRequests(guestId: string, txn?: Transaction | null): Promise<void> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this._sequelize!.transaction();
 
         try {
             // Find all guest requests for the given guest
@@ -219,7 +219,7 @@ export default class GuestRequestsService {
     }
 
     public async approveGuestRequest(guestId: string, requestId: string, txn?: Transaction): Promise<void> {
-        const transaction = txn || await this.sequelize!.transaction();
+        const transaction = txn || await this._sequelize!.transaction();
 
         try {
             const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId }, transaction });
