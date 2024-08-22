@@ -1,9 +1,5 @@
 # syntax=docker/dockerfile:1
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/engine/reference/builder/
-
 ARG NODE_VERSION=18.17.1
 
 ################################################################################
@@ -13,9 +9,8 @@ FROM node:${NODE_VERSION}-alpine as base
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
 
-
 ################################################################################
-# Create a stage for installing production dependecies.
+# Create a stage for installing production dependencies.
 FROM base as deps
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
@@ -51,8 +46,15 @@ FROM base as final
 # Use production node environment by default.
 ENV NODE_ENV production
 
-# Run the application as a non-root user.
-USER node
+# Create a new user with UID and GID
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+
+WORKDIR /usr/app
+
+# Create necessary directories and set ownership
+RUN mkdir -p /usr/app/upload \
+    && mkdir -p /usr/app/.logs \
+    && chown -R appuser:appgroup /usr/app
 
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
@@ -60,16 +62,16 @@ COPY package.json .
 # Copy the production dependencies from the deps stage and also
 # the built application from the build stage into the image.
 COPY --from=deps /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app//dist .//dist
+COPY --from=build /usr/src/app/dist ./dist
 
+# Switch to the new user
+USER appuser
 
 # Expose the port that the application listens on.
 EXPOSE 8087
 
 # Run the application.
-CMD npm run start
-
-
+CMD ["npm", "run", "start"]
 
 ################################################################################
 FROM base as development
