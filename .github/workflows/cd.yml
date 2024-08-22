@@ -52,7 +52,7 @@ jobs:
             docker-compose -f compose.yml pull
 
             # Stop and remove the existing containers
-            docker-compose -f compose.yml down -v || true
+            docker-compose -f compose.yml down || true
 
             # Start the containers with the new image
             docker-compose -f compose.yml up -d --build
