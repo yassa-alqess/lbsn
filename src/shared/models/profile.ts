@@ -1,10 +1,14 @@
-import { Table, Model, Column, DataType, HasMany, BelongsToMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, HasMany, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import Ticket from './ticket';
 import Task from './task';
 import Lead from './lead';
-import UserProfile from './user-profile';
 import User from './user';
+import { MarketingBudgetEnum } from '../enums';
 
+//3rd party dependencies
+import * as _ from "lodash";
+
+const marketingBudgetEnumValues: string[] = _.values(MarketingBudgetEnum);
 
 @Table({ schema: 'public', timestamps: true })
 class Profile extends Model {
@@ -17,9 +21,29 @@ class Profile extends Model {
 
     @Column({
         type: DataType.STRING(200),
-        unique: true,
     })
     declare name: string;
+
+    @Column({
+        type: DataType.TEXT,
+    })
+    declare sheetUrl: string;
+
+    @Column({
+        type: DataType.STRING(200),
+    })
+    declare sheetName: string;
+
+    @Column({
+        type: DataType.ENUM({
+            values: marketingBudgetEnumValues
+        }),
+
+        validate: {
+            isIn: [marketingBudgetEnumValues]
+        },
+    })
+    declare marketingBudget: MarketingBudgetEnum;
 
     @HasMany(() => Ticket)
     declare tickets: Ticket[];
@@ -30,8 +54,14 @@ class Profile extends Model {
     @HasMany(() => Lead)
     declare leads: Lead[];
 
-    @BelongsToMany(() => User, () => UserProfile)
-    declare users: User[];
+    @ForeignKey(() => User)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare userId: string;
+
+    @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare user: User;
 }
 
 export default Profile;

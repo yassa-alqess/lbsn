@@ -36,6 +36,7 @@ export interface IGuestsGetResponse {
 
 export interface ApproveGuestResponse {
     userId: string;
+    email: string;
     sendEmail: boolean;
     emailPayload?: IEmailOptions;
 }

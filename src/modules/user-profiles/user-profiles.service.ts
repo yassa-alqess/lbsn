@@ -1,21 +1,25 @@
 import Profile from "../../shared/models/profile";
 import { IProfileResponse, IProfilesGetResponse } from "../profiles/profiles.interface";
-import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
+import { NotFoundException } from "../../shared/exceptions";
 import { IProfileAddPayload } from "./user-profiles.interface";
 import User from "../../shared/models/user";
-import sequelize from "../../config/database/connection";
 import logger from "../../config/logger";
+import DatabaseManager from "../../config/database/db-manager";
 
 // 3rd party dependencies
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 import ServicesService from "../services/services.service";
 
 
 export default class UserProfilesService {
 
     private _serviceService = new ServicesService();
+    private sequelize: Sequelize | null = null;
+    constructor() {
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addUserProfile(profilePayload: IProfileAddPayload, txn?: Transaction): Promise<IProfileResponse> {
-        const transaction = txn || await sequelize.transaction(); // start a new transaction 
+        const transaction = txn || await this.sequelize!.transaction(); // start a new transaction 
 
         // Check if the user exists
         const user = await User.findByPk(profilePayload.userId, { transaction });
@@ -26,12 +30,6 @@ export default class UserProfilesService {
         const service = await this._serviceService.getServiceByName(profilePayload.name);
         if (!service) {
             throw new NotFoundException('Service', 'name', profilePayload.name);
-        }
-
-        // Check if the profile with the given name already exists
-        const profile = await Profile.findOne({ where: { name: profilePayload.name }, transaction });
-        if (profile) {
-            throw new AlreadyExistsException('Profile', 'name', profilePayload.name);
         }
 
         try {
@@ -45,8 +43,7 @@ export default class UserProfilesService {
             if (!txn) await transaction.commit();
 
             return {
-                profileId: newProfile.profileId,
-                name: newProfile.name,
+                ...newProfile.toJSON() as IProfileResponse,
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -66,8 +63,7 @@ export default class UserProfilesService {
         const profiles = await user.$get('profiles');
         return {
             profiles: profiles.map(profile => ({
-                profileId: profile.profileId,
-                name: profile.name,
+                ...profile.toJSON() as IProfileResponse
             }))
         };
     }

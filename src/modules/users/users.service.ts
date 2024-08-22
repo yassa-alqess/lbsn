@@ -3,17 +3,22 @@ import User from "../../shared/models/user";
 import { readXlsx } from "../../shared/utils";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsLockedEnum, IsVerifiedEnum } from "../../shared/enums";
-import sequelize from "../../config/database/connection";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
+import DatabaseManager from "../../config/database/db-manager";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
-import { Op } from 'sequelize';
+import { Op, Sequelize } from 'sequelize';
 
 export default class UserService {
+
+    private sequelize: Sequelize | null = null;
+    constructor() {
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addUser(userPayload: IUserAddPayload): Promise<IUserResponse> {
-        const transaction = await sequelize.transaction(); // Start a transaction
+        const transaction = await this.sequelize!.transaction(); // Start a transaction
 
         try {
             // Check if user already exists
@@ -23,13 +28,21 @@ export default class UserService {
             }
 
             // Validate and get the roles from the database
-            const roles = await Role.findAll({
-                where: {
-                    name: {
-                        [Op.in]: userPayload.roles,
-                    },
-                },
-            });
+            let roles;
+
+            try {
+                roles = await Role.findAll({
+                    where: {
+                        name: {
+                            [Op.in]: userPayload.roles,
+                        },
+                    }, transaction,
+                });
+            } //eslint-disable-next-line
+            catch (error: any) {
+                logger.error(`Couldn't Fetch Roles, ${error.message}`);
+                throw new Error(`Couldn't Fetch Roles`);
+            }
 
             if (roles.length !== userPayload.roles.length) {
                 logger.error('One or more roles are invalid');
@@ -40,7 +53,6 @@ export default class UserService {
             const { isVerified, isLocked } = userPayload;
             if (!isVerified) userPayload.isVerified = IsVerifiedEnum.PENDING;
             if (!isLocked) userPayload.isLocked = IsLockedEnum.UNLOCKED;
-
 
             let hashedPassword;
             try {
@@ -81,8 +93,8 @@ export default class UserService {
             };
             //eslint-disable-next-line
         } catch (error: any) {
-            await transaction.rollback(); // Rollback in case of error
             logger.error(`Couldn't Add User, ${error.message}`);
+            await transaction.rollback(); // Rollback in case of error
             throw new Error(`Couldn't Add User`);
         }
     }
@@ -96,7 +108,7 @@ export default class UserService {
             throw new NotFoundException('User', 'userId', userId);
         }
 
-        const transaction = await sequelize.transaction(); // Start a transaction
+        const transaction = await this.sequelize!.transaction(); // Start a transaction
 
         try {
             // Hash password if it’s provided and different from the current one

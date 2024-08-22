@@ -1,6 +1,7 @@
 import Joi from 'joi';
-import { MarketingBudgetEnum } from '../../shared/enums';
 import _ from 'lodash';
+import { MarketingBudgetEnum } from '../../shared/enums';
+
 export const CreateGuestRequestDto = Joi.object({
     marketingBudget: Joi.string()
         .valid(..._.values(MarketingBudgetEnum))

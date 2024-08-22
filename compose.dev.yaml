@@ -10,16 +10,14 @@ services:
       - .env.dev
     ports:
       - 8087:8087
+    user: 'appuser:appgroup'
     volumes:
       - ./src:/usr/app/src/
-      - /node_modules
-      - /.logs
-      - ./upload:/app/upload
-    user: 'appuser:appgroup'
+      # - ./node_modules:/usr/app/node_modules
 
   sql-db:
     ports:
-      - 5432:5432
+      - 5433:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres

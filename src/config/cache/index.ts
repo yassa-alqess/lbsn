@@ -17,6 +17,6 @@ export async function initializeRedisClient(): Promise<RedisClientType> {
     });
 
     await redisClient.connect();
-    logger.debug(`Redis client connected to ${REDIS_URL}`);
+    logger.info(`Redis client connected to ${REDIS_URL}`);
     return redisClient;
 }

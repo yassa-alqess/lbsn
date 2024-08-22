@@ -9,14 +9,18 @@ import Role from "../../shared/models/role";
 import User from "../../shared/models/user";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
-import sequelize from "../../config/database/connection";
+import DatabaseManager from "../../config/database/db-manager";
 
 //3rd party dependencies
 import bcrypt from 'bcrypt';
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestService {
     private _userService = new UserService();
+    private sequelize: Sequelize | null = null;
+    constructor() {
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
         const guest = await Guest.findOne({ where: { email: guestPayload.email } });
         if (guest)
@@ -88,7 +92,7 @@ export default class GuestService {
     }
 
     public async approveGuest(guestId: string, txn?: Transaction): Promise<ApproveGuestResponse> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this.sequelize!.transaction();
 
         try {
             const guest = await Guest.findByPk(guestId, { transaction });
@@ -104,7 +108,7 @@ export default class GuestService {
                     const existingUser = await this._userService.getUserByEmail(guest.email);
                     if (existingUser) {
                         logger.info('Guest already approved and user exists');
-                        return { userId: existingUser.userId, sendEmail: false };
+                        return { userId: existingUser.userId, email: guest.email, sendEmail: false };
                     }
                     //eslint-disable-next-line
                 } catch (error: any) {
@@ -122,7 +126,7 @@ export default class GuestService {
                 const existingUser = await this._userService.getUserByEmail(email);
                 if (existingUser) {
                     logger.info('User already exists');
-                    return { userId: existingUser.userId, sendEmail: false };
+                    return { userId: existingUser.userId, email: guest.email, sendEmail: false };
                 }
                 //eslint-disable-next-line
             } catch (error: any) {
@@ -169,7 +173,7 @@ export default class GuestService {
             await guest.update({ approved: IsApprovedEnum.APPROVED }, { transaction });
 
             if (!txn) await transaction.commit();
-            return { userId: newUser.userId, sendEmail, emailPayload };
+            return { userId: newUser.userId, email: guest.email, sendEmail, emailPayload };
             //eslint-disable-next-line
         } catch (error: any) {
             if (!txn) await transaction.rollback();

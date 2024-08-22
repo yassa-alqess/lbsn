@@ -6,20 +6,28 @@ import logger from "../../config/logger";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
 import { IgetGuestRequestsResponse, IGuestRequest, IGuestRequestAddPayload, IGuestRequestUpdatePayload } from "./guest-requests.interface";
-import sequelize from "../../config/database/connection";
 import ServicesService from "../services/services.service";
 import { ApproveGuestResponse } from "../guests/guests.interface";
 import EmailService from "../../config/mailer";
 import { IEmailOptions } from "../../config/mailer/email.interface";
+import DatabaseManager from "../../config/database/db-manager";
+import { IProfileAddPayload } from "../user-profiles/user-profiles.interface";
+import SheetsService from "../sheets/sheets.service";
 
 // 3rd party dependencies
-import { Transaction } from "sequelize";
+import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
     private _servicesService = new ServicesService();
     private _userProfilesService = new UserProfilesService();
     private _emailService = new EmailService();
+    private sequelize: Sequelize | null = null;
+    private _sheetsService = new SheetsService();
+    constructor() {
+
+        this.sequelize = DatabaseManager.getSQLInstance();
+    }
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
@@ -49,12 +57,14 @@ export default class GuestRequestsService {
             }
 
             return {
+                // ...guestRequestWithService.toJSON() as IGuestRequest,
                 guestRequestId: guestRequestWithService.guestRequestId,
                 guestId: guestRequestWithService.guestId,
                 requestId: guestRequestWithService.serviceId,
                 name: guestRequestWithService.service.name,
                 status: guestRequestWithService.resolved as IsResolvedEnum,
                 marketingBudget: guestRequestWithService.marketingBudget as MarketingBudgetEnum
+
             }
         }
         //eslint-disable-next-line
@@ -84,6 +94,7 @@ export default class GuestRequestsService {
             }
 
             return {
+                // ...guestRequestWithService.toJSON() as IGuestRequest,
                 guestRequestId: guestRequestWithService.guestRequestId,
                 guestId: guestRequestWithService.guestId,
                 requestId: guestRequestWithService.serviceId,
@@ -108,6 +119,7 @@ export default class GuestRequestsService {
         });
 
         const guestRequestsResponse: IGuestRequest[] = guestRequests.map(request => ({
+            // ...request.toJSON() as IGuestRequest,
             guestRequestId: request.guestRequestId,
             guestId: request.guestId,
             requestId: request.serviceId,
@@ -145,6 +157,7 @@ export default class GuestRequestsService {
             throw new Error(`Guest request not found`);
         }
         return {
+            // ...guestRequest.toJSON() as IGuestRequest,
             guestRequestId: guestRequest.guestRequestId,
             guestId: guestRequest.guestId,
             requestId: guestRequest.serviceId,
@@ -155,7 +168,7 @@ export default class GuestRequestsService {
     }
 
     public async approveGuestRequest(guestId: string, requestId: string, txn?: Transaction): Promise<void> {
-        const transaction = txn || await sequelize.transaction();
+        const transaction = txn || await this.sequelize!.transaction();
 
         try {
             const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId }, transaction });
@@ -188,9 +201,30 @@ export default class GuestRequestsService {
                 throw new NotFoundException("Service", "serviceId", requestId);
             }
 
+            //create new sheet & add the user to the sheet as editor
+            let sheetUrl: string = '';
+            try {
+
+                const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`, requestData.name);
+                sheetUrl = sheet.spreadsheetId;
+                await this._sheetsService.shareSheetWithEmail(sheetUrl, approvalResult?.email as string);
+
+            } //eslint-disable-next-line
+            catch (error: any) {
+                logger.error(`Error creating sheet: ${error.message}`);
+                throw new Error(`Error creating sheet`);
+            }
+
             // Create profile & add service/request data to profile
             try {
-                await this._userProfilesService.addUserProfile({ userId: approvalResult?.userId as string, name: requestData.name }, transaction);
+                const profilePayload: IProfileAddPayload = {
+                    userId: approvalResult?.userId as string,
+                    name: requestData.name,
+                    marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
+                    sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`,
+                    sheetName: requestData.name,
+                }
+                await this._userProfilesService.addUserProfile(profilePayload, transaction);
                 //eslint-disable-next-line
             } catch (err: any) {
                 if (err instanceof AlreadyExistsException) {

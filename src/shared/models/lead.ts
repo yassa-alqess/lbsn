@@ -11,15 +11,9 @@ const statuses: string[] = _.values(LeadStatusEnum);
 class Lead extends Model {
     @Column({
         primaryKey: true,
-        type: DataType.UUID,
-        defaultValue: DataType.UUIDV4,
+        type: DataType.STRING(200),
     })
     declare leadId: string;
-
-    @Column({
-        type: DataType.TEXT,
-    })
-    declare sheetUrl: string;
 
     @Column({
         type: DataType.ENUM({
@@ -31,6 +25,11 @@ class Lead extends Model {
         },
     })
     declare status: LeadStatusEnum;
+
+    @Column({
+        type: DataType.JSONB,
+    })
+    declare record: object; // binary json
 
     @ForeignKey(() => Profile)
     @Column({

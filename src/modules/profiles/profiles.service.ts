@@ -19,10 +19,9 @@ export default class ProfileService {
         }
 
         try {
-            await profile.update({ ...profilePayload });
+            const newProfile = await profile.update({ ...profilePayload });
             return {
-                profileId: profile.profileId,
-                name: profile.name,
+                ...newProfile.toJSON() as IProfileResponse,
             };
         } //eslint-disable-next-line
         catch (error: any) {
@@ -37,10 +36,10 @@ export default class ProfileService {
             throw new NotFoundException('Profile', 'profileId', profileId);
         }
         return {
-            profileId: profile.profileId,
-            name: profile.name,
+            ...profile.toJSON() as IProfileResponse,
         };
     }
+    
     public async deleteProfile(profileId: string): Promise<void> {
         const profile = await Profile.findByPk(profileId);
         if (!profile) {
