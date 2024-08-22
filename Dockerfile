@@ -44,7 +44,7 @@ RUN npm run build
 FROM base as final
 
 # Use production node environment by default.
-ENV NODE_ENV production
+ENV NODE_ENV prod
 
 # Create a new user with UID and GID
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
