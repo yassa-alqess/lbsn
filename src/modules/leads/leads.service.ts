@@ -5,19 +5,16 @@ import { NotFoundException } from "../../shared/exceptions";
 import Lead from "../../shared/models/lead";
 import { LeadStatusEnum } from "../../shared/enums";
 import { GroupedLead, ILead, ILeadsGetPayload, ILeadsGetResponse, ILeadUpdatePayload } from "./leads.interface";
-import DatabaseManager from "../../config/database/db-manager";
 
-import { Sequelize, fn, col } from "sequelize";
+import { fn, col } from "sequelize";
 
 export class LeadsService {
     private _sheetsService: SheetsService;
     private _profileService: ProfileService;
-    private _sequelize: Sequelize | null = null;
 
     constructor() {
         this._sheetsService = new SheetsService();
         this._profileService = new ProfileService();
-        this._sequelize = DatabaseManager.getSQLInstance();
     }
 
     public async getSheetLeads(profileId: string) {
@@ -30,6 +27,7 @@ export class LeadsService {
             const { sheetUrl, sheetName } = profile;
             const leads = await this._sheetsService.getSpreadSheetValues({ spreadsheetId: sheetUrl.split('/')[5], sheetName });
             logger.info(`leads: ${JSON.stringify(leads)}`);
+
             // Use Promise.all to insert all leads concurrently
             const leadResult: ILeadsGetResponse = { leads: [], total: leads.length };
             await Promise.all(leads.map(async (leadData) => {
@@ -53,6 +51,7 @@ export class LeadsService {
                     }
                 } catch (error) {
                     logger.error('Error processing lead:', error);
+                    throw new Error('Error processing lead');
                     // Handle the error as needed, e.g., pushing an error message or logging
                 }
             }));

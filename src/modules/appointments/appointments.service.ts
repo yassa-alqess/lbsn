@@ -1,6 +1,6 @@
 //file dependinces
 import { IGuestAddPayload } from "../guests/guests.interface";
-import { IAppointmentsAddPayload } from "./appointments.interface";
+import { IAppointment, IAppointmentsAddPayload, IAppointmentsResponse } from "./appointments.interface";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import GuestService from "../guests/guests.service";
 import logger from "../../config/logger";
@@ -100,7 +100,7 @@ export default class AppointmentService {
         // add to apppointment table the url
         try {
 
-            await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId });
+            await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId, serviceId: appointmentPayload.serviceId });
             //eslint-disable-next-line
         } catch (err: any) {
 
@@ -133,5 +133,18 @@ export default class AppointmentService {
             },
         };
         await this._emailService.sendEmail(emailPayload);
+    }
+
+    public async getAppointments(guestId: string): Promise<IAppointmentsResponse | undefined> {
+        const appointments = await Appointment.findAll({
+            where: {
+                ...(guestId && { guestId }),
+            }
+        });
+        return {
+            appointments: appointments.map(appointment => ({
+               ...appointment.toJSON() as IAppointment
+            }))
+        };
     }
 }

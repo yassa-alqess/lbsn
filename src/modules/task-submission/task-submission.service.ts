@@ -8,9 +8,9 @@ import { Sequelize } from "sequelize";
 import DatabaseManager from "../../config/database/db-manager";
 
 export default class TaskSubmissionService {
-    private sequelize: Sequelize | null = null;
+    private _sequelize: Sequelize | null = null;
     constructor() {
-        this.sequelize = DatabaseManager.getSQLInstance();
+        this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addTaskSubmission(taskSubmissionAddPayload: ITaskSubmissionAddPayload): Promise<ITaskSubmission> {
         const taskSubmission = await TaskSubmission.findOne({ where: { taskId: taskSubmissionAddPayload.taskId } });
@@ -18,7 +18,7 @@ export default class TaskSubmissionService {
             throw new AlreadyExistsException('Task Submission', 'taskId', taskSubmissionAddPayload.taskId);
         }
 
-        const transaction = await this.sequelize!.transaction();
+        const transaction = await this._sequelize!.transaction();
 
         try {
             // Create new task submission
@@ -81,7 +81,7 @@ export default class TaskSubmissionService {
             throw new NotFoundException('Task Submission', 'taskId', taskId);
         }
 
-        const transaction = await this.sequelize!.transaction();
+        const transaction = await this._sequelize!.transaction();
 
         try {
             // Delete the task submission

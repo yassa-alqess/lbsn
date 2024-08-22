@@ -13,12 +13,12 @@ import { Op, Sequelize } from 'sequelize';
 
 export default class UserService {
 
-    private sequelize: Sequelize | null = null;
+    private _sequelize: Sequelize | null = null;
     constructor() {
-        this.sequelize = DatabaseManager.getSQLInstance();
+        this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addUser(userPayload: IUserAddPayload): Promise<IUserResponse> {
-        const transaction = await this.sequelize!.transaction(); // Start a transaction
+        const transaction = await this._sequelize!.transaction(); // Start a transaction
 
         try {
             // Check if user already exists
@@ -108,7 +108,7 @@ export default class UserService {
             throw new NotFoundException('User', 'userId', userId);
         }
 
-        const transaction = await this.sequelize!.transaction(); // Start a transaction
+        const transaction = await this._sequelize!.transaction(); // Start a transaction
 
         try {
             // Hash password if it’s provided and different from the current one

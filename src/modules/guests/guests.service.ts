@@ -17,9 +17,9 @@ import { Sequelize, Transaction } from "sequelize";
 
 export default class GuestService {
     private _userService = new UserService();
-    private sequelize: Sequelize | null = null;
+    private _sequelize: Sequelize | null = null;
     constructor() {
-        this.sequelize = DatabaseManager.getSQLInstance();
+        this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
         const guest = await Guest.findOne({ where: { email: guestPayload.email } });
@@ -76,23 +76,42 @@ export default class GuestService {
         }
     }
 
-    public async deleteGuest(guestId: string): Promise<void> {
-        const guest = await Guest.findByPk(guestId);
-        if (!guest) {
-            throw new NotFoundException('Guest', 'guestId', guestId);
-        }
-        try {
+    public async deleteGuest(guestId: string, txn?: Transaction | null): Promise<void> {
+        const transaction = txn || await this._sequelize!.transaction();
 
-            await guest.destroy();
+        try {
+            // Find the guest
+            const guest = await Guest.findByPk(guestId, { transaction });
+            if (!guest) {
+                throw new NotFoundException('Guest', 'guestId', guestId);
+            }
+
+            // Delete all guest requests for this guest
+            // await this._guestRequestsService.deleteAllGuestRequests(guestId, transaction);
+            await guest.$set('services', [], { transaction });
+
+            await guest.$set('appointments', [], { transaction });
+
+            // Delete the guest
+            await guest.destroy({ transaction });
+
+            // Commit the transaction if it was created within this method
+            if (!txn) {
+                await transaction.commit();
+            }
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`Error deleting guest: ${error.message}`);
-            throw new Error(`Error deleting guest`);
+            // Rollback the transaction if it was created within this method
+            if (!txn) {
+                await transaction.rollback();
+            }
+            logger.error(`Error deleting guest & it's requests: ${error.message}`);
+            throw new Error(`Error deleting guest & it's requests`);
         }
     }
 
     public async approveGuest(guestId: string, txn?: Transaction): Promise<ApproveGuestResponse> {
-        const transaction = txn || await this.sequelize!.transaction();
+        const transaction = txn || await this._sequelize!.transaction();
 
         try {
             const guest = await Guest.findByPk(guestId, { transaction });
