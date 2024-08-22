@@ -19,7 +19,7 @@ export default class SheetsService {
 
     private _getAuthToken = async () => {
         const auth = new google.auth.GoogleAuth({
-            keyFile: '.keys/ldns-sheets-d2c4a31efa5d.json', // Path to service account key
+            keyFile: '.keys/credentials.json', // Path to service account key
             scopes: SCOPES,
         });
         try {
