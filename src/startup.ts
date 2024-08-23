@@ -13,7 +13,7 @@ import { initDatabases, closeConnections } from './config/database/db-factory'; 
 import { errorMiddleware, notFoundMiddleware, responseFormatter, loggerMiddleware } from './shared/middlewares';
 import { initializeRedisClient } from './config/cache'; // initialize redis client
 import { initWebSocket } from './config/ws';
-
+import { userRolesMigration } from './shared/migrations/seed-data';
 
 // app container & middlewares
 const APP = express();
@@ -55,6 +55,7 @@ const WSS = initWebSocket(server); // initialize websocket server
 
     await initDatabases(); // initialize db connections
     await initializeRedisClient(); // initialize redis client
+    await userRolesMigration(); // migration to seed roles and admin user
 
   } catch (error) {
     logger.error('Unable to connect,', error);
