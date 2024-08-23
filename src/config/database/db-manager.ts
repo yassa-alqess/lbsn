@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize-typescript';
 import logger from '../logger';
-import { SCHEMA, DATABASE_NAME, DATABASE_URL } from '../../shared/constants';
+import { SCHEMA, DATABASE_NAME, DATABASE_URL, ENV } from '../../shared/constants';
 
 class DatabaseManager {
     private static sqlInstance: Sequelize | null = null;
@@ -11,8 +11,9 @@ class DatabaseManager {
 
     public static getSQLInstance(): Sequelize {
         if (!DatabaseManager.sqlInstance) {
+            const modelsPath = ENV === 'development' ? '/../../shared/models/*.ts' : '/../../shared/models/*.js';
             DatabaseManager.sqlInstance = new Sequelize(DATABASE_URL as string, {
-                models: [__dirname + '/../../shared/models/*.ts'],
+                models: [__dirname + modelsPath],
                 logging: (query) => logger.info(query),
             });
         }
