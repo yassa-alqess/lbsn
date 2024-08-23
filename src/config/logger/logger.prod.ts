@@ -1,6 +1,6 @@
 import { createLogger, transports, format } from 'winston';
 const { combine, timestamp, printf, json, colorize } = format;
-console.log(process.env.LOG_LEVEL);
+
 export const prodLogger = createLogger({
   transports: [
     new transports.File({
