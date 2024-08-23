@@ -14,6 +14,7 @@ import { errorMiddleware, notFoundMiddleware, responseFormatter, loggerMiddlewar
 import { initializeRedisClient } from './config/cache'; // initialize redis client
 import { initWebSocket } from './config/ws';
 import { userRolesMigration } from './shared/migrations/seed-data';
+import './shared/workers' // shedult cron jobs
 
 // app container & middlewares
 const APP = express();
