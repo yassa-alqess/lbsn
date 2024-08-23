@@ -3,9 +3,9 @@ services:
     build:
       target: development
       args:
-        - NODE_ENV=dev
+        - NODE_ENV=development
     environment:
-      - NODE_ENV=dev #the app will spin up the target env variables
+      - NODE_ENV=development #the app will spin up the target env variables
     env_file:
       - .env.dev
     ports:
