@@ -49,8 +49,8 @@ jobs:
             cd app/server-networks || { echo "Failed to navigate to directory"; exit 1; }
             
             # Pull the new Docker image
-            echo "Pulling image: $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
-            docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG || { echo "Failed to pull Docker image"; exit 1; }
+            echo "Pulling image: '$DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG' ..."
+            docker pull "$DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" || { echo "Failed to pull Docker image"; exit 1; }
             
             # Stop and remove the existing containers
             ./stop_containers.sh || { echo "Failed to stop containers"; exit 1; }
