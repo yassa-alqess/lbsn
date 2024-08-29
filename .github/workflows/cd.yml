@@ -46,7 +46,7 @@ jobs:
       - name: Deploy to Server
         run: |
           # Use SSH to connect to the remote server
-          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST << 'EOF'
           
             # Navigate to the directory where the compose file is located
             cd app/server-networks || { echo "Failed to navigate to directory"; exit 1; }
