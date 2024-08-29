@@ -24,6 +24,9 @@ jobs:
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_IMAGE_NAME: ${{ secrets.DOCKER_IMAGE_NAME }}
+      DOCKER_IMAGE_TAG: ${{ secrets.DOCKER_IMAGE_TAG }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
@@ -42,18 +45,19 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          # Use sshpass to handle SSH password authentication and force pseudo-terminal allocation
-          ssh  -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
+          # Use SSH to connect to the remote server
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST << 'EOF'
           
             # Navigate to the directory where the compose file is located
-            cd /app
-
-            # Run Docker commands without sudo
-            docker-compose -f compose.yml pull
-
+            cd app/server-networks || { echo "Failed to navigate to directory"; exit 1; }
+            
+            # Pull the new Docker image
+            docker pull $DOCKER_USERNAME/$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG || { echo "Failed to pull Docker image"; exit 1; }
+            
             # Stop and remove the existing containers
-            docker-compose -f compose.yml down || true
-
+            ./stop_containers.sh || { echo "Failed to stop containers"; exit 1; }
+            
             # Start the containers with the new image
-            docker-compose -f compose.yml up -d --build
+            ./start_containers.sh || { echo "Failed to start containers"; exit 1; }
+            
           EOF
