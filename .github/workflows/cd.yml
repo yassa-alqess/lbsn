@@ -24,7 +24,6 @@ jobs:
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-      DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Setup SSH Key
@@ -47,7 +46,7 @@ jobs:
             cd app/server-networks || { echo "Failed to navigate to directory"; exit 1; }
             
             # Pull the new Docker image
-            docker pull "$DOCKER_REPO" || { echo "Failed to pull Docker image"; exit 1; }
+            docker pull ${{ secrets.DOCKER_REPO }}:latest || { echo "Failed to pull Docker image"; exit 1; }
             
             # Stop and remove the existing containers
             ./stop_containers.sh || { echo "Failed to stop containers"; exit 1; }
