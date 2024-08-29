@@ -29,9 +29,6 @@ jobs:
       DOCKER_IMAGE_TAG: ${{ secrets.DOCKER_IMAGE_TAG }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
