@@ -64,4 +64,4 @@ jobs:
           context: .
           target: final
           push: true
-          tags: ${{ secrets.DOCKER_REPO }}:latest
+          tags: ${{ secrets.DOCKER_REPO }}
