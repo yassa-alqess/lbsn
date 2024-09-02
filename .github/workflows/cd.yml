@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup
     env:
-      SSH_PASS: ${{ secrets.SSH_PASS }}
-      SSH_USER: ${{ secrets.SSH_USER }}
       SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PASS: ${{ secrets.SSH_PASS }}
       PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
@@ -37,21 +37,9 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST 'echo "SSH Connection Successful"'
 
+      - name: Install sshpass # runner may not have ssh-pass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
       - name: Deploy to Server
         run: |
-          # Use SSH to connect to the remote server
-          ssh -T -o StrictHostKeyChecking=no -o BatchMode=yes $SSH_USER@$SSH_HOST << 'EOF'
-          
-            # Navigate to the directory where the compose file is located
-            cd app/server-networks || { echo "Failed to navigate to directory"; exit 1; }
-            
-            # Pull the new Docker image
-            docker pull ${{ secrets.DOCKER_REPO }} || { echo "Failed to pull Docker image"; exit 1; }
-            
-            # Stop and remove the existing containers
-            ./stop_containers.sh || { echo "Failed to stop containers"; exit 1; }
-            
-            # Start the containers with the new image
-            ./start_containers.sh || { echo "Failed to start containers"; exit 1; }
-            
-          EOF
+          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd ~/app/server-networks/ && echo $SSH_PASS | sudo -S ./deploy.sh"
