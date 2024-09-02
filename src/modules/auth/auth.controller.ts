@@ -32,7 +32,7 @@ export default class AuthController implements Controller {
             res.status(StatusCodes.OK).json({
                 accessToken: tokens[0],
                 refreshToken: tokens[1],
-                type: 'Bearer',
+                // type: 'Bearer',
             }).end();
 
             //eslint-disable-next-line
