@@ -52,9 +52,8 @@ WORKDIR /usr/app
 RUN mkdir -p /usr/app/upload \
     && mkdir -p /usr/app/.logs \
     && chmod -R 755 /usr/app/.logs \
+    && mkdir -p /usr/app/certs \
     && chown -R appuser:appgroup /usr/app \
-    && mkdir -p /etc/ssl/certs \
-    && chown -R appuser:appgroup /etc/ssl/certs
 
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
