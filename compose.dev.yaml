@@ -13,7 +13,6 @@ services:
     user: 'appuser:appgroup'
     volumes:
       - ./src:/usr/app/src/
-      # - ./node_modules:/usr/app/node_modules
 
   sql-db:
     ports:
