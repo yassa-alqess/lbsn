@@ -40,8 +40,8 @@ if (ENV === 'development') {
 else {
   // Load SSL certificates
   const sslOptions = {
-    key: fs.readFileSync('/usr/app/certs/privkey1.pem'),
-    cert: fs.readFileSync('/usr/app/certs/fullchain1.pem'),
+    key: fs.readFileSync('./certs/privkey1.pem'),
+    cert: fs.readFileSync('./certs/fullchain1.pem'),
   };
   server = createServer(sslOptions, APP);
   server.listen(PORT, () => {
