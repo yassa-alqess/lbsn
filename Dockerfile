@@ -48,10 +48,12 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /usr/app
 
-# Create necessary directories and set ownership
+# Create necessary directories and set ownership to appuser
 RUN mkdir -p /usr/app/upload \
     && mkdir -p /usr/app/.logs \
-    && chown -R appuser:appgroup /usr/app
+    && chown -R appuser:appgroup /usr/app \
+    && mkdir -p /etc/ssl/certs \
+    && chown -R appuser:appgroup /etc/ssl/certs
 
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
@@ -74,10 +76,11 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /usr/app
 
-# Create the upload directory and set ownership
-RUN mkdir -p /usr/app/upload 
-RUN mkdir -p /usr/app/.logs 
-RUN chown -R appuser:appgroup /usr/app
+# Create necessary dirs and set ownership to appuser
+# maybe later we will support self-signed certs for local development
+RUN mkdir -p /usr/app/upload \
+    && mkdir -p /usr/app/.logs \
+    && chown -R appuser:appgroup /usr/app
 
 COPY package*.json ./
 
