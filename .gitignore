@@ -161,3 +161,7 @@ upload/
 # debug
 /debug.log
 /.vscode
+
+
+# ssl certs
+/certs
