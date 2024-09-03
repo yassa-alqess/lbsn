@@ -51,6 +51,7 @@ WORKDIR /usr/app
 # Create necessary directories and set ownership to appuser
 RUN mkdir -p /usr/app/upload \
     && mkdir -p /usr/app/.logs \
+    && chmod -R 755 /usr/app/.logs \
     && chown -R appuser:appgroup /usr/app \
     && mkdir -p /etc/ssl/certs \
     && chown -R appuser:appgroup /etc/ssl/certs
@@ -80,6 +81,7 @@ WORKDIR /usr/app
 # maybe later we will support self-signed certs for local development
 RUN mkdir -p /usr/app/upload \
     && mkdir -p /usr/app/.logs \
+    && chmod -R 755 /usr/app/.logs \
     && chown -R appuser:appgroup /usr/app
 
 COPY package*.json ./
