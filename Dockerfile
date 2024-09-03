@@ -47,11 +47,17 @@ ENV NODE_ENV production
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /usr/app
+RUN chown -R appuser:appgroup /usr/app 
 
-# Create necessary directories and set ownership
+# Switch to the new user
+USER appuser
+
+# Create necessary directories and set ownership to appuser
 RUN mkdir -p /usr/app/upload \
     && mkdir -p /usr/app/.logs \
-    && chown -R appuser:appgroup /usr/app
+    && mkdir -p /usr/app/.keys \
+    && mkdir -p /usr/app/certs 
+
 
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
@@ -60,9 +66,6 @@ COPY package.json .
 # the built application from the build stage into the image.
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
-
-# Switch to the new user
-USER appuser
 
 # Run the application.
 CMD ["npm", "run", "start"]
@@ -74,10 +77,12 @@ RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /usr/app
 
-# Create the upload directory and set ownership
-RUN mkdir -p /usr/app/upload 
-RUN mkdir -p /usr/app/.logs 
-RUN chown -R appuser:appgroup /usr/app
+# Create necessary dirs and set ownership to appuser
+# maybe later we will support self-signed certs for local development
+RUN mkdir -p /usr/app/upload \
+    && mkdir -p /usr/app/.logs \
+    && chmod -R 755 /usr/app/.logs \
+    && chown -R appuser:appgroup /usr/app
 
 COPY package*.json ./
 

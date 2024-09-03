@@ -1,18 +1,19 @@
 services:
   ldns:
     build:
-      target: development
+      target: final
       args:
-        - NODE_ENV=development
+        - NODE_ENV=production
     environment:
-      - NODE_ENV=development #the app will spin up the target env variables
+      - NODE_ENV=production #the app will spin up the target env variables
     env_file:
-      - .env.dev
+      - .env.prod
     ports:
-      - 8087:8087
+      - 8089:8089
     user: 'appuser:appgroup'
     volumes:
       - ./src:/usr/app/src/
+      - ./certs:/usr/app/certs
 
   sql-db:
     ports:

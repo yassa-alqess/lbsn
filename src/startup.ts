@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { createServer, Server as SecureServer } from 'https';
+import fs from 'fs';
 import { Server } from 'http';
 
 // src imports & config
@@ -12,18 +14,41 @@ import logger from './config/logger';
 import { initDatabases, closeConnections } from './config/database/db-factory'; // close db connection
 import { errorMiddleware, notFoundMiddleware, responseFormatter, loggerMiddleware } from './shared/middlewares';
 import { initializeRedisClient } from './config/cache'; // initialize redis client
-import { initWebSocket } from './config/ws';
+import { initWebSocket, initSecureWebSocket } from './config/ws';
 import { userRolesMigration } from './shared/migrations/seed-data';
+import { ExtendedWebSocketServer } from './shared/interfaces';
 import './shared/workers' // schedule cron jobs
+
 
 // app container & middlewares
 const APP = express();
+
+
+
 // startup script
-let server: Server | null = null;
-server = APP.listen(PORT, () => {
-  logger.info(`⚡️[server]: Server is running at http://localhost:${PORT} in ${ENV} mode`);
-});
-const WSS = initWebSocket(server); // initialize websocket server
+// maybe later we can use a factory pattern to initialize the server
+// mayber later we will support self-signed certificates for local development
+let server: Server | SecureServer | null = null;
+let WSS: ExtendedWebSocketServer | null = null;
+
+if (ENV === 'development') {
+  server = APP.listen(PORT, () => {
+    logger.info(`⚡️[server]: Server is running at http://localhost:${PORT} in ${ENV} mode`);
+  });
+  WSS = initWebSocket(server as Server); // initialize websocket server
+}
+else {
+  // Load SSL certificates
+  const sslOptions = {
+    key: fs.readFileSync('./certs/privkey1.pem'),
+    cert: fs.readFileSync('./certs/fullchain1.pem'),
+  };
+  server = createServer(sslOptions, APP);
+  server.listen(PORT, () => {
+    logger.info(`⚡️[server]: Server is running at https://localhost:${PORT} in ${ENV} mode`);
+  });
+  WSS = initSecureWebSocket(server as SecureServer); // initialize websocket server
+}
 
 (async () => {
   try {
