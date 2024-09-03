@@ -7,7 +7,7 @@ services:
     environment:
       - NODE_ENV=production #the app will spin up the target env variables
     env_file:
-      - .env.dev
+      - .env.prod
     ports:
       - 8087:8087
     user: 'appuser:appgroup'
