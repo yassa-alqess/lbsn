@@ -53,7 +53,7 @@ RUN mkdir -p /usr/app/upload \
     && mkdir -p /usr/app/.logs \
     && chmod -R 755 /usr/app/.logs \
     && mkdir -p /usr/app/certs \
-    && chown -R appuser:appgroup /usr/app \
+    && chown -R appuser:appgroup /usr/app
 
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
