@@ -4,7 +4,7 @@ import { Controller } from '../../shared/interfaces/controller.interface';
 import { validate } from '../../shared/middlewares';
 import AuthService from './auth.service';
 import logger from '../../config/logger';
-import { LoginSchema, LogoutSchema, RefreshTokenSchema } from './auth.dto';
+import { ForgetPasswordSchema, LoginSchema, LogoutSchema, RefreshTokenSchema, ResetPasswordSchema, VerifyEmailSchema, VerifyOtpSchema } from './auth.dto';
 import { InternalServerException, NotFoundException, WrongCredentialsException } from '../../shared/exceptions';
 
 // 3rd party dependencies
@@ -24,6 +24,11 @@ export default class AuthController implements Controller {
         this.router.post(`${this.path}/login`, validate(LoginSchema), this.login);
         this.router.post(`${this.path}/logout`, validate(LogoutSchema), this.logout);
         this.router.post(`${this.path}/refresh-token`, validate(RefreshTokenSchema), this.refreshToken);
+
+        this.router.post(`${this.path}/verify-email`, validate(VerifyEmailSchema), this.verifyEmail);
+        this.router.post(`${this.path}/verify-otp`, validate(VerifyOtpSchema), this.verifyOtp);
+        this.router.post(`${this.path}/forget-password`, validate(ForgetPasswordSchema), this.forgetPassword);
+        this.router.post(`${this.path}/reset-password`, validate(ResetPasswordSchema), this.resetPassword);
     }
     public login = async (req: Request, res: Response, next: NextFunction) => {
         const { email, password } = req.body;
@@ -81,6 +86,53 @@ export default class AuthController implements Controller {
             logger.error(`error at refreshToken action ${error.message}`);
             next(new InternalServerException(`${error.message}`));
         }
+    }
 
+    public verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+        const { email } = req.body;
+        try {
+            await this._authService.verifyEmail(email);
+            res.status(StatusCodes.OK).end();
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at verifyEmail action ${error.message}`);
+            next(new InternalServerException(`${error.message}`));
+        }
+    }
+
+    public forgetPassword = async (req: Request, res: Response, next: NextFunction) => {
+        const { email } = req.body;
+        try {
+            await this._authService.forgetPassword(email);
+            res.status(StatusCodes.OK).end();
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at forgetPassword action ${error.message}`);
+            next(new InternalServerException(`${error.message}`));
+        }
+    }
+
+    public resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+        const { password, otp } = req.body;
+        try {
+            await this._authService.resetPassword(password, otp);
+            res.status(StatusCodes.OK).end();
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at resetPassword action ${error.message}`);
+            next(new InternalServerException(`${error.message}`));
+        }
+    }
+
+    public verifyOtp = async (req: Request, res: Response, next: NextFunction) => {
+        const { otp } = req.body;
+        try {
+            await this._authService.verifyOtp(otp);
+            res.status(StatusCodes.OK).end();
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at verifyOtp action ${error.message}`);
+            next(new InternalServerException(`${error.message}`));
+        }
     }
 }

@@ -1,13 +1,14 @@
 // file dependencies
-import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../../shared/constants";
+import { ACCESS_TOKEN_EXPIRY, OTP_EXPIRY, REFRESH_TOKEN_EXPIRY, REFRESH_TOKEN_SECRET } from "../../shared/constants";
 import User from "../../shared/models/user";
 import RefreshToken from "../../shared/models/refresh-token";
 import { generateAccessToken, generateRefreshToken } from "../../shared/utils";
 import { IAuthPayload } from "./auth.interface";
-import { RoleEnum } from "../../shared/enums";
-import { InvalidRefreshTokenException, NotFoundException, RefreshTokenExpiredException, WrongCredentialsException } from "../../shared/exceptions";
+import { IsVerifiedEnum, RoleEnum } from "../../shared/enums";
+import { InvalidRefreshTokenException, NotFoundException, ExpiredException, WrongCredentialsException } from "../../shared/exceptions";
 import { initializeRedisClient } from "../../config/cache";
 import logger from "../../config/logger";
+import EmailService from "../../config/mailer";
 
 //3rd party dependinces
 import bcrypt from 'bcrypt'
@@ -16,8 +17,9 @@ import { RedisClientType } from "redis";
 import jwt from 'jsonwebtoken';
 
 export default class AuthService {
-    constructor(private _redisClient: RedisClientType | null = null) {
+    constructor(private _redisClient: RedisClientType | null = null, private _emailService: EmailService | null = null) {
         this._initializeRedisClient();
+        this._emailService = new EmailService();
     }
     private async _initializeRedisClient(): Promise<void> {
         this._redisClient = await initializeRedisClient();
@@ -92,7 +94,7 @@ export default class AuthService {
             throw new InvalidRefreshTokenException();
 
         if (refreshTokenValue.expiresAt < new Date())
-            throw new RefreshTokenExpiredException();
+            throw new ExpiredException('refresh token');
 
         let userPayload: IAuthPayload;
         try {
@@ -116,6 +118,129 @@ export default class AuthService {
         catch (err: any) {
             logger.error(`error in refreshToken service: ${err.message}`);
             throw new Error('couldn\'t refresh the token');
+        }
+    }
+
+    public async verifyEmail(email: string): Promise<void> {
+        const user = await User.findOne({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User', 'email', email);
+        }
+
+        try {
+            // Generate OTP and store it with the email in Redis
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const result = await this._redisClient?.setEx(`fe-otp:${otp}`, ms(OTP_EXPIRY), email); // Store OTP with email
+            logger.debug(`cache result: ${result} with otp: ${otp}`);
+
+            const mailOptions = {
+                to: email,
+                subject: 'Email Verification',
+                template: 'verify-mail',
+                context: {
+                    code: otp,
+                    expiry: OTP_EXPIRY,
+                },
+            };
+            await this._emailService?.sendEmail(mailOptions);
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error in verifyEmail service: ${error.message}`);
+            throw new Error('couldn\'t send the verification email');
+        }
+    }
+
+    public async verifyOtp(otp: string): Promise<void> {
+        // Retrieve the email from Redis using the OTP
+        const email = await this._redisClient?.get(`fe-otp:${otp}`);
+
+        if (!email) {
+            throw new ExpiredException('OTP has expired or is invalid');
+        }
+
+        const user = await User.findOne({ where: { email } });
+
+        if (!user) {
+            throw new NotFoundException('User', 'email', email);
+        }
+
+        try {
+            // Mark the user as verified
+            await user.update({ isVerified: IsVerifiedEnum.VERIFIED });
+
+            // Remove the OTP from Redis after successful verification
+            await this._redisClient?.del(`fe-otp:${otp}`);
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error in verifyOtp service: ${error.message}`);
+            throw new Error('couldn\'t verify the OTP');
+        }
+    }
+
+    public async forgetPassword(email: string): Promise<void> {
+        const user = await User.findOne({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User', 'email', email);
+        }
+
+        try {
+            // Generate OTP and store it with the email in Redis
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            const result = await this._redisClient?.setEx(`fp-otp:${otp}`, ms(OTP_EXPIRY), email); // Store OTP with email
+            logger.debug(`cache result: ${result} with otp: ${otp}`);
+
+            const mailOptions = {
+                to: email,
+                subject: 'Password Reset',
+                template: 'forget-password',
+                context: {
+                    code: otp,
+                    expiry: OTP_EXPIRY,
+                },
+            };
+            await this._emailService?.sendEmail(mailOptions);
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error in forgetPassword service: ${error.message}`);
+            throw new Error('couldn\'t send the password reset email');
+        }
+    }
+
+    public async resetPassword(password: string, otp: string): Promise<void> {
+        const email = await this._redisClient?.get(`fp-otp:${otp}`);
+
+        if (!email) {
+            throw new ExpiredException('OTP');
+        }
+
+        const user = await User.findOne({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new NotFoundException('User', 'email', email);
+        }
+
+        try {
+            // Hash the new password
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await user.update({ password: hashedPassword });
+
+            // Remove the OTP from Redis after password reset
+            await this._redisClient?.del(`fp-otp:${otp}`);
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error in resetPassword service: ${error.message}`);
+            throw new Error('couldn\'t reset the password');
         }
     }
 }
