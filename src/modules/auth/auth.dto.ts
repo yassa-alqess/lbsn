@@ -14,3 +14,20 @@ export const RefreshTokenSchema = Joi.object({
     
     refreshToken: Joi.string().required(),
 });
+
+export const VerifyEmailSchema = Joi.object({
+    email: Joi.string().email().required(),
+});
+
+export const ForgetPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+});
+
+export const ResetPasswordSchema = Joi.object({
+    password: Joi.string().required(),
+    otp: Joi.string().required(),
+});
+
+export const VerifyOtpSchema = Joi.object({
+    otp: Joi.string().required(),
+});
