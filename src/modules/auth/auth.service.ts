@@ -128,7 +128,7 @@ export default class AuthService {
 
             // payload already has an "exp" property, so no need to add it
             const accessToken = generateAccessToken({ id: userPayload.id, roles: userPayload.roles }) as string;
-            await this._redisClient?.setEx(accessToken, ms(ACCESS_TOKEN_EXPIRY), 'valid');
+            await this._redisClient?.setEx(`access-token:${userPayload.id}:${accessToken}`, ms(ACCESS_TOKEN_EXPIRY), 'valid');
 
             const newRefreshToken = generateRefreshToken({ id: userPayload.id, roles: userPayload.roles }) as string;
             await refreshTokenValue.update({ value: newRefreshToken, expiresAt: new Date(Date.now() + ms(REFRESH_TOKEN_EXPIRY)) });
