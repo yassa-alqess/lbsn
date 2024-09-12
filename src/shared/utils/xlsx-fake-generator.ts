@@ -1,4 +1,4 @@
-// this function is used to generate fake data and export it to an excel file for testing bulk add users feature
+// this function is used to generate fake data and export it to an excel file for test bulk add users feature
 import path from 'path';
 import * as XLSX from 'xlsx';
 import fs from 'fs';

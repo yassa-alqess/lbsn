@@ -76,9 +76,9 @@ web_modules/
 # leave .env.sample file
 .env
 .env.prod
-.env.development.local
+.env.dev.local
 .env.test.local
-.env.production.local
+.env.prod.local
 .env.local
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -121,7 +121,7 @@ dist
 # TernJS port file
 .tern-port
 
-# Stores VSCode versions used for testing VSCode extensions
+# Stores VSCode versions used for test VSCode extensions
 .vscode-test
 
 # yarn v2

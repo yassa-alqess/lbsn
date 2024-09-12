@@ -3,9 +3,9 @@ services:
     build:
       target: final
       args:
-        - NODE_ENV=production
+        - NODE_ENV=prod
     environment:
-      - NODE_ENV=production #the app will spin up the target env variables
+      - NODE_ENV=prod #the app will spin up the target env variables
     env_file:
       - .env.prod
     ports:

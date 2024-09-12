@@ -27,11 +27,11 @@ const APP = express();
 
 // startup script
 // maybe later we can use a factory pattern to initialize the server
-// mayber later we will support self-signed certificates for local development
+// mayber later we will support self-signed certificates for local dev
 let server: Server | SecureServer | null = null;
 let WSS: ExtendedWebSocketServer | null = null;
 
-if (ENV === 'development') {
+if (ENV === 'dev') {
   server = APP.listen(PORT, () => {
     logger.info(`⚡️[server]: Server is running at http://localhost:${PORT} in ${ENV} mode`);
   });
@@ -99,6 +99,6 @@ process.on('SIGINT', async () => {
   });
 });
 
-export const APP_SERVER = APP; // exports for testing
+export const APP_SERVER = APP; // exports for test
 export const SERVER = server; // exports for ws
 export const WSS_SERVER = WSS; // exports for ws
