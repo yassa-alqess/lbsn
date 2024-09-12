@@ -19,15 +19,10 @@ export const VerifyEmailSchema = Joi.object({
     email: Joi.string().email().required(),
 });
 
-export const VerifyOtpSchema = Joi.object({
-    otp: Joi.string().required(),
-});
-
 export const ForgetPasswordSchema = Joi.object({
     email: Joi.string().email().required(),
 });
 
 export const ResetPasswordSchema = Joi.object({
-    password: Joi.string().required(),
-    otp: Joi.string().required(),
+    newPassword: Joi.string().required(),
 });

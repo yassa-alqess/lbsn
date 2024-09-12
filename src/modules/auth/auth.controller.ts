@@ -1,16 +1,16 @@
 // file dependencies
-import { ACCESS_TOKEN_SECRET, AUTH_PATH } from '../../shared/constants';
+import { AUTH_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
-import { validate } from '../../shared/middlewares';
+import { accessTokenGuard, validate } from '../../shared/middlewares';
 import AuthService from './auth.service';
 import logger from '../../config/logger';
-import { ForgetPasswordSchema, LoginSchema, LogoutSchema, RefreshTokenSchema, ResetPasswordSchema, VerifyEmailSchema, VerifyOtpSchema } from './auth.dto';
-import { InternalServerException, NotFoundException, WrongCredentialsException } from '../../shared/exceptions';
+import { ForgetPasswordSchema, LoginSchema, LogoutSchema, RefreshTokenSchema, ResetPasswordSchema, VerifyEmailSchema } from './auth.dto';
+import { AlreadyUsedException, AlreadyVerifiedException, ExpiredException, InternalServerException, InvalidTokenException, NotFoundException, ParamRequiredException, UserLoggedOutException, WrongCredentialsException } from '../../shared/exceptions';
 
 // 3rd party dependencies
-import jwt from 'jsonwebtoken';
 import express, { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
+import { IAuthPayload } from './auth.interface';
 
 export default class AuthController implements Controller {
     path = AUTH_PATH;
@@ -26,9 +26,13 @@ export default class AuthController implements Controller {
         this.router.post(`${this.path}/refresh-token`, validate(RefreshTokenSchema), this.refreshToken);
 
         this.router.post(`${this.path}/verify-email`, validate(VerifyEmailSchema), this.verifyEmail);
-        this.router.post(`${this.path}/verify-otp`, validate(VerifyOtpSchema), this.verifyOtp);
+        this.router.get(`${this.path}/verify-email`, this.verifyEmailToken);
+
         this.router.post(`${this.path}/forget-password`, validate(ForgetPasswordSchema), this.forgetPassword);
+        this.router.post(`${this.path}/change-password`, accessTokenGuard, this.changePassword);
+        this.router.get(`${this.path}/reset-password`, this.verifyResetToken);
         this.router.post(`${this.path}/reset-password`, validate(ResetPasswordSchema), this.resetPassword);
+
     }
     public login = async (req: Request, res: Response, next: NextFunction) => {
         const { email, password } = req.body;
@@ -53,11 +57,6 @@ export default class AuthController implements Controller {
     public logout = async (req: Request, res: Response, next: NextFunction) => {
         const { accessToken, refreshToken } = req.body;
 
-        jwt.verify(accessToken, ACCESS_TOKEN_SECRET as string, (err: jwt.VerifyErrors | null) => {
-            if (err)
-                return res.status(StatusCodes.UNAUTHORIZED).json('Invalid token').end();
-        });
-
         try {
             await this._authService.logout(accessToken, refreshToken);
             res.status(StatusCodes.OK).end();
@@ -65,7 +64,7 @@ export default class AuthController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at logout action ${error.message}`);
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof InvalidTokenException || error instanceof UserLoggedOutException || error instanceof ExpiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -92,47 +91,109 @@ export default class AuthController implements Controller {
         const { email } = req.body;
         try {
             await this._authService.verifyEmail(email);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`error at verifyEmail action ${error.message}`);
+            logger.error(`Error at verifyEmail action: ${error.message}`);
+            if (error instanceof NotFoundException || error instanceof AlreadyVerifiedException) {
+                return next(error);
+            }
+            next(new InternalServerException(`${error.message}`));
+        }
+    }
+
+    public verifyEmailToken = async (req: Request, res: Response, next: NextFunction) => {
+        const { token } = req.query;
+        try {
+            await this._authService.verifyEmailToken(token as string);
+            res.status(StatusCodes.OK).json({}).end();
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error at verifyEmailToken action: ${error.message}`);
+
+            if (error instanceof InvalidTokenException || error instanceof ExpiredException || error instanceof NotFoundException || error instanceof AlreadyUsedException) {
+                return next(error);
+            }
             next(new InternalServerException(`${error.message}`));
         }
     }
 
     public forgetPassword = async (req: Request, res: Response, next: NextFunction) => {
         const { email } = req.body;
+
         try {
             await this._authService.forgetPassword(email);
-            res.status(StatusCodes.OK).end();
+            res.status(StatusCodes.OK).json({}).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`error at forgetPassword action ${error.message}`);
+            logger.error(`Error in forgetPassword action: ${error.message}`);
+
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
+        }
+
+    }
+
+    public changePassword = async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.user as IAuthPayload;
+
+        try {
+            await this._authService.changePassword(id);
+            res.status(StatusCodes.OK).json({}).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error in changePassword action: ${error.message}`);
+
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
+        }
+    };
+
+    public verifyResetToken = async (req: Request, res: Response, next: NextFunction) => {
+        const { token } = req.query;
+        if (!token) {
+            return next(new ParamRequiredException('Reset Password', 'token'));
+        }
+        try {
+            await this._authService.verifyResetToken(token as string);
+            res.status(StatusCodes.OK).json({}).end();
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error in verifyResetToken action: ${error.message}`);
+
+            if (error instanceof InvalidTokenException || error instanceof ExpiredException || error instanceof AlreadyUsedException) {
+                return next(error);
+            }
             next(new InternalServerException(`${error.message}`));
         }
     }
 
     public resetPassword = async (req: Request, res: Response, next: NextFunction) => {
-        const { password, otp } = req.body;
+        const { token } = req.query;
+        const { newPassword } = req.body;
+        if (!token) {
+            return next(new ParamRequiredException('Email Verification', 'token'));
+        }
         try {
-            await this._authService.resetPassword(password, otp);
-            res.status(StatusCodes.OK).end();
+            await this._authService.resetPassword(token as string, newPassword);
+            res.status(StatusCodes.OK).json({}).end();
+
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`error at resetPassword action ${error.message}`);
-            next(new InternalServerException(`${error.message}`));
+            logger.error(`Error in resetPassword action: ${error.message}`);
+
+            if (error instanceof InvalidTokenException || error instanceof ExpiredException || error instanceof AlreadyUsedException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
         }
     }
 
-    public verifyOtp = async (req: Request, res: Response, next: NextFunction) => {
-        const { otp } = req.body;
-        try {
-            await this._authService.verifyOtp(otp);
-            res.status(StatusCodes.OK).end();
-            //eslint-disable-next-line
-        } catch (error: any) {
-            logger.error(`error at verifyOtp action ${error.message}`);
-            next(new InternalServerException(`${error.message}`));
-        }
-    }
 }
