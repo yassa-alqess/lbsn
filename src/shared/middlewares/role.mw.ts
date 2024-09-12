@@ -1,7 +1,7 @@
 import { IAuthPayload } from "../../modules/auth/auth.interface";
 import { RoleEnum } from "../enums";
 import { ACCESS_TOKEN_SECRET } from "../constants";
-import { AuthTokenMissingException, UNAuthorizedException, InvalidAuthTokenException } from "../exceptions";
+import { TokenMissingException, UNAuthorizedException, InvalidTokenException } from "../exceptions";
 
 //3rd party dependinces
 import { Request, Response, NextFunction } from "express";
@@ -11,7 +11,7 @@ export function requireAnyOfThoseRoles(allowedRoles: RoleEnum[]) {
     return (req: Request, res: Response, next: NextFunction) => {
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
-            next(new AuthTokenMissingException());
+            next(new TokenMissingException());
         }
 
         try {
@@ -22,7 +22,7 @@ export function requireAnyOfThoseRoles(allowedRoles: RoleEnum[]) {
             }
             next(new UNAuthorizedException());
         } catch (err) {
-            next(new InvalidAuthTokenException());
+            next(new InvalidTokenException('Access token'));
         }
     };
 }
