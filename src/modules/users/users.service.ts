@@ -118,20 +118,20 @@ export default class UserService {
                 delete userPayload.password;
             }
 
-
             // Check for unique email and taxId to avoid constraint violation
-            const existingUserWithEmail = await User.findOne({
-                where: {
-                    email: email,
-                    userId: { [Op.ne]: userId }, // Exclude the current user from the check
-                },
-                transaction,
-            });
-            if (existingUserWithEmail) {
-                throw new AlreadyExistsException('User', 'email', email as string);
+            if (email) {
+                const existingUserWithEmail = await User.findOne({
+                    where: {
+                        email: email,
+                        userId: { [Op.ne]: userId }, // Exclude the current user from the check
+                    },
+                    transaction,
+                });
+                if (existingUserWithEmail) {
+                    throw new AlreadyExistsException('User', 'email', email as string);
+                }
             }
 
-            // Check for unique taxId if it's provided
             if (taxId) {
                 const existingUserWithTaxId = await User.findOne({
                     where: {
