@@ -37,8 +37,8 @@ export const TIME_SLOTS_PATH = "/time-slots"
 export const ROLES_PATH = "/roles"
 
 
-export const DOMAIN = process.env.DOMAIN || "localhost"
-export const ACQUISITION_MAIL = `sales@${DOMAIN}`
+export const DOMAIN = process.env.DOMAIN;
+export const ACQUISITION_MAIL = DOMAIN ? `sales@${DOMAIN}` : "";
 export const MAIN_MAIL = `sales@leadbull.net`
 
 
