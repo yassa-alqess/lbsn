@@ -1,7 +1,7 @@
 //file dependinces
 import { ACCESS_TOKEN_SECRET } from '../constants';
 import { IAuthPayload } from '../../modules/auth/auth.interface';
-import { TokenMissingException, InvalidTokenException, ExpiredException, UserLoggedOutException } from '../exceptions';
+import { TokenMissingException, InvalidTokenException, ExpiredException } from '../exceptions';
 import { initializeRedisClient } from '../../config/cache';
 import loggerPromise from '../../config/logger';
 
@@ -27,8 +27,7 @@ export async function accessTokenGuard(req: Request, res: Response, next: NextFu
         const isValid = await _redisClient.get(`access-token:${decoded.id}:${token}`);
         if (!isValid) { //token valid and not expired but it's not cached, so it's logged out
             logger.info(`user logged out`);
-            return next(new UserLoggedOutException());
-            // return res.status(StatusCodes.BAD_REQUEST).json('Token invalid or expired');
+            return next(new InvalidTokenException('Access token')); //don't reveal the reason
         }
 
         req.user = decoded;

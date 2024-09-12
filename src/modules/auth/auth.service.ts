@@ -5,7 +5,7 @@ import RefreshToken from "../../shared/models/refresh-token";
 import { generateAccessToken, generateRefreshToken } from "../../shared/utils";
 import { IAuthPayload } from "./auth.interface";
 import { IsVerifiedEnum, RoleEnum } from "../../shared/enums";
-import { InvalidTokenException, NotFoundException, ExpiredException, WrongCredentialsException, AlreadyUsedException, AlreadyVerifiedException, UserLoggedOutException } from "../../shared/exceptions";
+import { InvalidTokenException, NotFoundException, ExpiredException, WrongCredentialsException, AlreadyUsedException, AlreadyVerifiedException } from "../../shared/exceptions";
 import { initializeRedisClient } from "../../config/cache";
 import logger from "../../config/logger";
 import EmailService from "../../config/mailer";
@@ -81,7 +81,7 @@ export default class AuthService {
             }
 
             const isValid = await this._redisClient?.get(`access-token:${decoded.id}:${accessToken}`);
-            if (!isValid) throw new UserLoggedOutException();
+            if (!isValid) throw new InvalidTokenException('access token');
 
             if (!refreshTokenValue) throw new InvalidTokenException('refresh token');
 
@@ -91,7 +91,7 @@ export default class AuthService {
             //eslint-disable-next-line
         } catch (err: any) {
             logger.error(`error in logout service: ${err.message}`);
-            if (err instanceof InvalidTokenException || err instanceof UserLoggedOutException) {
+            if (err instanceof InvalidTokenException) {
                 throw err;
             }
             if (err instanceof TokenExpiredError) {
@@ -115,7 +115,7 @@ export default class AuthService {
             });
 
             if (!refreshTokenValue)
-                throw new UserLoggedOutException();
+                throw new InvalidTokenException('refresh token');
         } //eslint-disable-next-line
         catch (err: any) {
             if (err instanceof TokenExpiredError) {

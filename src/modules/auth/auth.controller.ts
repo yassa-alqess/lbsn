@@ -5,7 +5,7 @@ import { accessTokenGuard, validate } from '../../shared/middlewares';
 import AuthService from './auth.service';
 import logger from '../../config/logger';
 import { ForgetPasswordSchema, LoginSchema, LogoutSchema, RefreshTokenSchema, ResetPasswordSchema, VerifyEmailSchema } from './auth.dto';
-import { AlreadyUsedException, AlreadyVerifiedException, ExpiredException, InternalServerException, InvalidTokenException, NotFoundException, ParamRequiredException, UserLoggedOutException, WrongCredentialsException } from '../../shared/exceptions';
+import { AlreadyUsedException, AlreadyVerifiedException, ExpiredException, InternalServerException, InvalidTokenException, NotFoundException, ParamRequiredException, WrongCredentialsException } from '../../shared/exceptions';
 
 // 3rd party dependencies
 import express, { Request, Response, NextFunction } from 'express';
@@ -64,7 +64,7 @@ export default class AuthController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at logout action ${error.message}`);
-            if (error instanceof NotFoundException || error instanceof InvalidTokenException || error instanceof UserLoggedOutException || error instanceof ExpiredException) {
+            if (error instanceof NotFoundException || error instanceof InvalidTokenException || error instanceof ExpiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
