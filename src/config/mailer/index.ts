@@ -53,6 +53,7 @@ export default class EmailService {
             // eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error sending email to ${options.to}: ${error.message}`);
+            throw new Error(`Error sending email to ${options.to}: ${error.message}`);
         }
     }
 }

@@ -10,6 +10,8 @@ export const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || ""
 export const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || ""
 export const ACCESS_TOKEN_EXPIRY = process.env.ACCESS_TOKEN_EXPIRY || "15m"
 export const REFRESH_TOKEN_EXPIRY = process.env.REFRESH_TOKEN_EXPIRY || "7d"
+export const OTT_SECRET = process.env.OTT_SECRET || ""
+export const OTT_EXPIRY = process.env.OTT_EXPIRY || "3m"
 
 
 // mail constants
@@ -35,8 +37,8 @@ export const TIME_SLOTS_PATH = "/time-slots"
 export const ROLES_PATH = "/roles"
 
 
-export const DOMAIN = process.env.DOMAIN || "localhost"
-export const ACQUISITION_MAIL = `sales@${DOMAIN}`
+export const DOMAIN = process.env.DOMAIN;
+export const ACQUISITION_MAIL = DOMAIN ? `sales@${DOMAIN}` : "";
 export const MAIN_MAIL = `sales@leadbull.net`
 
 

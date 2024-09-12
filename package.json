@@ -9,7 +9,8 @@
     "inspect": "node inspect localhost:9229",
     "start": "node ./dist/startup.js",
     "test": "jest",
-    "build": "tsc",
+    "build": "tsc && npm run copy-templates",
+    "copy-templates": "cp -r src/config/mailer/templates dist/config/mailer",
     "lint": "eslint src/**/*.ts",
     "format": "eslint src/**/*.ts --fix"
   },

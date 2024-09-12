@@ -40,7 +40,7 @@ export interface IUserUpdatePayload {
     image?: string;
     password?: string;
     isLocked?: IsLockedEnum;
-    roles: RoleEnum[];
+    roles?: RoleEnum[];
 }
 
 export interface IUserBulkAddResponse {

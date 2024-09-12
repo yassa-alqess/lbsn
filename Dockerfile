@@ -72,28 +72,25 @@ CMD ["npm", "run", "start"]
 ################################################################################
 FROM base as development
 
+ENV NODE_ENV development
+
 # Create a new user with UID and GID
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
 WORKDIR /usr/app
+RUN chown -R appuser:appgroup /usr/app 
 
-# Create necessary dirs and set ownership to appuser
-# maybe later we will support self-signed certs for local development
-RUN mkdir -p /usr/app/upload \
-    && mkdir -p /usr/app/.logs \
-    && chmod -R 755 /usr/app/.logs \
-    && chown -R appuser:appgroup /usr/app
-
-COPY package*.json ./
-
-RUN npm install
 RUN npm install -g ts-node
-
-ENV NODE_ENV development
-
-COPY . .
+COPY package*.json ./
+RUN npm install
 
 # Switch to the new user
 USER appuser
+
+# Create necessary dirs and set ownership to appuser
+RUN mkdir -p /usr/app/upload \
+    && mkdir -p /usr/app/.logs
+
+COPY . .
 
 CMD [ "npm", "run", "dev" ]

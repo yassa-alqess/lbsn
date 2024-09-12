@@ -16,19 +16,24 @@ import UserProfilesController from './user-profiles/user-profiles.controller';
 import LeadsController from './leads/leads.controller';
 
 const restRouter = Router();
-restRouter.use('/', new AppointmentController().router);
-restRouter.use('/', new ServiceController().router);
-restRouter.use('/', new UserController().router);
-restRouter.use('/', new TimeSlotsController().router);
-restRouter.use('/', new GuestController().router);
-restRouter.use('/', new GuestRequestsController().router);
-restRouter.use('/', new TaskController().router);
-restRouter.use('/', new TicketController().router);
-restRouter.use('/', new TaskSubmissionController().router);
-restRouter.use('/', new ProfileController().router);
-restRouter.use('/', new UserProfilesController().router);
-restRouter.use('/', new RolesController().router);
-restRouter.use('/', new AuthController().router);
-restRouter.use('/', new LeadsController().router);
+for (const controller of [
+    AppointmentController,
+    ServiceController,
+    UserController,
+    TaskSubmissionController,
+    TimeSlotsController,
+    GuestController,
+    TicketController,
+    TaskController,
+    GuestRequestsController,
+    ProfileController,
+    RolesController,
+    AuthController,
+    UserProfilesController,
+    LeadsController,
+]) {
+    const instance = new controller();
+    restRouter.use('/', instance.router);
+}
 
 export default restRouter;

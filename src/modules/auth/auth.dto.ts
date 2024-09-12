@@ -11,6 +11,18 @@ export const LogoutSchema = Joi.object({
 });
 
 export const RefreshTokenSchema = Joi.object({
-    
+
     refreshToken: Joi.string().required(),
+});
+
+export const VerifyEmailSchema = Joi.object({
+    email: Joi.string().email().required(),
+});
+
+export const ForgetPasswordSchema = Joi.object({
+    email: Joi.string().email().required(),
+});
+
+export const ResetPasswordSchema = Joi.object({
+    newPassword: Joi.string().required(),
 });
