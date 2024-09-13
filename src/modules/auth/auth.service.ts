@@ -47,7 +47,7 @@ export default class AuthService {
             id: user.userId,
             roles: user.roles.map((role) => role.name as RoleEnum),
         } as IAuthPayload;
-        logger.debug(tokenPayload);
+        
         try {
             const accessToken = generateAccessToken(tokenPayload) as string;
             const result = await this._redisClient?.setEx(`access-token:${user.userId}:${accessToken}`, ms(ACCESS_TOKEN_EXPIRY), 'valid');
