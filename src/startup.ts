@@ -99,6 +99,6 @@ process.on('SIGINT', async () => {
   });
 });
 
-export const APP_SERVER = APP; // exports for test
-export const SERVER = server; // exports for ws
+export const APP_SERVER = APP; // exports for testing
+export const SERVER = server; 
 export const WSS_SERVER = WSS; // exports for ws

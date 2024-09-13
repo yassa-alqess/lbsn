@@ -76,6 +76,8 @@ web_modules/
 # leave .env.sample file
 .env
 .env.prod
+.env.dev
+.env.test
 .env.dev.local
 .env.test.local
 .env.prod.local
@@ -135,13 +137,6 @@ upload/
 
 
 .docker/
-
-
-
-# env files
-.env.dev
-.env.test
-.env.prod
 
 
 # local data
