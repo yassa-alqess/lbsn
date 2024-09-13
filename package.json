@@ -8,7 +8,7 @@
     "debug": "node --inspect-brk=9229 -r ts-node/register ./src/startup.ts",
     "inspect": "node inspect localhost:9229",
     "start": "node ./dist/startup.js",
-    "test": "export NODE_ENV=testing && jest --runInBand",
+    "test": "export NODE_ENV=test && jest --runInBand",
     "build": "tsc && npm run copy-templates",
     "copy-templates": "cp -r src/config/mailer/templates dist/config/mailer",
     "lint": "eslint src/**/*.ts",

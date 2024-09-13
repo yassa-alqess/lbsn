@@ -11,7 +11,7 @@ class DatabaseManager {
 
     public static getSQLInstance(): Sequelize {
         if (!DatabaseManager.sqlInstance) {
-            const modelsPath = ENV === 'development' ? '/../../shared/models/*.ts' : '/../../shared/models/*.js';
+            const modelsPath = ENV === 'dev' ? '/../../shared/models/*.ts' : '/../../shared/models/*.js';
             DatabaseManager.sqlInstance = new Sequelize(DATABASE_URL as string, {
                 models: [__dirname + modelsPath],
                 logging: (query) => logger.info(query),

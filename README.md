@@ -2,7 +2,7 @@
 
 
 ## Overview
-This README will guide you through setting up the application in development mode using Docker Compose.
+This README will guide you through setting up the application in dev mode using Docker Compose.
 
 ## Prerequisites
 

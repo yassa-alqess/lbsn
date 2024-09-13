@@ -1,11 +1,11 @@
 services:
-  ldns:
+  server:
     build:
-      target: development
+      target: dev
       args:
-        - NODE_ENV=development
+        - NODE_ENV=dev
     environment:
-      - NODE_ENV=development #the app will spin up the target env variables
+      - NODE_ENV=dev #the app will spin up the target env variables
     env_file:
       - .env.dev
     ports:
@@ -20,13 +20,13 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=LDNS
+      - POSTGRES_DB=LDSN
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   cache:
     ports:
-      - 6379:6379
+      - 6380:6379
     volumes:
       - cache_data:/data
 

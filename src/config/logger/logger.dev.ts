@@ -3,7 +3,7 @@ const { combine, timestamp, printf, json, colorize } = format;
 import { ENV } from '../../shared/constants';
 
 let devLogger: Logger | null = null;
-if (ENV === 'development') {
+if (ENV === 'dev') {
   devLogger = createLogger({
     transports: [
       new transports.File({ filename: `.logs/dev/dev.log` }),

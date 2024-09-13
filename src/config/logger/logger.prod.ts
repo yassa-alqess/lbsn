@@ -3,7 +3,7 @@ const { combine, timestamp, printf, json, colorize } = format;
 import { ENV } from '../../shared/constants';
 
 let prodLogger: Logger | null = null;
-if (ENV === "production") {
+if (ENV === "prod") {
 
   prodLogger = createLogger({
     transports: [

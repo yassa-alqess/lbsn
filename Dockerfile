@@ -9,7 +9,7 @@ FROM node:${NODE_VERSION}-alpine as base
 # Set working directory for all build stages.
 WORKDIR /usr/src/app
 ################################################################################
-# Create a stage for installing production dependencies.
+# Create a stage for installing prod dependencies.
 FROM base as deps
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
@@ -24,7 +24,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 # Create a stage for building the application.
 FROM deps as build
 
-# Download additional development dependencies before building, as some projects require
+# Download additional dev dependencies before building, as some projects require
 # "devDependencies" to be installed to build. If you don't need this, remove this step.
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
@@ -40,8 +40,8 @@ RUN npm run build
 # where the necessary files are copied from the build stage.
 FROM base as final
 
-# Use production node environment by default.
-ENV NODE_ENV production
+# Use prod node environment by default.
+ENV NODE_ENV prod
 
 # Create a new user with UID and GID
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
@@ -62,7 +62,7 @@ RUN mkdir -p /usr/app/upload \
 # Copy package.json so that package manager commands can be used.
 COPY package.json .
 
-# Copy the production dependencies from the deps stage and also
+# Copy the prod dependencies from the deps stage and also
 # the built application from the build stage into the image.
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
@@ -70,9 +70,9 @@ COPY --from=build /usr/src/app/dist ./dist
 # Run the application.
 CMD ["npm", "run", "start"]
 ################################################################################
-FROM base as development
+FROM base as dev
 
-ENV NODE_ENV development
+ENV NODE_ENV dev
 
 # Create a new user with UID and GID
 RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
