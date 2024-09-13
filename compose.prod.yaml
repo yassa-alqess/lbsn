@@ -1,5 +1,5 @@
 services:
-  ldns:
+  server:
     build:
       target: final
       args:
@@ -21,7 +21,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=LDNS
+      - POSTGRES_DB=LDSN
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
