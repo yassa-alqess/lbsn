@@ -1,7 +1,8 @@
-import { IServiceAddPayload, IServiceResponse, IServicesGetResponse, IServiceUpdatePayload } from "./services.interface";
+import { IServiceAddPayload, IServiceResponse, IServicesBulkAddPayload, IServicesBulkAddResponse, IServicesGetResponse, IServiceUpdatePayload } from "./services.interface";
 import Service from "../../shared/models/service";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
+
 export default class ServicesService {
     public async addService(servicePayload: IServiceAddPayload): Promise<IServiceResponse> {
         const service = await Service.findOne({ where: { name: servicePayload.name } });
@@ -79,26 +80,44 @@ export default class ServicesService {
     }
 
     public async getServiceByName(serviceName: string): Promise<IServiceResponse | undefined> {
-        try {
-            const service = await Service.findOne({ where: { name: serviceName } });
-
-            if (!service) {
-                throw new NotFoundException("Service", "name", serviceName);
-            }
-
-            return {
-                ...service.toJSON() as IServiceResponse,
-            };
-            
-            //eslint-disable-next-line
-        } catch (err: any) {
-            if (err instanceof NotFoundException) {
-                throw err; // Re-throw NotFoundException to be handled elsewhere
-            }
-
-            // Handle unexpected errors
-            throw new Error(`Couldn't find service with name ${serviceName}`);
+        const service = await Service.findOne({ where: { name: serviceName } });
+        if (!service) {
+            throw new NotFoundException("Service", "name", serviceName);
         }
+        return {
+            ...service.toJSON() as IServiceResponse,
+        };
+    }
+
+    public async bulkAddServices(servicePayload: IServicesBulkAddPayload): Promise<IServicesBulkAddResponse | undefined> {
+        const addedServices: IServiceResponse[] = [];
+
+        for (const name of servicePayload.names) {
+            const service = await Service.findOne({ where: { name } });
+
+            if (service) {
+                // Skip already existing services and continue with the next
+                logger.info(`Service with name "${name}" already exists, skipping.`);
+                continue;
+            }
+
+            try {
+                const newService = await Service.create({ name });
+                addedServices.push({
+                    serviceId: newService.serviceId,
+                    name: newService.name,
+                });
+
+                //eslint-disable-next-line
+            } catch (error: any) {
+                logger.error(`Error adding service "${name}": ${error.message}`);
+            }
+        }
+
+        return {
+            services: addedServices,
+            count: addedServices.length,
+        };
     }
 
 }

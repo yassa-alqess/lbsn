@@ -1,12 +1,12 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, SERVICES_PATH } from '../../shared/constants';
-import { IServiceAddPayload, IServiceUpdatePayload } from './services.interface';
+import { IServiceAddPayload, IServicesBulkAddPayload, IServiceUpdatePayload } from './services.interface';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import ServicesService from './services.service';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import { RoleEnum } from '../../shared/enums';
 import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
-import { CreateServiceDto, UpdateServiceDto } from './services.dto';
+import { BulkAddServicesDto, CreateServiceDto, UpdateServiceDto } from './services.dto';
 import logger from '../../config/logger';
 
 // 3rd party dependencies
@@ -31,6 +31,7 @@ export default class ServiceController implements Controller {
         this.router.post(this.path, validate(CreateServiceDto), this.addService);
         this.router.patch(`${this.path}/:serviceId`, validate(UpdateServiceDto), this.updateService);
         this.router.delete(`${this.path}/:serviceId`, this.deleteService);
+        this.router.post(`${this.path}/bulk`, validate(BulkAddServicesDto), this.bulkAddServices);
     }
 
     public addService = async (req: Request, res: Response, next: NextFunction) => {
@@ -133,4 +134,17 @@ export default class ServiceController implements Controller {
             next(new InternalServerException(error.message));
         }
     }
+
+    public bulkAddServices = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const bulkAddServicesPayload: IServicesBulkAddPayload = req.body;
+            const BulkAddServicesResponse = await this._servicesService.bulkAddServices(bulkAddServicesPayload);
+            res.status(StatusCodes.CREATED).json(BulkAddServicesResponse).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error at bulkAddServices action: ${error}`);
+            next(new InternalServerException(error.message));
+        }
+    };
 }
