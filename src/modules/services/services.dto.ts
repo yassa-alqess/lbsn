@@ -7,8 +7,9 @@ export const CreateServiceDto = Joi.object({
 export const UpdateServiceDto = Joi.object({
     name: Joi.string().optional(),
 });
-export const AddServicesBulkDto = Joi.object({
-    services: Joi.array()
-        .items(Joi.string().min(1)) // Array of strings, each with at least 1 character
-        .required() // Ensure that 'services' is a required field
+
+export const BulkAddServicesDto = Joi.object({
+    names: Joi.array()
+        .items(Joi.string())
+        .required()
 });

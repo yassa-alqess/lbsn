@@ -14,6 +14,12 @@ export interface IServiceUpdatePayload {
 export interface IServicesGetResponse {
     services: IServiceResponse[]
 }
-export interface IServiceAddBulkPayload {
-    services: string[]; // Array of service names
+
+export interface IServicesBulkAddPayload {
+    names: string[];
+}
+
+export interface IServicesBulkAddResponse {
+    services: IServiceResponse[]
+    count: number
 }
