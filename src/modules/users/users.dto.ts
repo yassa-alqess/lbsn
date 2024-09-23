@@ -3,12 +3,15 @@ import Joi from 'joi'
 import _ from 'lodash'
 
 export const CreateUserDto = Joi.object({
-    email: Joi.string().email().required(),
-    name: Joi.string().required(),
-    taxId: Joi.string().optional(),
+    username: Joi.string().required(),
+    userEmail: Joi.string().optional(),
+    userPhone: Joi.string().optional(),
+    userAddress: Joi.string().optional(),
+    companytaxId: Joi.string().optional(),
     companyName: Joi.string().required(),
-    phone: Joi.string().required(),
-    location: Joi.string().required(),
+    companyEmail: Joi.string().required(),
+    companyPhone: Joi.string().required(),
+    companyAddress: Joi.string().required(),
     password: Joi.string().min(6).required(),
     isVerified: Joi.string()
         .valid(..._.values(IsVerifiedEnum))
@@ -23,12 +26,15 @@ export const CreateUserDto = Joi.object({
 })
 
 export const UpdateUserDto = Joi.object({
-    email: Joi.string().email().optional(),
-    name: Joi.string().optional(),
-    taxId: Joi.string().optional(),
+    username: Joi.string().optional(),
+    userEmail: Joi.string().optional(),
+    userPhone: Joi.string().optional(),
+    userAddress: Joi.string().optional(),
+    companytaxId: Joi.string().optional(),
     companyName: Joi.string().optional(),
-    phone: Joi.string().optional(),
-    location: Joi.string().optional(),
+    companyEmail: Joi.string().optional(),
+    companyPhone: Joi.string().optional(),
+    companyAddress: Joi.string().optional(),
     password: Joi.string().min(6).optional(),
     isVerified: Joi.string()
         .valid(..._.values(IsVerifiedEnum))
@@ -40,4 +46,16 @@ export const UpdateUserDto = Joi.object({
         .items(Joi.string().valid(..._.values(RoleEnum)))
         .min(1)
         .optional()
+})
+
+export const UpdateUserInfoDto = Joi.object({
+    username: Joi.string().optional(),
+    userEmail: Joi.string().optional(),
+    userPhone: Joi.string().optional(),
+    userAddress: Joi.string().optional(),
+    companytaxId: Joi.string().optional(),
+    companyName: Joi.string().optional(),
+    companyEmail: Joi.string().optional(),
+    companyPhone: Joi.string().optional(),
+    companyAddress: Joi.string().optional(),
 })
