@@ -1,7 +1,7 @@
 import { Table, Model, Column, DataType } from 'sequelize-typescript';
 
 @Table({ schema: 'public', timestamps: true })
-class Company extends Model {
+class WarmLead extends Model {
     @Column({
         primaryKey: true,
         type: DataType.UUID,
@@ -10,40 +10,35 @@ class Company extends Model {
     declare Id: string;
 
     @Column({
-        type: DataType.STRING(100),
-        allowNull: false,
+        type: DataType.STRING(200),
     })
-    declare fullName: string; // Full Name
+    declare fullName: string;
 
     @Column({
         type: DataType.STRING(200),
-        allowNull: false,
         validate: {
             isEmail: true,
         },
     })
-    declare email: string; // Email
+    declare email: string;
 
     @Column({
-        type: DataType.STRING(15),
-        allowNull: false,
+        type: DataType.STRING(20),
     })
-    declare phoneNumber: string; // Phone Number
-
-    @Column({
-        type: DataType.STRING(150),
-        allowNull: false,
-    })
-    declare companyName: string; // Company Name
+    declare phone: string;
 
     @Column({
         type: DataType.STRING(200),
-        allowNull: false,
+    })
+    declare companyName: string;
+
+    @Column({
+        type: DataType.STRING(200),
         validate: {
             isEmail: true,
         },
     })
-    declare companyEmail: string; // Company Email
+    declare companyEmail: string;
 }
 
-export default Company;
+export default WarmLead;
