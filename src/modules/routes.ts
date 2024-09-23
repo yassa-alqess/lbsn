@@ -14,7 +14,7 @@ import RolesController from './roles/roles.controller';
 import AuthController from './auth/auth.controller';
 import UserProfilesController from './user-profiles/user-profiles.controller';
 import LeadsController from './leads/leads.controller';
-
+import WarmController from './warm-leads/warm-leads.controller';
 const restRouter = Router();
 for (const controller of [
     AppointmentController,
@@ -31,6 +31,7 @@ for (const controller of [
     AuthController,
     UserProfilesController,
     LeadsController,
+    WarmController,
 ]) {
     const instance = new controller();
     restRouter.use('/', instance.router);
