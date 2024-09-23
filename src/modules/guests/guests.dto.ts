@@ -1,20 +1,25 @@
 import Joi from 'joi'
 
 export const CreateGuestDto = Joi.object({
-    email: Joi.string().required(),
-    name: Joi.string().required(),
-    taxId: Joi.string().optional(),
+    username: Joi.string().required(),
+    userEmail: Joi.string().optional(),
+    userPhone: Joi.string().optional(),
+    userAddress: Joi.string().optional(),
+    companytaxId: Joi.string().optional(),
     companyName: Joi.string().required(),
-    phone: Joi.string().required(),
-    location: Joi.string().required(),
-
+    companyEmail: Joi.string().required(),
+    companyPhone: Joi.string().required(),
+    companyAddress: Joi.string().required(),
 });
 
 export const UpdateGuestDto = Joi.object({
-    email: Joi.string().optional(),
-    name: Joi.string().optional(),
-    taxId: Joi.string().optional(),
+    username: Joi.string().optional(),
+    userEmail: Joi.string().optional(),
+    userPhone: Joi.string().optional(),
+    userAddress: Joi.string().optional(),
+    companytaxId: Joi.string().optional(),
     companyName: Joi.string().optional(),
-    phone: Joi.string().optional(),
-    location: Joi.string().optional(),
+    companyEmail: Joi.string().optional(),
+    companyPhone: Joi.string().optional(),
+    companyAddress: Joi.string().optional(),
 });

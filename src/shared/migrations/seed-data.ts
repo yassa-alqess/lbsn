@@ -25,20 +25,20 @@ export const userRolesMigration = async () => {
 
         // Seed User
         logger.debug('Seeding user...');
-        let user = await User.findOne({ where: { email }, transaction });
+        let user = await User.findOne({ where: { companyEmail: email }, transaction });
 
         if (!user) {
             user = await User.create({
-                email,
-                name: "Yassa",
+                username: "Yassa",
                 companyName: "MGIL",
-                phone: "123456789",
-                location: "Cairo",
+                companyEmail: email,
+                companyPhone: "123456789",
+                companyAddress: "Cairo",
                 password: bcrypt.hashSync("123456", 10)
             }, { transaction });
-            logger.info(`User ${user.email} created.`);
+            logger.info(`User ${user.companyEmail} created.`);
         } else {
-            logger.info(`User ${user.email} already exists.`);
+            logger.info(`User ${user.companyEmail} already exists.`);
         }
 
         // Find the roles

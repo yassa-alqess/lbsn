@@ -1,14 +1,15 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, USERS_PATH } from '../../shared/constants';
-import { IUserAddPayload, IUserUpdatePayload } from './users.interface';
+import { IUserAddPayload, IUserUpdateInfoPayload, IUserUpdatePayload } from './users.interface';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import UserService from './users.service';
 import { RoleEnum } from '../../shared/enums';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import upload from '../../config/storage/multer.config';
-import { CreateUserDto, UpdateUserDto } from './users.dto';
+import { CreateUserDto, UpdateUserDto, UpdateUserInfoDto } from './users.dto';
 import { AlreadyExistsException, InternalServerException, InvalidIdException, NoFileUploadedException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
+import { IAuthPayload } from '../auth/auth.interface';
 
 
 // 3rd party dependencies
@@ -26,6 +27,9 @@ export default class UserController implements Controller {
     }
 
     private _initializeRoutes() {
+
+        this.router.patch(`${this.path}/:userId/info`, accessTokenGuard, upload(`${this.path}/images`)!.single("file"), validate(UpdateUserInfoDto), this.updateUserInfo);
+
         this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, upload(`${this.path}/images`)!.single("file"), validate(CreateUserDto), this.addUser);
         this.router.post(`${this.path}/bulk`, upload(this.path)!.single("file"), this.bulkAddUsers);
@@ -151,6 +155,36 @@ export default class UserController implements Controller {
             logger.error('error at deleteUser action', error);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('userId'));
+            }
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public updateUserInfo = async (req: Request, res: Response, next: NextFunction) => {
+        const { id: userId } = req.user as IAuthPayload;
+
+        try {
+            const path = req.file ? req.file.filename : '';
+            const userUpdatePayload: IUserUpdateInfoPayload = {
+                ...req.body,
+                userId,
+                image: path
+            }
+            logger.debug(`req.file.filename: ${JSON.stringify(req.file)}`);
+            const user = await this._userService.updateUser(userUpdatePayload);
+            res.status(StatusCodes.OK).json(user).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at updateUserInfo action ${error}`);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return next(new InvalidIdException('userId'));
+            }
+            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
+                return next(new AlreadyExistsException('User', 'email', req.body.email));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

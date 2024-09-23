@@ -30,7 +30,7 @@ export default class AppointmentService {
 
         let guest;
         try {
-            guest = await this._guestService.getGuestByEmail(appointmentPayload.email);
+            guest = await this._guestService.getGuestByEmail(appointmentPayload.companyEmail);
             //eslint-disable-next-line
         } catch (err: any) {
             if (err instanceof NotFoundException) {
@@ -100,7 +100,7 @@ export default class AppointmentService {
         // add to apppointment table the url
         try {
 
-            await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.email, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId, serviceId: appointmentPayload.serviceId });
+            await Appointment.create({ time: appointmentPayload.timeSlot, guestEmail: guest!.companyEmail, meetingUrl: meeting.start_url, meetingJoinUrl: meeting.join_url, meetingPassword: hashedPassword, guestId: guest!.guestId, serviceId: appointmentPayload.serviceId });
             //eslint-disable-next-line
         } catch (err: any) {
 
@@ -121,7 +121,7 @@ export default class AppointmentService {
             hour12: true // Use 12-hour time format
         });
         const emailPayload: IEmailOptions = {
-            to: guest!.email,
+            to: guest!.companyEmail,
             cc: [MAIN_MAIL, ACQUISITION_MAIL], // Optional CC recipients
             template: "appointment",
             subject: 'Appointment Confirmation',
@@ -143,7 +143,7 @@ export default class AppointmentService {
         });
         return {
             appointments: appointments.map(appointment => ({
-               ...appointment.toJSON() as IAppointment
+                ...appointment.toJSON() as IAppointment
             }))
         };
     }

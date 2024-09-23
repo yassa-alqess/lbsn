@@ -2,32 +2,42 @@ import { IEmailOptions } from "../../config/mailer/email.interface";
 import { IsApprovedEnum } from "../../shared/enums";
 
 export interface IGuestAddPayload {
-    email: string;
-    name: string;
-    taxId?: string;
+    username: string;
+    userEmail?: string;
+    userPhone?: string;
+    userAddress?: string;
+    companytaxId?: string;
     companyName: string;
-    phone: string;
-    location: string;
+    companyEmail: string;
+    companyPhone: string;
+    companyAddress: string;
 }
 
 export interface IGuestResponse {
     guestId: string;
-    email: string;
-    name: string;
-    taxId?: string;
+    username: string;
+    userEmail: string;
+    userPhone: string;
+    userAddress: string;
+    companytaxId: string;
     companyName: string;
-    phone: string;
-    location: string;
+    companyEmail: string;
+    companyPhone: string;
+    companyAddress: string;
     approved: IsApprovedEnum;
 }
 export interface IGuestUpdatePayload {
     guestId: string;
-    email?: string;
-    name?: string;
-    taxId?: string;
+    username?: string;
+    userEmail?: string;
+    userPhone?: string;
+    userAddress?: string;
+    companytaxId?: string;
     companyName?: string;
-    phone?: string;
-    location?: string;
+    companyEmail?: string;
+    companyPhone?: string;
+    companyAddress?: string;
+
 }
 
 export interface IGuestsGetResponse {

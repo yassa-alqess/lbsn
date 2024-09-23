@@ -30,7 +30,7 @@ export default class AuthService {
         //get user and it's roles
         const user = await User.findOne({
             where: {
-                email,
+                companyEmail: email,
             },
             include: 'roles',
         });
@@ -47,7 +47,7 @@ export default class AuthService {
             id: user.userId,
             roles: user.roles.map((role) => role.name as RoleEnum),
         } as IAuthPayload;
-        
+
         try {
             const accessToken = generateAccessToken(tokenPayload) as string;
             const result = await this._redisClient?.setEx(`access-token:${user.userId}:${accessToken}`, ms(ACCESS_TOKEN_EXPIRY), 'valid');
@@ -244,15 +244,16 @@ export default class AuthService {
     public async changePassword(userId: string): Promise<void> {
         try {
             const user = await this._userService?.getUser(userId);
+            const email = user?.companyEmail as string;
             if (!user) {
                 throw new NotFoundException('User', 'userId', userId);
             }
 
-            const resetToken = jwt.sign({ email: user.email }, OTT_SECRET, { expiresIn: ms(OTT_EXPIRY) });
-            await this._redisClient?.setEx(`reset-token:${resetToken}`, ms(OTT_EXPIRY), user.email);
+            const resetToken = jwt.sign({ email }, OTT_SECRET, { expiresIn: ms(OTT_EXPIRY) });
+            await this._redisClient?.setEx(`reset-token:${resetToken}`, ms(OTT_EXPIRY), email);
 
             const mailOptions = {
-                to: user.email,
+                to: email,
                 subject: 'Password Change Request',
                 template: 'reset-password',
                 context: {

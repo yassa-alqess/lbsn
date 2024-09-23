@@ -22,9 +22,9 @@ export default class GuestService {
         this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
-        const guest = await Guest.findOne({ where: { email: guestPayload.email } });
+        const guest = await Guest.findOne({ where: { companyEmail: guestPayload.companyEmail } });
         if (guest)
-            throw new AlreadyExistsException('Guest', 'email', guestPayload.email);
+            throw new AlreadyExistsException('Guest', 'email', guestPayload.companyEmail);
 
         try {
             const newGuest = await Guest.create({ ...guestPayload, approved: IsApprovedEnum.PENDING });
@@ -124,10 +124,10 @@ export default class GuestService {
             // Check if the guest is already approved
             if (guest.approved === IsApprovedEnum.APPROVED) {
                 try {
-                    const existingUser = await this._userService.getUserByEmail(guest.email);
+                    const existingUser = await this._userService.getUserByEmail(guest.companyEmail);
                     if (existingUser) {
                         logger.info('Guest already approved and user exists');
-                        return { userId: existingUser.userId, email: guest.email, sendEmail: false };
+                        return { userId: existingUser.userId, email: guest.companyEmail, sendEmail: false };
                     }
                     //eslint-disable-next-line
                 } catch (error: any) {
@@ -140,12 +140,12 @@ export default class GuestService {
                 }
             }
 
-            const email = guest.email;
+            const email = guest.companyEmail;
             try {
                 const existingUser = await this._userService.getUserByEmail(email);
                 if (existingUser) {
                     logger.info('User already exists');
-                    return { userId: existingUser.userId, email: guest.email, sendEmail: false };
+                    return { userId: existingUser.userId, email: guest.companyEmail, sendEmail: false };
                 }
                 //eslint-disable-next-line
             } catch (error: any) {
@@ -162,12 +162,15 @@ export default class GuestService {
             const hashedPassword = bcrypt.hashSync(password, 10);
 
             const userPayload: IUserAddPayload = {
-                email,
-                name: guest.name,
-                taxId: guest.taxId,
+                username: guest.username,
+                userEmail: guest.userEmail,
+                userPhone: guest.userPhone,
+                userAddress: guest.userAddress,
+                companytaxId: guest.companytaxId,
                 companyName: guest.companyName,
-                phone: guest.phone,
-                location: guest.location,
+                companyEmail: guest.companyEmail,
+                companyPhone: guest.companyPhone,
+                companyAddress: guest.companyAddress,
                 password: hashedPassword,
                 isVerified: IsVerifiedEnum.PENDING,
                 roles: [RoleEnum.USER],
@@ -192,7 +195,7 @@ export default class GuestService {
             await guest.update({ approved: IsApprovedEnum.APPROVED }, { transaction });
 
             if (!txn) await transaction.commit();
-            return { userId: newUser.userId, email: guest.email, sendEmail, emailPayload };
+            return { userId: newUser.userId, email: guest.companyEmail, sendEmail, emailPayload };
             //eslint-disable-next-line
         } catch (error: any) {
             if (!txn) await transaction.rollback();
@@ -202,19 +205,12 @@ export default class GuestService {
     }
 
     public async getGuestByEmail(email: string): Promise<IGuestResponse | undefined> {
-        const guest = await Guest.findOne({ where: { email } });
+        const guest = await Guest.findOne({ where: { companyEmail: email } });
         if (!guest) {
             throw new NotFoundException('Guest', 'email', email);
         }
         return {
-            guestId: guest.guestId,
-            email: guest.email,
-            name: guest.name,
-            taxId: guest.taxId,
-            companyName: guest.companyName,
-            phone: guest.phone,
-            location: guest.location,
-            approved: guest.approved
+            ...guest.toJSON() as IGuestResponse
         };
     }
 }

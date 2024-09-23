@@ -3,15 +3,15 @@ import _ from 'lodash';
 import Joi from 'joi';
 
 export const CreateAppointmentDto = Joi.object({
-    email: Joi.string().email().required(),
-    name: Joi.string().required(),
+    username: Joi.string().required(),
+    companyTaxId: Joi.string().optional(),
     companyName: Joi.string().required(),
-    taxId: Joi.string().optional(),
+    companyEmail: Joi.string().required(),
+    companyPhone: Joi.string().required(),
+    companyAddress: Joi.string().required(),
     marketingBudget: Joi.string()
         .valid(..._.values(MarketingBudgetEnum))
         .required(),
-    phone: Joi.string().required(),
-    location: Joi.string().required(),
     timeSlot: Joi.date().required(),
     serviceId: Joi.string().required()
 });

@@ -22,14 +22,13 @@ export default class UserService {
 
         try {
             // Check if user already exists
-            const user = await User.findOne({ where: { email: userPayload.email } });
+            const user = await User.findOne({ where: { email: userPayload.companyEmail } });
             if (user) {
-                throw new AlreadyExistsException('User', 'email', userPayload.email);
+                throw new AlreadyExistsException('User', 'email', userPayload.companyEmail);
             }
 
             // Validate and get the roles from the database
             let roles;
-
             try {
                 roles = await Role.findAll({
                     where: {
@@ -80,15 +79,18 @@ export default class UserService {
             // };
             return {
                 userId: newUser.userId,
-                email: newUser.email,
-                name: newUser.name,
-                taxId: newUser.taxId,
-                roles: userRoles.map((role) => role.name),
-                isVerified: newUser.isVerified,
+                username: newUser.username,
+                userEmail: newUser.userEmail,
+                userPhone: newUser.userPhone,
+                userAddress: newUser.userAddress,
+                companytaxId: newUser.companytaxId,
                 companyName: newUser.companyName,
-                phone: newUser.phone,
-                location: newUser.location,
+                companyEmail: newUser.companyEmail,
+                companyPhone: newUser.companyPhone,
+                companyAddress: newUser.companyAddress,
+                roles: userRoles.map((role) => role.name),
                 image: newUser.image,
+                isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
             //eslint-disable-next-line
@@ -100,7 +102,7 @@ export default class UserService {
     }
 
     public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
-        const { userId, roles: newRoles, email, taxId, password } = userPayload;
+        const { userId, companytaxId, companyEmail, password, roles: newRoles, } = userPayload;
         const user = await User.findByPk(userId, {
             include: [{ model: Role, as: 'roles' }],
         });
@@ -119,29 +121,29 @@ export default class UserService {
             }
 
             // Check for unique email and taxId to avoid constraint violation
-            if (email) {
+            if (companyEmail) {
                 const existingUserWithEmail = await User.findOne({
                     where: {
-                        email: email,
+                        companyEmail,
                         userId: { [Op.ne]: userId }, // Exclude the current user from the check
                     },
                     transaction,
                 });
                 if (existingUserWithEmail) {
-                    throw new AlreadyExistsException('User', 'email', email as string);
+                    throw new AlreadyExistsException('User', 'email', companyEmail as string);
                 }
             }
 
-            if (taxId) {
+            if (companytaxId) {
                 const existingUserWithTaxId = await User.findOne({
                     where: {
-                        taxId: taxId,
+                        companytaxId,
                         userId: { [Op.ne]: userId }, // Exclude the current user from the check
                     },
                     transaction,
                 });
                 if (existingUserWithTaxId) {
-                    throw new AlreadyExistsException('User', 'taxId', taxId as string);
+                    throw new AlreadyExistsException('User', 'taxId', companytaxId as string);
                 }
             }
 
@@ -170,16 +172,19 @@ export default class UserService {
 
             return {
                 userId: user.userId,
-                email: user.email,
-                name: user.name,
-                taxId: user.taxId,
-                roles: updatedRoles.map((role) => role.name),
-                isVerified: user.isVerified,
+                username: user.username,
+                userEmail: user.userEmail,
+                userPhone: user.userPhone,
+                userAddress: user.userAddress,
+                companytaxId: user.companytaxId,
                 companyName: user.companyName,
-                phone: user.phone,
-                location: user.location,
+                companyEmail: user.companyEmail,
+                companyPhone: user.companyPhone,
+                companyAddress: user.companyAddress,
+                roles: updatedRoles.map((role) => role.name),
                 image: user.image,
-                isLocked: user.isLocked,
+                isVerified: user.isVerified,
+                isLocked: user.isLocked
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -205,24 +210,26 @@ export default class UserService {
 
         for (const user of data) {
 
-            const definedUser = user as { email: string, name: string, taxId: string, roles: string, isVerified: IsVerifiedEnum, companyName: string, phone: string, location: string, image: string, isLocked: IsLockedEnum };
+            const definedUser = user as { username: string, userEmail: string, userPhone: string, userAddress: string, companytaxId: string, companyName: string, companyEmail: string, companyPhone: string, companyAddress: string, roles: string, isVerified: IsVerifiedEnum, isLocked: IsLockedEnum };
 
-            if (User.findOne({ where: { email: definedUser.email } }) !== null) {
-                logger.info(`User with email ${definedUser.email} already exists`);
+            if (User.findOne({ where: { email: definedUser.companyEmail } }) !== null) {
+                logger.info(`User with email ${definedUser.companyEmail} already exists`);
                 continue; // Skip if the user already exists
             }
             const roles = (definedUser.roles || "").split(",").map(role => role.trim());
-            rolesToAssign.set(definedUser.email, roles); // Store roles by user email
+            rolesToAssign.set(definedUser.companyEmail, roles); // Store roles by user email
 
             users.push({
-                email: definedUser.email,
-                name: definedUser.name,
-                taxId: definedUser.taxId,
-                isVerified: definedUser.isVerified,
+                username: definedUser.username,
+                userEmail: definedUser.userEmail,
+                userPhone: definedUser.userPhone,
+                userAddress: definedUser.userAddress,
+                companytaxId: definedUser.companytaxId,
                 companyName: definedUser.companyName,
-                phone: definedUser.phone,
-                location: definedUser.location,
-                image: definedUser.image,
+                companyEmail: definedUser.companyEmail,
+                companyPhone: definedUser.companyPhone,
+                companyAddress: definedUser.companyAddress,
+                isVerified: definedUser.isVerified,
                 isLocked: definedUser.isLocked,
             });
         }
@@ -236,6 +243,7 @@ export default class UserService {
             throw new Error(`Failed to bulk add users: ${error.message}`);
         }
         logger.debug(`Bulk added ${usersResponse.length} users`);
+
         // Associate roles with users
         const roleNames = new Set<string>();
         rolesToAssign.forEach(roles => roles.forEach(role => roleNames.add(role)));
@@ -255,8 +263,8 @@ export default class UserService {
 
         try {
             for (const user of usersResponse) {
-                logger.debug(`Assigning roles to user with email ${user.email}`);
-                const userRoles = rolesToAssign.get(user.email) || [];
+                logger.debug(`Assigning roles to user with email ${user.companyEmail}`);
+                const userRoles = rolesToAssign.get(user.companyEmail) || [];
                 // Map role names to Role instances
                 // Ensure validRoles contains only Role instances
                 const validRoles = userRoles.map(roleName => roleMap.get(roleName))
@@ -274,22 +282,22 @@ export default class UserService {
         // Prepare response
         return {
             users: usersResponse.map(user => ({
-
                 userId: user.userId,
-                email: user.email,
-                name: user.name,
-                taxId: user.taxId,
-                roles: user.roles.map((role) => role.name),
-                isVerified: user.isVerified,
+                username: user.username,
+                userEmail: user.userEmail,
+                userPhone: user.userPhone,
+                userAddress: user.userAddress,
+                companytaxId: user.companytaxId,
                 companyName: user.companyName,
-                phone: user.phone,
-                location: user.location,
+                companyEmail: user.companyEmail,
+                companyPhone: user.companyPhone,
+                companyAddress: user.companyAddress,
+                roles: user.roles.map((role) => role.name),
                 image: user.image,
+                isVerified: user.isVerified,
                 isLocked: user.isLocked,
             }))
         };
-
-
     }
 
     public async getUser(userId: string): Promise<IUserResponse | undefined> {
@@ -301,22 +309,25 @@ export default class UserService {
         }
         return {
             userId: user.userId,
-            email: user.email,
-            name: user.name,
-            taxId: user.taxId,
-            roles: user.roles.map((role) => role.name), // Extract role names
-            isVerified: user.isVerified,
+            username: user.username,
+            userEmail: user.userEmail,
+            userPhone: user.userPhone,
+            userAddress: user.userAddress,
+            companytaxId: user.companytaxId,
             companyName: user.companyName,
-            phone: user.phone,
-            location: user.location,
+            companyEmail: user.companyEmail,
+            companyPhone: user.companyPhone,
+            companyAddress: user.companyAddress,
+            roles: user.roles.map((role) => role.name), // extract role names
             image: user.image,
+            isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
     }
 
     public async getUserByEmail(email: string): Promise<IUserResponse | undefined> {
         const user = await User.findOne({
-            where: { email },
+            where: { companyEmail: email },
             include: [{ model: Role, as: 'roles' }], // Include roles
         });
         if (!user) {
@@ -324,15 +335,18 @@ export default class UserService {
         }
         return {
             userId: user.userId,
-            email: user.email,
-            name: user.name,
-            taxId: user.taxId,
-            roles: user.roles.map((role) => role.name),
-            isVerified: user.isVerified,
+            username: user.username,
+            userEmail: user.userEmail,
+            userPhone: user.userPhone,
+            userAddress: user.userAddress,
+            companytaxId: user.companytaxId,
             companyName: user.companyName,
-            phone: user.phone,
-            location: user.location,
+            companyEmail: user.companyEmail,
+            companyPhone: user.companyPhone,
+            companyAddress: user.companyAddress,
+            roles: user.roles.map((role) => role.name), // extract role names
             image: user.image,
+            isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
     }
@@ -344,15 +358,18 @@ export default class UserService {
         return {
             users: users.map(user => ({
                 userId: user.userId,
-                email: user.email,
-                name: user.name,
-                taxId: user.taxId,
-                roles: user.roles.map((role) => role.name),
-                isVerified: user.isVerified,
+                username: user.username,
+                userEmail: user.userEmail,
+                userPhone: user.userPhone,
+                userAddress: user.userAddress,
+                companytaxId: user.companytaxId,
                 companyName: user.companyName,
-                phone: user.phone,
-                location: user.location,
+                companyEmail: user.companyEmail,
+                companyPhone: user.companyPhone,
+                companyAddress: user.companyAddress,
+                roles: user.roles.map((role) => role.name), // extract role names
                 image: user.image,
+                isVerified: user.isVerified,
                 isLocked: user.isLocked,
             })),
         };

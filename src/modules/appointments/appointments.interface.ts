@@ -1,12 +1,12 @@
 import { MarketingBudgetEnum } from "../../shared/enums";
 
 export interface IAppointmentsAddPayload {
-    email: string;
-    name: string;
+    username: string;
+    companyTaxId?: string;
     companyName: string;
-    taxId?: string;
-    phone: string;
-    location: string;
+    companyEmail: string;
+    companyPhone: string;
+    companyAddress: string;
     marketingBudget: MarketingBudgetEnum;
     timeSlot: Date;
     serviceId: string;
@@ -15,12 +15,12 @@ export interface IAppointmentsAddPayload {
 
 export interface IAppointment {
     appointmentId: string;
-    email: string;
-    name: string;
+    username: string;
+    companyTaxId?: string;
     companyName: string;
-    taxId?: string;
-    phone: string;
-    location: string;
+    companyEmail: string;
+    companyPhone: string;
+    companyAddress: string;
     marketingBudget: MarketingBudgetEnum;
     timeSlot: Date;
     serviceId: string;

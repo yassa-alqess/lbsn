@@ -22,20 +22,33 @@ class Guest extends Model {
         type: DataType.STRING(200),
 
     })
-    declare name: string;
-
-    @Column({
-        type: DataType.STRING(200),
-        unique: true,
-    })
-    declare email: string;
+    declare username: string;
 
     @AllowNull(true)
     @Column({
         type: DataType.STRING(200),
         unique: true,
     })
-    declare taxId: string;
+    declare userEmail: string;
+
+    @AllowNull(true)
+    @Column({
+        type: DataType.STRING(20),
+    })
+    declare userPhone: string;
+
+    @AllowNull(true)
+    @Column({
+        type: DataType.STRING(200),
+    })
+    declare userAddress: string;
+
+    // Company Details
+    @Column({
+        type: DataType.STRING(200),
+        unique: true,
+    })
+    declare companytaxId: string;
 
     @Column({
         type: DataType.STRING(50),
@@ -43,14 +56,20 @@ class Guest extends Model {
     declare companyName: string;
 
     @Column({
+        type: DataType.STRING(200),
+        unique: true,
+    })
+    declare companyEmail: string;
+
+    @Column({
         type: DataType.STRING(20),
     })
-    declare phone: string;
+    declare companyPhone: string;
 
     @Column({
         type: DataType.STRING(200),
     })
-    declare location: string;
+    declare companyAddress: string;
 
     @Column({
         type: DataType.ENUM({
