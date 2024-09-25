@@ -40,11 +40,11 @@ export default class SalesService {
             }
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error('Error fetching sales:', error.message);
+            logger.error(`Error fetching sales: ${error.message}`);
             if (error instanceof NotFoundException) {
                 throw error;
             }
-            throw new Error('Failed to fetch sales');
+            throw new Error(`Failed to fetch sales: ${error.message}`);
         }
     }
 
