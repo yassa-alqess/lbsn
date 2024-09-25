@@ -89,7 +89,9 @@ USER appuser
 
 # Create necessary dirs and set ownership to appuser
 RUN mkdir -p /usr/app/upload \
-    && mkdir -p /usr/app/.logs
+    && mkdir -p /usr/app/.logs \
+    && mkdir -p /usr/app/.keys
+
 
 COPY . .
 

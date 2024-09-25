@@ -33,4 +33,7 @@
 LICENSE
 README.md
 **/.logs
+**/.keys
+/data
 /certs
+/upload
