@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo, ForeignKey, } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey, AllowNull, } from 'sequelize-typescript';
 import Profile from './profile';
 import { LeadStatusEnum } from '../enums';
 
@@ -25,6 +25,12 @@ class Lead extends Model {
         },
     })
     declare status: LeadStatusEnum;
+
+    @AllowNull(true)
+    @Column({
+        type: DataType.STRING(200),
+    })
+    declare otherType: string;
 
     @Column({
         type: DataType.JSONB,
