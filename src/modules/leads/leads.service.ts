@@ -3,15 +3,15 @@ import SheetsService from "../sheets/sheets.service";
 import logger from "../../config/logger";
 import { NotFoundException } from "../../shared/exceptions";
 import Lead from "../../shared/models/lead";
+import Sale from "../../shared/models/sale";
 import { LeadStatusEnum } from "../../shared/enums";
-import { GroupedLead, ILead, ILeadsGetPayload, ILeadsGetResponse, ILeadUpdatePayload } from "./leads.interface";
+import { GroupedLeads, ILead, ILeadAddPayload, ILeadsGetPayload, ILeadsGetResponse, ILeadUpdatePayload } from "./leads.interface";
 
 import { fn, col } from "sequelize";
 
-export class LeadsService {
+export default class LeadsService {
     private _sheetsService: SheetsService;
     private _profileService: ProfileService;
-
     constructor() {
         this._sheetsService = new SheetsService();
         this._profileService = new ProfileService();
@@ -66,14 +66,19 @@ export class LeadsService {
     }
 
     public async getLeads(payload: ILeadsGetPayload): Promise<ILeadsGetResponse> {
-        const { profileId, status, limit, offset } = payload;
-
         try {
+            const { profileId, status, otherType, limit, offset } = payload;
+            //check if this profile exists
+            const profile = await this._profileService.getProfile(profileId);
+            if (!profile) {
+                throw new NotFoundException('Profile', 'profileId', profileId);
+            }
             // Fetch leads and total count
             const { rows: leads, count: total } = await Lead.findAndCountAll({
                 where: {
                     profileId,
-                    ...(status && { status })
+                    ...(status && { status }),
+                    ...(otherType && { otherType })
                 },
                 ...(limit !== undefined && { limit }),  // Apply limit only if provided
                 ...(offset !== undefined && { offset }), // Apply offset only if provided
@@ -87,52 +92,78 @@ export class LeadsService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error('Error fetching leads:', error.message);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
             throw new Error('Failed to fetch leads');
         }
     }
 
-    public async updateLead(payload: ILeadUpdatePayload) {
-        const { leadId, status } = payload;
-
-        const lead = await Lead.findByPk(leadId);
-
-        if (!lead) {
-            throw new NotFoundException('Lead', 'leadId', leadId);
-        }
+    public async updateLead(payload: ILeadUpdatePayload): Promise<void> {
 
         try {
-            if (status) {
-                lead.status = status;
+            const { leadId, status } = payload;
+
+            const lead = await Lead.findByPk(leadId);
+            if (!lead) {
+                throw new NotFoundException('Lead', 'leadId', leadId);
             }
+            if (status) {
+                if (status === LeadStatusEnum.SALE_MADE) {
+                    const { stage, dealValue, dealCurrency, comment } = payload;
+                    if (stage && dealValue && dealCurrency) {
+                        Sale.create({
+                            saleId: lead.leadId,
+                            profileId: lead.profileId,
+                            stage,
+                            dealValue,
+                            dealCurrency,
+                            comment
+                        });
+                        await lead.destroy();
+                        return;
+                    } else {
+                        throw new Error('Missing required fields for SALE_MADE status');
+                    }
+                }
 
-            await lead.save();
-            return lead;
-
+                lead.status = status;
+                if (status === LeadStatusEnum.OTHER) {
+                    const { otherType } = payload;
+                    if (otherType) {
+                        lead.otherType = otherType;
+                    }
+                }
+                await lead.save();
+            }
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error('Error updating lead:', error.message);
-            throw new Error('Failed to update lead');
+            logger.error(`Error updating lead: ${error.message}`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Failed to update lead: ${error.message}`);
         }
     }
 
-    public async getAllLeadsGrouped(): Promise<GroupedLead[]> {
+    public async getAllLeadsGrouped(): Promise<GroupedLeads[]> {
         try {
             // Step 1: Fetch the lead counts grouped by profileId
-            const leadCounts = await Lead.findAll({
+            const leadsCount = await Lead.findAll({
                 attributes: [
                     'profileId', // Group by profileId
-                    [fn('COUNT', col('leadId')), 'leadCount'], // Count leads per profile
+                    [fn('COUNT', col('leadId')), 'leadsCount'], // Count leads per profile
                 ],
                 group: ['profileId'], // Grouping by profileId
                 order: [['profileId', 'ASC']] // Optional: order by profileId
             });
 
             // Prepare the result array
-            const groupedLeads: GroupedLead[] = [];
+            const groupedLeads: GroupedLeads[] = [];
 
             // Step 2: Fetch all leads details for each profileId
-            for (const leadCount of leadCounts) {
-                const profileId = leadCount.profileId;
+            for (const lead of leadsCount) {
+                const profileId = lead.profileId;
                 const leads = await Lead.findAll({
                     where: { profileId },
                     order: [['createdAt', 'ASC']] // Optional: order leads
@@ -140,15 +171,29 @@ export class LeadsService {
 
                 groupedLeads.push({
                     profileId,
-                    leadCount: leadCount.get('leadCount') as number,
+                    leadsCount: lead.get('leadsCount') as number,
                     leads: leads.map(lead => lead.toJSON() as ILead)
                 });
             }
 
             return groupedLeads;
         } catch (error) {
-            logger.error('Error fetching all leads for admin:', error);
+            logger.error('Error fetching all leads: ', error);
             throw new Error('Failed to fetch all leads');
+        }
+    }
+
+    public async addLead(payload: ILeadAddPayload): Promise<ILead> {
+        try {
+            const lead = await Lead.create({ ...payload });
+            return {
+                ...lead.toJSON() as ILead
+            }
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error adding lead: ${error.message}`);
+            throw new Error(`Error adding lead`);
         }
     }
 }
