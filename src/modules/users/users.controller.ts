@@ -29,6 +29,7 @@ export default class UserController implements Controller {
     private _initializeRoutes() {
 
         this.router.patch(`${this.path}/:userId/info`, accessTokenGuard, upload(`${this.path}/images`)!.single("file"), validate(UpdateUserInfoDto), this.updateUserInfo);
+        this.router.get(`${this.path}/me`, accessTokenGuard, this.getInfo);
 
         this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, upload(`${this.path}/images`)!.single("file"), validate(CreateUserDto), this.addUser);
@@ -125,6 +126,19 @@ export default class UserController implements Controller {
             if (error instanceof NotFoundException) {
                 return next(error);
             }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public getInfo = async (req: Request, res: Response, next: NextFunction) => {
+        const { id } = req.user as IAuthPayload;
+        try {
+            const user = await this._userService.getUser(id);
+            res.status(StatusCodes.OK).json(user).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at getInfo action ${error}`);
             next(new InternalServerException(error.message));
         }
     }
