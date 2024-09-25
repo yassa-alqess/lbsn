@@ -1,36 +1,56 @@
 import { Table, Model, Column, DataType, BelongsTo, ForeignKey, AllowNull, } from 'sequelize-typescript';
 import Profile from './profile';
-import { LeadStatusEnum } from '../enums';
+import { DealCurrencyEnum, SalesStageEnum } from '../enums';
 
 //3rd party imports
 import * as _ from "lodash";
 
-const statuses: string[] = _.values(LeadStatusEnum);
+const stages: string[] = _.values(SalesStageEnum);
+const currencyTypes: string[] = _.values(DealCurrencyEnum);
 
 @Table({ schema: 'public', timestamps: true })
-class Lead extends Model {
+class Sale extends Model {
     @Column({
         primaryKey: true,
         type: DataType.STRING(200),
     })
-    declare leadId: string;
+    declare saleId: string;
 
     @Column({
         type: DataType.ENUM({
-            values: statuses
+            values: stages
         }),
 
         validate: {
-            isIn: [statuses]
+            isIn: [stages]
         },
     })
-    declare status: LeadStatusEnum;
+    declare stage: SalesStageEnum;
 
+    //deal value
+    @Column({
+        type: DataType.INTEGER,
+    })
+    declare dealValue: number;
+
+    //currency
+    @Column({
+        type: DataType.ENUM({
+            values: currencyTypes
+        }),
+
+        validate: {
+            isIn: [currencyTypes]
+        },
+    })
+    declare dealCurrency: DealCurrencyEnum;
+
+    //comment
     @AllowNull(true)
     @Column({
         type: DataType.STRING(200),
     })
-    declare otherType: string;
+    declare comment: string;
 
     @Column({
         type: DataType.JSONB,
@@ -47,4 +67,4 @@ class Lead extends Model {
     declare profile: Profile;
 }
 
-export default Lead;
+export default Sale;

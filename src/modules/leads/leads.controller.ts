@@ -5,14 +5,14 @@ import { accessTokenGuard, requireAnyOfThoseRoles, validate } from "../../shared
 import { InternalServerException, InvalidEnumValueException, InvalidIdException, ParamRequiredException } from "../../shared/exceptions";
 import { LeadStatusEnum, RoleEnum } from "../../shared/enums";
 import { ILeadsGetPayload, ILeadUpdatePayload } from "./leads.interface";
-import { StatusCodes } from "http-status-codes";
-import { LeadsService } from "./leads.service";
+import LeadsService from "./leads.service";
 import { UpdateLeadSchema } from "./leads.dto";
 import { WSS_SERVER } from "../../startup";
 
 // 3rd party dependencies
 import WebSocket from "ws";
 import express, { Request, Response, NextFunction } from 'express';
+import { StatusCodes } from "http-status-codes";
 import jwt from 'jsonwebtoken';
 
 export default class LeadsController implements Controller {
@@ -82,9 +82,9 @@ export default class LeadsController implements Controller {
     public getLeads = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.query;
         if (!profileId) {
-            return next(new ParamRequiredException('Lead', 'profileId'));
+            return next(new ParamRequiredException('Leads', 'profileId'));
         }
-        const { status, limit, offset } = req.query;
+        const { status, otherType, limit, offset } = req.query;
         if (status && !Object.values(LeadStatusEnum).includes(status as LeadStatusEnum)) {
             return next(new InvalidEnumValueException('LeadStatus'));
         }
@@ -93,6 +93,7 @@ export default class LeadsController implements Controller {
             const payload: ILeadsGetPayload = {
                 profileId: profileId as string,
                 status: status as LeadStatusEnum,
+                otherType: otherType as string || undefined,
                 limit: limit ? parseInt(limit as string) : undefined,
                 offset: offset ? parseInt(offset as string) : undefined
             };
@@ -114,11 +115,11 @@ export default class LeadsController implements Controller {
         if (!leadId) return next(new ParamRequiredException('Lead', 'leadId'));
         try {
             const leadUpdatePayload: ILeadUpdatePayload = {
-                ...req.body, //status
+                ...req.body, //status & otherType
                 leadId
             }
-            const lead = await this._leadsService.updateLead(leadUpdatePayload);
-            res.status(StatusCodes.OK).json(lead).end();
+            await this._leadsService.updateLead(leadUpdatePayload);
+            res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {

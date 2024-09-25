@@ -1,5 +1,3 @@
-
-
 import Joi from 'joi';
 
 export const CreateWarmLeadDto = Joi.object({
