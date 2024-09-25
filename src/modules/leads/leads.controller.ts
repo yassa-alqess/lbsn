@@ -14,6 +14,7 @@ import WebSocket from "ws";
 import express, { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from "http-status-codes";
 import jwt from 'jsonwebtoken';
+import ms from "ms";
 
 export default class LeadsController implements Controller {
     path = LEADS_PATH;
@@ -44,7 +45,7 @@ export default class LeadsController implements Controller {
 
                     // Validate accessToken (replace 'your-secret-key' with your JWT secret)
                     //eslint-disable-next-line
-                    jwt.verify(accessToken, ACCESS_TOKEN_SECRET, (err: any) => {
+                    jwt.verify(accessToken, ACCESS_TOKEN_SECRET, async (err: any) => {
                         if (err) {
                             logger.error('Invalid access token');
                             ws.close(1008, 'Invalid access token'); // 1008: Policy Violation
@@ -53,20 +54,40 @@ export default class LeadsController implements Controller {
 
                         logger.info(`Authenticated client with profileId: ${profileId}`);
 
+                        try {
+                            // Fetch and send data based on profileId
+                            const data = await this._leadsService.getSheetLeads(profileId);
+                            ws.send(JSON.stringify(data));
+                            //eslint-disable-next-line
+                        } catch (error: any) {
+                            logger.error(`Error fetching leads data: ${error.message}`);
+                            ws.close(1008, `Error fetching leads data`); // 1008: Policy Violation
+                            return;
+                        }
+
                         // Start sending data at regular intervals
                         const intervalId = setInterval(async () => {
                             try {
                                 // Fetch and send data based on profileId
                                 const data = await this._leadsService.getSheetLeads(profileId);
                                 ws.send(JSON.stringify(data));
-                            } catch (error) {
-                                logger.error('Error fetching leads data:', error);
+                                //eslint-disable-next-line
+                            } catch (error: any) {
+                                logger.error(`Error fetching leads data: ${error.message}`);
+                                ws.close(1008, `Error fetching leads data`); // 1008: Policy Violation
+                                clearInterval(intervalId);
+
                             }
-                        }, LEAD_FETCH_INTERVAL); // Send data every interval
+                        }, ms(LEAD_FETCH_INTERVAL)); // Send data every interval
 
                         // Handle client disconnection
                         ws.on('close', () => {
                             logger.info('WebSocket client disconnected');
+                            clearInterval(intervalId);
+                        });
+
+                        ws.on('error', (error) => {
+                            logger.error(`WebSocket error: ${error.message}`);
                             clearInterval(intervalId);
                         });
                     });

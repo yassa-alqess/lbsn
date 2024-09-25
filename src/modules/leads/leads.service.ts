@@ -61,7 +61,7 @@ export default class LeadsService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error getting sheet leads: ${error.message}`);
-            throw new Error(`Error getting sheet leads for profileId: ${profileId}`);
+            throw new Error(`Error getting sheet leads: ${error.message}`);
         }
     }
 
@@ -91,11 +91,11 @@ export default class LeadsService {
             }
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error('Error fetching leads:', error.message);
+            logger.error(`Error fetching leads: ${error.message}`);
             if (error instanceof NotFoundException) {
                 throw error;
             }
-            throw new Error('Failed to fetch leads');
+            throw new Error(`Failed to fetch leads: ${error.message}`);
         }
     }
 
