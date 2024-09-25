@@ -13,6 +13,7 @@ services:
     user: 'appuser:appgroup'
     volumes:
       - ./src:/usr/app/src/
+      - ./.keys:/usr/app/.keys
 
   sql-db:
     ports:
