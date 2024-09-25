@@ -57,4 +57,4 @@ export const MEETING_ACCOUNT_ID = process.env.MEETING_ACCOUNT_ID || ""
 export const MEETING_CLIENT_ID = process.env.MEETING_CLIENT_ID || ""
 export const MEETING_CLIENT_SECRET = process.env.MEETING_CLIENT_SECRET || ""
 
-export const LEAD_FETCH_INTERVAL = 60000
+export const LEAD_FETCH_INTERVAL = '1m'
