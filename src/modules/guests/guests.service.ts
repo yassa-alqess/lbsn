@@ -171,7 +171,7 @@ export default class GuestService {
                 userEmail: guest.userEmail,
                 userPhone: guest.userPhone,
                 userAddress: guest.userAddress,
-                companytaxId: guest.companytaxId,
+                companyTaxId: guest.companyTaxId,
                 companyName: guest.companyName,
                 companyEmail: guest.companyEmail,
                 companyPhone: guest.companyPhone,

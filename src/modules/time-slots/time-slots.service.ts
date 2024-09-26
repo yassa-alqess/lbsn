@@ -6,29 +6,32 @@ import logger from "../../config/logger";
 
 export default class TimeSlotService {
     public async addTimeSlot(timeSlotPayload: ITimeSlotAddPayload): Promise<ITimeSlotResponse> {
-        const timeSlot = await TimeSlot.findOne({ where: { time: timeSlotPayload.time } });
-        if (timeSlot) {
-            throw new AlreadyExistsException('TimeSlot', 'time', timeSlotPayload.time.toString());
-        }
         try {
-            const timeSlot = await TimeSlot.create({ ...timeSlotPayload });
+            const timeSlot = await TimeSlot.findOne({ where: { time: timeSlotPayload.time } });
+            if (timeSlot) {
+                throw new AlreadyExistsException('TimeSlot', 'time', timeSlotPayload.time.toString());
+            }
+            const newTimeSlot = await TimeSlot.create({ ...timeSlotPayload });
             return {
-                ...timeSlot.toJSON() as ITimeSlotResponse,
+                ...newTimeSlot.toJSON() as ITimeSlotResponse,
             };
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error adding timeSlot: ${error.message}`);
-            throw new Error(`Error adding timeSlot`);
+            if (error instanceof AlreadyExistsException) {
+                throw error;
+            }
+            throw new Error(`Error adding timeSlot: ${error.message}`);
         }
     }
 
     public async updateTimeSlot(timeSlotPayload: ITimeSlotUpdatePayload): Promise<ITimeSlotResponse | undefined> {
         const { timeSlotId } = timeSlotPayload;
-        const timeSlot = await TimeSlot.findByPk(timeSlotId);
-        if (!timeSlot) {
-            throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
-        }
         try {
+            const timeSlot = await TimeSlot.findByPk(timeSlotId);
+            if (!timeSlot) {
+                throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
+            }
 
             await timeSlot.update({ ...timeSlotPayload });
             return {
@@ -37,7 +40,10 @@ export default class TimeSlotService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating timeSlot: ${error.message}`);
-            throw new Error(`Error updating timeSlot`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating timeSlot: ${error.message}`);
         }
 
     }
@@ -63,19 +69,33 @@ export default class TimeSlotService {
     }
 
     public async deleteTimeSlot(timeSlotId: string): Promise<void> {
-        const timeSlot = await TimeSlot.findByPk(timeSlotId);
-        if (!timeSlot) {
-            throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
-        }
-
         try {
-
+            const timeSlot = await TimeSlot.findByPk(timeSlotId);
+            if (!timeSlot) {
+                throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
+            }
             await timeSlot.destroy();
         } //eslint-disable-next-line 
         catch (error: any) {
             logger.error(`Error deleting timeSlot: ${error.message}`);
-            throw new Error(`Error deleting timeSlot`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error deleting timeSlot: ${error.message}`);
         }
 
+    }
+
+    public async getTimeSlotsByDate(date: Date): Promise<ITimeSlotsGetResponse | undefined> {
+        const timeSlots = await TimeSlot.findAll({
+            where: {
+                time: date
+            }
+        });
+        return {
+            timeSlots: timeSlots.map(timeSlot => ({
+                ...timeSlot.toJSON() as ITimeSlotResponse
+            }))
+        };
     }
 }

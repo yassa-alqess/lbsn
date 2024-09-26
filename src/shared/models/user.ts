@@ -86,7 +86,7 @@ class User extends Model {
     type: DataType.STRING(200),
     unique: true,
   })
-  declare companytaxId: string;
+  declare companyTaxId: string;
 
   @Column({
     type: DataType.STRING(200),
