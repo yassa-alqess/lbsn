@@ -22,7 +22,6 @@ class Service extends Model {
     @HasMany(() => Appointment)
     declare appointments: Appointment[];
 
-
     @BelongsToMany(() => Guest, () => GuestRequest)
     declare guests: Guest[];
 }
