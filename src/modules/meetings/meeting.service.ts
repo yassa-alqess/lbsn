@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { MEETING_API_URL, MEETING_AUTH_API_URL, MEETING_ACCOUNT_ID, MEETING_CLIENT_ID, MEETING_CLIENT_SECRET } from '../../shared/constants/index'
 import logger from '../../config/logger'
+import { IMeeting } from './meeting.interface'
 
 export default class MeetingService {
 
@@ -14,7 +15,7 @@ export default class MeetingService {
         return response.data.access_token
     }
 
-    public scheduleMeeting = async (topic: string, startTime: Date, password: string) => {
+    public scheduleMeeting = async (topic: string, startTime: Date, password: string): Promise<IMeeting> => {
 
         const url = `${MEETING_API_URL}`
         let token;
@@ -47,7 +48,7 @@ export default class MeetingService {
 
             //eslint-disable-next-line
         } catch (err: any) {
-            logger.error(`Couldn't Create A Meeting ${err}`);
+            logger.error(`Couldn't Create A Meeting ${err.message}`);
             throw new Error("Couldn't Create A Meeting");
         }
 
