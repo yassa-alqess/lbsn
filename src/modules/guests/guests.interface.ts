@@ -6,7 +6,7 @@ export interface IGuestAddPayload {
     userEmail?: string;
     userPhone?: string;
     userAddress?: string;
-    companytaxId?: string;
+    companyTaxId?: string;
     companyName: string;
     companyEmail: string;
     companyPhone: string;
