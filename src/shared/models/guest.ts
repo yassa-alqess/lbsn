@@ -28,6 +28,9 @@ class Guest extends Model {
     @Column({
         type: DataType.STRING(200),
         unique: true,
+        validate: {
+            isEmail: true,
+        },
     })
     declare userEmail: string;
 
@@ -58,6 +61,9 @@ class Guest extends Model {
     @Column({
         type: DataType.STRING(200),
         unique: true,
+        validate: {
+            isEmail: true,
+        },
     })
     declare companyEmail: string;
 
