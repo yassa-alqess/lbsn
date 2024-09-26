@@ -1,7 +1,6 @@
 import { Table, Model, Column, DataType, BelongsToMany, AllowNull, HasMany } from 'sequelize-typescript';
 import Profile from './profile';
 import RefreshToken from './refresh-token';
-import ResetToken from './reset-token';
 import Role from './role';
 import UserRole from './user-role';
 import { IsLockedEnum, IsVerifiedEnum } from '../enums';
@@ -31,6 +30,9 @@ class User extends Model {
   @Column({
     type: DataType.STRING(200),
     unique: true,
+    validate: {
+      isEmail: true,
+    },
   })
   declare userEmail: string;
 
@@ -87,13 +89,16 @@ class User extends Model {
   declare companytaxId: string;
 
   @Column({
-    type: DataType.STRING(50),
+    type: DataType.STRING(200),
   })
   declare companyName: string;
 
   @Column({
     type: DataType.STRING(200),
     unique: true,
+    validate: {
+      isEmail: true,
+    },
   })
   declare companyEmail: string;
 
@@ -112,9 +117,6 @@ class User extends Model {
 
   @HasMany(() => RefreshToken)
   declare refreshTokens: RefreshToken[];
-
-  @HasMany(() => ResetToken)
-  declare resetTokens: ResetToken[];
 
   @BelongsToMany(() => Role, () => UserRole)
   declare roles: Role[];
