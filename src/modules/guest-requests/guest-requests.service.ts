@@ -27,19 +27,20 @@ export default class GuestRequestsService {
         this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
+        logger.debug(`Adding Guest Request for ${guestRequestPayload.guestId} and service ${guestRequestPayload.requestId}`);
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
-        const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
-        if (guestRequest) {
-            throw new Error(`Guest request already exists`);
-        }
-
-        // Check if the service exists
-        const service = await Service.findOne({ where: { serviceId: requestId } });
-        if (!service) {
-            throw new NotFoundException("Service", "serviceId", requestId);
-        }
 
         try {
+            const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
+            if (guestRequest) {
+                throw new Error(`Guest request already exists`);
+            }
+
+            // Check if the service exists
+            const service = await Service.findOne({ where: { serviceId: requestId } });
+            if (!service) {
+                throw new NotFoundException("Service", "serviceId", requestId);
+            }
             const newGuestRequest = await GuestRequest.create({
                 guestId, serviceId: requestId, resolved: IsResolvedEnum.PENDING, marketingBudget
             });
@@ -68,17 +69,17 @@ export default class GuestRequestsService {
         //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error adding guest request: ${error.message}`);
-            throw new Error(`Error adding guest request`);
+            throw new Error(`Error adding guest request: ${error.message}`);
         }
     }
 
     public async updateGuestRequest(guestRequestPayload: IGuestRequestUpdatePayload): Promise<IGuestRequest | undefined> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
-        const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
-        if (!guestRequest) {
-            throw new Error('Guest Request not found');
-        }
         try {
+            const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
+            if (!guestRequest) {
+                throw new Error('Guest Request not found');
+            }
             await guestRequest.update({ marketingBudget });
 
             // Fetch the newly created guest request with the associated service
@@ -103,7 +104,7 @@ export default class GuestRequestsService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating guest request: ${error.message}`);
-            throw new Error(`Error updating guest request`);
+            throw new Error(`Error updating guest request: ${error.message}`);
         }
     }
 
