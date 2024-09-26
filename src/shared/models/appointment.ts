@@ -1,6 +1,7 @@
 import { Table, Model, Column, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import Guest from './guest';
 import Service from './service';
+import TimeSlot from './time-slot';
 
 @Table({ schema: 'public', timestamps: true })
 class Appointment extends Model {
@@ -10,11 +11,6 @@ class Appointment extends Model {
         defaultValue: DataType.UUIDV4,
     })
     declare appointmentId: string;
-
-    @Column({
-        type: DataType.DATE,
-    })
-    declare time: Date;
 
     @Column({
         type: DataType.STRING(200),
@@ -47,6 +43,13 @@ class Appointment extends Model {
         type: DataType.UUID,
     })
     declare serviceId: string;
+
+    @ForeignKey(() => TimeSlot)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare timeSlotId: string;
+
 
     @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare guest: Guest;

@@ -1,5 +1,6 @@
-import { Table, Model, Column, DataType } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, HasOne } from 'sequelize-typescript';
 import { IsAvailableEnum } from '../enums';
+import Appointment from './appointment';
 
 //3rd party dependinces
 import * as _ from "lodash";
@@ -30,6 +31,9 @@ class TimeSlot extends Model {
         },
     })
     declare isAvailable: IsAvailableEnum;
+
+    @HasOne(() => Appointment)
+    declare appointment: Appointment;
 }
 
 export default TimeSlot;
