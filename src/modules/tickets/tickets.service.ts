@@ -21,7 +21,7 @@ export default class TicketService {
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
                 ...newTicketJson,
-                documentUrl: `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}`
+                documentUrl: newTicketJson.documentUrl ? `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}` : ''
             };
             //eslint-disable-next-line
         } catch (err: any) {
@@ -43,7 +43,7 @@ export default class TicketService {
         return {
             tickets: tickets.map(ticket => ({
                 ...ticket.toJSON(),
-                documentUrl: `${TICKETS_FILES_PATH}/${ticket.documentUrl}`
+                documentUrl: ticket.documentUrl ? `${TICKETS_FILES_PATH}/${ticket.documentUrl}` : ''
 
             }))
         };
@@ -78,7 +78,7 @@ export default class TicketService {
         const ticketJson = ticket.toJSON() as ITicket;
         return {
             ...ticketJson,
-            documentUrl: `${TICKETS_FILES_PATH}/${ticketJson.documentUrl}`
+            documentUrl: ticketJson.documentUrl ? `${TICKETS_FILES_PATH}/${ticketJson.documentUrl}` : ''
         };
     }
 
@@ -106,7 +106,7 @@ export default class TicketService {
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
                 ...newTicketJson,
-                documentUrl: `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}`
+                documentUrl: newTicketJson.documentUrl ? `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}` : ''
             };
             //eslint-disable-next-line
         } catch (error: any) {
