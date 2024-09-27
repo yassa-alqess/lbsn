@@ -38,11 +38,17 @@ class Appointment extends Model {
     })
     declare guestId: string;
 
+    @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare guest: Guest;
+
     @ForeignKey(() => Service)
     @Column({
         type: DataType.UUID,
     })
     declare serviceId: string;
+
+    @BelongsTo(() => Service, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare service: Service;
 
     @ForeignKey(() => TimeSlot)
     @Column({
@@ -50,9 +56,8 @@ class Appointment extends Model {
     })
     declare timeSlotId: string;
 
-
-    @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
-    declare guest: Guest;
+    @BelongsTo(() => TimeSlot, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare timeSlot: TimeSlot;
 }
 
 export default Appointment;

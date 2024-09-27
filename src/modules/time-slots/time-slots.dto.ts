@@ -10,7 +10,6 @@ export const CreateTimeSlotDto = Joi.object({
 });
 
 export const UpdateTimeSlotDto = Joi.object({
-    time: Joi.date().optional(),
     isAvailable: Joi.string()
         .valid(..._.values(IsAvailableEnum))
         .optional()
