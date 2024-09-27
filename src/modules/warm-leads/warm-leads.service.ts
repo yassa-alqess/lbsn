@@ -9,8 +9,9 @@ export default class WarmService {
             throw new AlreadyExistsException('WarmLead', 'email', payload.email);
         }
         const newWarmLead = await WarmLead.create({ ...payload });
+        const newWarmLeadJson = newWarmLead.toJSON() as IWarmLead;
         return {
-            ...newWarmLead.toJSON() as IWarmLead
+            ...newWarmLeadJson,
         }
     }
 
