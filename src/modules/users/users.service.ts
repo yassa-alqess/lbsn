@@ -92,7 +92,7 @@ export default class UserService {
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
                 roles: userRoles.map((role) => role.name),
-                image: `${USER_IMAGES_PATH}/${newUser.image}`,
+                image: newUser.image ? `${USER_IMAGES_PATH}/${newUser.image}` : '',
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
@@ -197,7 +197,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 roles: updatedRoles.map((role) => role.name),
-                image: `${USER_IMAGES_PATH}/${user.image}`,
+                image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
             };
@@ -334,7 +334,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: `${USER_IMAGES_PATH}/${user.image}`,
+            image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -360,7 +360,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: `${USER_IMAGES_PATH}/${user.image}`,
+            image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -383,7 +383,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 roles: user.roles.map((role) => role.name), // extract role names
-                image: user.image,
+                image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked,
             })),
