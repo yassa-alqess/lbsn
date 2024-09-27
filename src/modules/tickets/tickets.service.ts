@@ -3,21 +3,26 @@ import Ticket from "../../shared/models/ticket";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TicketStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
+
 export default class TicketService {
     public async addTicket(ticketPayload: ITicketsAddPayload): Promise<ITicket> {
-        const ticket = await Ticket.findOne({ where: { title: ticketPayload.title, profileId: ticketPayload.profileId } });
-        if (ticket) {
-            throw new AlreadyExistsException("Ticket", "title", ticketPayload.title);
-        }
         try {
-            const ticket = await Ticket.create({ ...ticketPayload, status: TicketStatusEnum.PENDING });
+            const ticket = await Ticket.findOne({ where: { title: ticketPayload.title, profileId: ticketPayload.profileId } });
+            if (ticket) {
+                throw new AlreadyExistsException("Ticket", "title", ticketPayload.title);
+            }
+            const newTicket = await Ticket.create({ ...ticketPayload, status: TicketStatusEnum.PENDING });
+            const newTicketJson = newTicket.toJSON() as ITicket;
             return {
-                ...ticket.toJSON()
+                ...newTicketJson,
             };
             //eslint-disable-next-line
         } catch (err: any) {
             logger.error(`Error adding ticket: ${err.message}`);
-            throw new Error(`Error adding ticket`);
+            if (err instanceof AlreadyExistsException) {
+                throw err;
+            }
+            throw new Error(`Error adding ticket: ${err.message}`);
         }
     }
 
@@ -36,20 +41,22 @@ export default class TicketService {
     }
 
     public async resolveTicket(ticketId: string): Promise<void> {
-        const ticket = await Ticket.findByPk(ticketId);
-        if (!ticket) {
-            throw new NotFoundException('Ticket', "ticketId", ticketId);
-        }
 
         try {
+            const ticket = await Ticket.findByPk(ticketId);
+            if (!ticket) {
+                throw new NotFoundException('Ticket', "ticketId", ticketId);
+            }
             ticket.status = TicketStatusEnum.RESOLVED;
             await ticket.save();
         }  //eslint-disable-next-line
         catch (err: any) {
             logger.error(`Error resolving ticket: ${err.message}`);
-            throw new Error(`Error resolving ticket`);
+            if (err instanceof NotFoundException) {
+                throw err;
+            }
+            throw new Error(`Error resolving ticket: ${err.message}`);
         }
-        return;
     }
 
     public async getTicket(ticketId: string): Promise<ITicket | undefined> {
@@ -64,11 +71,11 @@ export default class TicketService {
 
     public async updateTicket(ticketPayload: ITicketsUpdatePayload): Promise<ITicket | undefined> {
         const { ticketId } = ticketPayload;
-        const ticket = await Ticket.findByPk(ticketId);
-        if (!ticket) {
-            throw new NotFoundException('Ticket', 'ticketId', ticketId);
-        }
         try {
+            const ticket = await Ticket.findByPk(ticketId);
+            if (!ticket) {
+                throw new NotFoundException('Ticket', 'ticketId', ticketId);
+            }
             await ticket.update({ ...ticketPayload });
             return {
                 ...ticket.toJSON() as ITicket
@@ -76,21 +83,27 @@ export default class TicketService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating ticket: ${error.message}`);
-            throw new Error(`Error updating ticket`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating ticket: ${error.message}`);
         }
     }
 
     public async deleteTicket(ticketId: string): Promise<void> {
-        const ticket = await Ticket.findByPk(ticketId);
-        if (!ticket) {
-            throw new NotFoundException('Ticket', 'ticketId', ticketId);
-        }
         try {
+            const ticket = await Ticket.findByPk(ticketId);
+            if (!ticket) {
+                throw new NotFoundException('Ticket', 'ticketId', ticketId);
+            }
             await ticket.destroy();
         } //eslint-disable-next-line
         catch (err: any) {
             logger.error(`Error deleting ticket: ${err.message}`);
-            throw new Error(`Error deleting ticket`);
+            if (err instanceof NotFoundException) {
+                throw err;
+            }
+            throw new Error(`Error deleting ticket: ${err.message}`);
         }
     }
 }
