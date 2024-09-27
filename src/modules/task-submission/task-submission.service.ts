@@ -8,6 +8,10 @@ import { Sequelize } from "sequelize";
 import DatabaseManager from "../../config/database/db-manager";
 import { TASK_SUBMISSIONS_FILES_PATH } from "../../shared/constants";
 
+// 3rd party dependencies
+import path from 'path';
+import fs from 'fs';
+
 export default class TaskSubmissionService {
     private _sequelize: Sequelize | null = null;
     constructor() {
@@ -55,11 +59,20 @@ export default class TaskSubmissionService {
                 throw new NotFoundException('Task Submission', 'taskId', taskSubmissionUpdatePayload.taskId);
             }
 
-            taskSubmission.title = taskSubmissionUpdatePayload.title || taskSubmission.title;
-            taskSubmission.comment = taskSubmissionUpdatePayload.comment || taskSubmission.comment;
-            taskSubmission.documentUrl = taskSubmissionUpdatePayload.documentUrl || taskSubmission.documentUrl;
-            const newTaskSubmission = await taskSubmission.save();
 
+            // Delete old document if new document is uploaded
+            const oldDocumentUrl = taskSubmission.documentUrl;
+            const newDocumentUrl = taskSubmissionUpdatePayload.documentUrl;
+            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+                this._deleteOldDocument(oldDocumentUrl);
+            }
+
+            // if no new document is uploaded, keep the old document
+            if (!newDocumentUrl) {
+                delete taskSubmissionUpdatePayload.documentUrl;
+            }
+
+            const newTaskSubmission = await taskSubmission.update({ ...taskSubmissionUpdatePayload });
             const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
                 ...newTaskSubmissionJson,
@@ -133,5 +146,16 @@ export default class TaskSubmissionService {
             logger.error(`Error approving task submission: ${error.message}`);
             throw new Error('Error approving task submission: ${error.message}');
         }
+    }
+
+    private _deleteOldDocument(documentUrl: string): void {
+        const filePath = path.join(TASK_SUBMISSIONS_FILES_PATH, documentUrl);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
+            } else {
+                logger.info(`Old image file deleted: ${filePath}`);
+            }
+        });
     }
 }
