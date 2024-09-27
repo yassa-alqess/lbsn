@@ -18,7 +18,7 @@ export interface ITicket {
     comment: string;
     status: TicketStatusEnum;
     createdAt: Date;
-    updatedAt: Date;
+    resolvedAt?: Date;
 }
 
 export interface ITicketsAddPayload {

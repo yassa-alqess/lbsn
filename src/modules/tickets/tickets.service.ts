@@ -48,6 +48,7 @@ export default class TicketService {
                 throw new NotFoundException('Ticket', "ticketId", ticketId);
             }
             ticket.status = TicketStatusEnum.RESOLVED;
+            ticket.resolvedAt = new Date();
             await ticket.save();
         }  //eslint-disable-next-line
         catch (err: any) {

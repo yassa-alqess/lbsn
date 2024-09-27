@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey, AllowNull } from 'sequelize-typescript';
 import Profile from './profile';
 import { TicketStatusEnum } from '../enums';
 
@@ -50,6 +50,12 @@ class Ticket extends Model {
 
     @BelongsTo(() => Profile, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare profile: Profile;
+
+    @AllowNull(true)
+    @Column({
+        type: DataType.DATE,
+    })
+    declare resolvedAt: Date;
 }
 
 export default Ticket;
