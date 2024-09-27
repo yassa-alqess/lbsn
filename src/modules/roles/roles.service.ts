@@ -33,10 +33,10 @@ export default class RoleService {
                 throw new NotFoundException('Role', 'roleId', roleId);
             }
 
-            await role.update({ ...rolePayload });
-            const roleJson = role.toJSON() as IRoleResponse;
+            const newRole = await role.update({ ...rolePayload });
+            const newRoleJson = newRole.toJSON() as IRoleResponse;
             return {
-                ...roleJson,
+                ...newRoleJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {

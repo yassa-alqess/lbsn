@@ -34,10 +34,10 @@ export default class TimeSlotService {
                 throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
             }
 
-            await timeSlot.update({ ...timeSlotPayload });
-            const timeSlotJson = timeSlot.toJSON() as ITimeSlotResponse;
+            const newTimeSlot = await timeSlot.update({ ...timeSlotPayload });
+            const newTimeSlotJson = newTimeSlot.toJSON() as ITimeSlotResponse;
             return {
-                ...timeSlotJson,
+                ...newTimeSlotJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {

@@ -103,7 +103,7 @@ export default class UserService {
 
     public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
         const { userId, companyTaxId, companyEmail, password, roles: newRoles, } = userPayload;
-        const user = await User.findByPk(userId, {
+        let user = await User.findByPk(userId, {
             include: [{ model: Role, as: 'roles' }],
         });
         if (!user) {
@@ -149,7 +149,7 @@ export default class UserService {
 
             // Update user if there are changes
             if (Object.keys(userPayload).length > 0) {
-                await user.update(userPayload, { transaction });
+                user = await user.update(userPayload, { transaction });
             }
 
             // Update roles if provided

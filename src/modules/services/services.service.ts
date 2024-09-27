@@ -33,10 +33,10 @@ export default class ServicesService {
             if (!service) {
                 throw new NotFoundException("Service", "serviceId", serviceId);
             }
-            await service.update({ ...servicePayload });
-            const serviceJson = service.toJSON() as IServiceResponse;
+            const newService = await service.update({ ...servicePayload });
+            const newServiceJson = newService.toJSON() as IServiceResponse;
             return {
-                ...serviceJson,
+                ...newServiceJson,
             };
         }
 

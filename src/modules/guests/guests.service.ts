@@ -47,11 +47,11 @@ export default class GuestService {
             const guest = await Guest.findByPk(guestId);
             if (!guest)
                 throw new NotFoundException('Guest', 'guestId', guestId);
-            await guest.update({ ...guestPayload });
+            const newGuest = await guest.update({ ...guestPayload });
 
-            const guestJson = guest.toJSON() as IGuestResponse;
+            const newGuestJson = newGuest.toJSON() as IGuestResponse;
             return {
-                ...guestJson
+                ...newGuestJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {

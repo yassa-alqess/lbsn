@@ -48,11 +48,11 @@ export default class TaskService {
                 throw new NotFoundException('Task', 'taskId', taskId);
             }
 
-            await task.update({ ...taskPayload });
+            const newTask = await task.update({ ...taskPayload });
 
-            const taskJson = task.toJSON() as ITask;
+            const newTaskJson = newTask.toJSON() as ITask;
             return {
-                ...taskJson,
+                ...newTaskJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {

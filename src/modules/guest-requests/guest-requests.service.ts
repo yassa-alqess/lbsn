@@ -76,11 +76,11 @@ export default class GuestRequestsService {
     public async updateGuestRequest(guestRequestPayload: IGuestRequestUpdatePayload): Promise<IGuestRequest | undefined> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         try {
-            const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
+            let guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
             if (!guestRequest) {
                 throw new Error('Guest Request not found');
             }
-            await guestRequest.update({ marketingBudget });
+            guestRequest = await guestRequest.update({ marketingBudget });
 
             // Fetch the newly created guest request with the associated service
             const guestRequestWithService = await GuestRequest.findOne({

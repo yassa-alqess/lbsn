@@ -56,11 +56,11 @@ export default class TaskSubmissionService {
             taskSubmission.title = taskSubmissionUpdatePayload.title || taskSubmission.title;
             taskSubmission.comment = taskSubmissionUpdatePayload.comment || taskSubmission.comment;
             taskSubmission.documentUrl = taskSubmissionUpdatePayload.documentUrl || taskSubmission.documentUrl;
-            await taskSubmission.save();
+            const newTaskSubmission = await taskSubmission.save();
 
-            const taskSubmissionJson = taskSubmission.toJSON() as ITaskSubmission;
+            const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
-                ...taskSubmissionJson,
+                ...newTaskSubmissionJson,
             };
         } //eslint-disable-next-line
         catch (error: any) {

@@ -64,8 +64,10 @@ export default class TicketService {
         if (!ticket) {
             throw new NotFoundException('Ticket', "ticketId", ticketId);
         }
+
+        const ticketJson = ticket.toJSON() as ITicket;
         return {
-            ...ticket.toJSON() as ITicket
+            ...ticketJson,
         };
     }
 
@@ -76,9 +78,10 @@ export default class TicketService {
             if (!ticket) {
                 throw new NotFoundException('Ticket', 'ticketId', ticketId);
             }
-            await ticket.update({ ...ticketPayload });
+            const newTicket = await ticket.update({ ...ticketPayload });
+            const newTicketJson = newTicket.toJSON() as ITicket;
             return {
-                ...ticket.toJSON() as ITicket
+                ...newTicketJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
