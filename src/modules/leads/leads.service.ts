@@ -186,14 +186,15 @@ export default class LeadsService {
     public async addLead(payload: ILeadAddPayload): Promise<ILead> {
         try {
             const lead = await Lead.create({ ...payload });
+            const leadJson = lead.toJSON() as ILead;
             return {
-                ...lead.toJSON() as ILead
+                ...leadJson
             }
 
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error adding lead: ${error.message}`);
-            throw new Error(`Error adding lead`);
+            throw new Error(`Error adding lead: ${error.message}`);
         }
     }
 }

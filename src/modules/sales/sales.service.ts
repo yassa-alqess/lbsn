@@ -132,14 +132,15 @@ export default class SalesService {
     public async addSale(payload: ISaleAddPayload): Promise<ISale> {
         try {
             const sale = await Sale.create({ ...payload });
+            const saleJson = sale.toJSON() as ISale;
             return {
-                ...sale.toJSON() as ISale
+                ...saleJson,
             }
 
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error('Error adding sale:', error.message);
-            throw new Error('Failed to add sale');
+            throw new Error(`Error adding sale: ${error.message}`);
         }
     }
 }

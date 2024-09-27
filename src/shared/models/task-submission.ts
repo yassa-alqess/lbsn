@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo, ForeignKey } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, ForeignKey, AllowNull } from 'sequelize-typescript';
 import Task from './task';
 import { TaskSubmissionStatusEnum } from '../enums';
 
@@ -41,6 +41,12 @@ class TaskSubmission extends Model {
         },
     })
     declare status: TaskSubmissionStatusEnum;
+
+    @AllowNull(true)
+    @Column({
+        type: DataType.DATE,
+    })
+    declare approvedAt: Date;
 
     @ForeignKey(() => Task)
     @Column({

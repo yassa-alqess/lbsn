@@ -6,19 +6,23 @@ import logger from "../../config/logger";
 
 export default class TaskService {
     public async addTask(taskPayload: ITasksAddPayload): Promise<ITask> {
-        const task = await Task.findOne({ where: { title: taskPayload.title, profileId: taskPayload.profileId } });
-        if (task) {
-            throw new AlreadyExistsException("Task", "title", taskPayload.title);
-        }
         try {
-            const task = await Task.create({ ...taskPayload, status: TaskStatusEnum.PENDING });
+            const task = await Task.findOne({ where: { title: taskPayload.title, profileId: taskPayload.profileId } });
+            if (task) {
+                throw new AlreadyExistsException("Task", "title", taskPayload.title);
+            }
+            const newTask = await Task.create({ ...taskPayload, status: TaskStatusEnum.PENDING });
+            const newTaskJson = newTask.toJSON() as ITask;
             return {
-               ...task.toJSON() as ITask
+                ...newTaskJson,
             };
         } //eslint-disable-next-line
         catch (err: any) {
             logger.error(`Error adding task: ${err.message}`);
-            throw new Error(`Error adding task`);
+            if (err instanceof AlreadyExistsException) {
+                throw err;
+            }
+            throw new Error(`Error adding task: ${err.message}`);
         }
     }
 
@@ -31,27 +35,32 @@ export default class TaskService {
         });
         return {
             tasks: tasks.map(task => ({
-               ...task.toJSON() as ITask
+                ...task.toJSON() as ITask
             }))
         };
     }
 
     public async updateTask(taskPayload: ITaskUpdatePayload): Promise<ITask | undefined> {
         const { taskId } = taskPayload;
-        const task = await Task.findByPk(taskId);
-        if (!task) {
-            throw new NotFoundException('Task', 'taskId', taskId);
-        }
         try {
+            const task = await Task.findByPk(taskId);
+            if (!task) {
+                throw new NotFoundException('Task', 'taskId', taskId);
+            }
 
-            await task.update({ ...taskPayload });
+            const newTask = await task.update({ ...taskPayload });
+
+            const newTaskJson = newTask.toJSON() as ITask;
             return {
-                ...task.toJSON() as ITask,
+                ...newTaskJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating task: ${error.message}`);
-            throw new Error(`Error updating task`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating task: ${error.message}`);
         }
 
     }
@@ -61,23 +70,28 @@ export default class TaskService {
         if (!task) {
             throw new NotFoundException('Task', 'taskId', taskId);
         }
+
+        const taskJson = task.toJSON() as ITask;
         return {
-            ...task.toJSON() as ITask,
+            ...taskJson,
         };
     }
 
     public async deleteTask(taskId: string): Promise<void> {
-        const task = await Task.findByPk(taskId);
-        if (!task) {
-            throw new NotFoundException('Task', 'taskId', taskId);
-        }
         try {
+            const task = await Task.findByPk(taskId);
+            if (!task) {
+                throw new NotFoundException('Task', 'taskId', taskId);
+            }
 
             await task.destroy();
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error deleting task: ${error.message}`);
-            throw new Error(`Error deleting task`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error deleting task: ${error.message}`);
         }
     }
 }

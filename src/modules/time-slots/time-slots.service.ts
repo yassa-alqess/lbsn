@@ -12,8 +12,9 @@ export default class TimeSlotService {
                 throw new AlreadyExistsException('TimeSlot', 'time', timeSlotPayload.time.toString());
             }
             const newTimeSlot = await TimeSlot.create({ ...timeSlotPayload });
+            const newTimeSlotJson = newTimeSlot.toJSON() as ITimeSlotResponse;
             return {
-                ...newTimeSlot.toJSON() as ITimeSlotResponse,
+                ...newTimeSlotJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -33,9 +34,10 @@ export default class TimeSlotService {
                 throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
             }
 
-            await timeSlot.update({ ...timeSlotPayload });
+            const newTimeSlot = await timeSlot.update({ ...timeSlotPayload });
+            const newTimeSlotJson = newTimeSlot.toJSON() as ITimeSlotResponse;
             return {
-                ...timeSlot.toJSON() as ITimeSlotResponse,
+                ...newTimeSlotJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -53,8 +55,10 @@ export default class TimeSlotService {
         if (!timeSlot) {
             throw new NotFoundException('TimeSlot', 'timeSlotId', timeSlotId);
         }
+
+        const timeSlotJson = timeSlot.toJSON() as ITimeSlotResponse;
         return {
-            ...timeSlot.toJSON() as ITimeSlotResponse,
+            ...timeSlotJson,
         };
     }
 

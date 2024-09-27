@@ -6,6 +6,7 @@ import Task from "../../shared/models/task";
 import logger from "../../config/logger";
 import { Sequelize } from "sequelize";
 import DatabaseManager from "../../config/database/db-manager";
+import { TASK_SUBMISSIONS_FILES_PATH } from "../../shared/constants";
 
 export default class TaskSubmissionService {
     private _sequelize: Sequelize | null = null;
@@ -19,7 +20,6 @@ export default class TaskSubmissionService {
         }
 
         const transaction = await this._sequelize!.transaction();
-
         try {
             // Create new task submission
             const newTaskSubmission = await TaskSubmission.create(
@@ -29,14 +29,16 @@ export default class TaskSubmissionService {
 
             // Update the associated task status
             await Task.update(
-                { status: TaskStatusEnum.SUBMITTED },
+                { status: TaskStatusEnum.SUBMITTED, submittedAt: new Date() },
                 { where: { taskId: taskSubmissionAddPayload.taskId }, transaction }
             );
 
             await transaction.commit();
 
+            const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
-                ...newTaskSubmission.toJSON() as ITaskSubmission
+                ...newTaskSubmissionJson,
+                documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}`
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -47,18 +49,30 @@ export default class TaskSubmissionService {
     }
 
     public async updateTaskSubmission(taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload): Promise<ITaskSubmission | undefined> {
-        const taskSubmission = await TaskSubmission.findOne({ where: { taskId: taskSubmissionUpdatePayload.taskId } });
-        if (!taskSubmission) {
-            throw new NotFoundException('Task Submission', 'taskId', taskSubmissionUpdatePayload.taskId);
-        }
+        try {
+            const taskSubmission = await TaskSubmission.findOne({ where: { taskId: taskSubmissionUpdatePayload.taskId } });
+            if (!taskSubmission) {
+                throw new NotFoundException('Task Submission', 'taskId', taskSubmissionUpdatePayload.taskId);
+            }
 
-        taskSubmission.title = taskSubmissionUpdatePayload.title || taskSubmission.title;
-        taskSubmission.comment = taskSubmissionUpdatePayload.comment || taskSubmission.comment;
-        taskSubmission.documentUrl = taskSubmissionUpdatePayload.documentUrl || taskSubmission.documentUrl;
-        await taskSubmission.save();
-        return {
-            ...taskSubmission.toJSON() as ITaskSubmission
-        };
+            taskSubmission.title = taskSubmissionUpdatePayload.title || taskSubmission.title;
+            taskSubmission.comment = taskSubmissionUpdatePayload.comment || taskSubmission.comment;
+            taskSubmission.documentUrl = taskSubmissionUpdatePayload.documentUrl || taskSubmission.documentUrl;
+            const newTaskSubmission = await taskSubmission.save();
+
+            const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
+            return {
+                ...newTaskSubmissionJson,
+                documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}`
+            };
+        } //eslint-disable-next-line
+        catch (error: any) {
+            logger.error(`Error updating task submission: ${error.message}`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating task submission: ${error.message}`);
+        }
     }
 
     public async getTaskSubmissionByTaskId(taskSubmissionGetByTaskIdPayload: ItaskSubmissionGetByTaskIdPayload): Promise<ITaskSubmission | undefined> {
@@ -70,8 +84,11 @@ export default class TaskSubmissionService {
         if (!taskSubmission) {
             throw new NotFoundException('Task Submission', 'taskId', taskSubmissionGetByTaskIdPayload.taskId);
         }
+
+        const taskSubmissionJson = taskSubmission.toJSON() as ITaskSubmission;
         return {
-            ...taskSubmission.toJSON() as ITaskSubmission
+            ...taskSubmissionJson,
+            documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmissionJson.documentUrl}`
         };
     }
 
@@ -108,13 +125,13 @@ export default class TaskSubmissionService {
             throw new NotFoundException('Task Submission', 'taskId', taskId);
         }
         taskSubmission.status = TaskSubmissionStatusEnum.RESOLVED;
+        taskSubmission.approvedAt = new Date();
         try {
             await taskSubmission.save();
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error approving task submission: ${error.message}`);
-            throw new Error('Error approving task submission');
+            throw new Error('Error approving task submission: ${error.message}');
         }
     }
-
 }

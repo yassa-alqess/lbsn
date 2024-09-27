@@ -27,8 +27,9 @@ export default class GuestService {
             if (guest)
                 throw new AlreadyExistsException('Guest', 'email', guestPayload.companyEmail);
             const newGuest = await Guest.create({ ...guestPayload, approved: IsApprovedEnum.PENDING });
+            const newGuestJson = newGuest.toJSON() as IGuestResponse;
             return {
-                ...newGuest.toJSON() as IGuestResponse
+                ...newGuestJson
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -46,9 +47,11 @@ export default class GuestService {
             const guest = await Guest.findByPk(guestId);
             if (!guest)
                 throw new NotFoundException('Guest', 'guestId', guestId);
-            await guest.update({ ...guestPayload });
+            const newGuest = await guest.update({ ...guestPayload });
+
+            const newGuestJson = newGuest.toJSON() as IGuestResponse;
             return {
-                ...guest.toJSON() as IGuestResponse
+                ...newGuestJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -58,7 +61,6 @@ export default class GuestService {
             }
             throw new Error(`Error updating guest: ${error.message}`);
         }
-
     }
 
     public async getGuest(guestId: string): Promise<IGuestResponse | undefined> {
@@ -66,8 +68,9 @@ export default class GuestService {
         if (!guest)
             throw new NotFoundException('Guest', 'guestId', guestId);
 
+        const guestJson = guest.toJSON() as IGuestResponse;
         return {
-            ...guest.toJSON() as IGuestResponse
+            ...guestJson
         };
     }
 
@@ -214,8 +217,10 @@ export default class GuestService {
         if (!guest) {
             throw new NotFoundException('Guest', 'email', email);
         }
+
+        const guestJson = guest.toJSON() as IGuestResponse;
         return {
-            ...guest.toJSON() as IGuestResponse
+            ...guestJson
         };
     }
 

@@ -6,6 +6,7 @@ import { IsLockedEnum, IsVerifiedEnum } from "../../shared/enums";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
+import { USER_IMAGES_PATH } from "../../shared/constants";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -89,7 +90,7 @@ export default class UserService {
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
                 roles: userRoles.map((role) => role.name),
-                image: newUser.image,
+                image: `${USER_IMAGES_PATH}/${newUser.image}`,
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
@@ -97,13 +98,13 @@ export default class UserService {
         } catch (error: any) {
             logger.error(`Couldn't Add User, ${error.message}`);
             await transaction.rollback(); // Rollback in case of error
-            throw new Error(`Couldn't Add User`);
+            throw new Error(`Couldn't Add User, ${error.message}`);
         }
     }
 
     public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
         const { userId, companyTaxId, companyEmail, password, roles: newRoles, } = userPayload;
-        const user = await User.findByPk(userId, {
+        let user = await User.findByPk(userId, {
             include: [{ model: Role, as: 'roles' }],
         });
         if (!user) {
@@ -149,7 +150,7 @@ export default class UserService {
 
             // Update user if there are changes
             if (Object.keys(userPayload).length > 0) {
-                await user.update(userPayload, { transaction });
+                user = await user.update(userPayload, { transaction });
             }
 
             // Update roles if provided
@@ -182,7 +183,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 roles: updatedRoles.map((role) => role.name),
-                image: user.image,
+                image: `${USER_IMAGES_PATH}/${user.image}`,
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
             };
@@ -190,7 +191,7 @@ export default class UserService {
         } catch (error: any) {
             await transaction.rollback();
             logger.error(`Couldn't Update User, ${error.message}`);
-            throw new Error(`Couldn't Update User`);
+            throw new Error(`Couldn't Update User, ${error.message}`);
         }
     }
 
@@ -319,7 +320,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: user.image,
+            image: `${USER_IMAGES_PATH}/${user.image}`,
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -345,7 +346,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: user.image,
+            image: `${USER_IMAGES_PATH}/${user.image}`,
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -393,8 +394,7 @@ export default class UserService {
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Couldn't Delete User, ${error.message}`);
-            throw new Error(`Couldn't Delete User`);
+            throw new Error(`Couldn't Delete User, ${error.message}`);
         }
     }
-
 }

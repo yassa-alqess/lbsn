@@ -42,8 +42,9 @@ export default class UserProfilesService {
             // Commit the transaction
             if (!txn) await transaction.commit();
 
+            const newProfileJson = newProfile.toJSON() as IProfileResponse;
             return {
-                ...newProfile.toJSON() as IProfileResponse,
+                ...newProfileJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {

@@ -28,5 +28,5 @@ export interface ITask {
     comment: string;
     status: TaskStatusEnum;
     createdAt: Date;
-    updatedAt: Date;
+    submittedAt?: Date;
 }

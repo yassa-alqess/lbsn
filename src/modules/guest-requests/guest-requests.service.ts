@@ -76,11 +76,11 @@ export default class GuestRequestsService {
     public async updateGuestRequest(guestRequestPayload: IGuestRequestUpdatePayload): Promise<IGuestRequest | undefined> {
         const { guestId, requestId, marketingBudget } = guestRequestPayload;
         try {
-            const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
+            let guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId } });
             if (!guestRequest) {
                 throw new Error('Guest Request not found');
             }
-            await guestRequest.update({ marketingBudget });
+            guestRequest = await guestRequest.update({ marketingBudget });
 
             // Fetch the newly created guest request with the associated service
             const guestRequestWithService = await GuestRequest.findOne({
@@ -166,7 +166,7 @@ export default class GuestRequestsService {
                 await transaction.rollback();
             }
             logger.error(`Error deleting guest request: ${error.message}`);
-            throw new Error(`Error deleting guest request`);
+            throw new Error(`Error deleting guest request: ${error.message}`);
         }
     }
 
@@ -193,7 +193,7 @@ export default class GuestRequestsService {
                 await transaction.rollback();
             }
             logger.error(`Error deleting all guest requests: ${error.message}`);
-            throw new Error(`Error deleting all guest requests`);
+            throw new Error(`Error deleting all guest requests: ${error.message}`);
         }
     }
 
@@ -300,7 +300,7 @@ export default class GuestRequestsService {
                 await transaction.rollback(); // Rollback the transaction only if it wasn't provided
             }
             logger.error(`Error approving guest request: ${error.message}`);
-            throw new Error(`Error approving guest request`);
+            throw new Error(`Error approving guest request: ${error.message}`);
         }
     }
 }

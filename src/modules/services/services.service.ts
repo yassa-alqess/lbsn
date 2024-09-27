@@ -5,42 +5,48 @@ import logger from "../../config/logger";
 
 export default class ServicesService {
     public async addService(servicePayload: IServiceAddPayload): Promise<IServiceResponse> {
-        const service = await Service.findOne({ where: { name: servicePayload.name } });
-        if (service) {
-            throw new AlreadyExistsException("Service", "name", servicePayload.name);
-        }
-
         try {
+            const service = await Service.findOne({ where: { name: servicePayload.name } });
+            if (service) {
+                throw new AlreadyExistsException("Service", "name", servicePayload.name);
+            }
             const newService = await Service.create({ ...servicePayload });
+            const newServiceJson = newService.toJSON() as IServiceResponse;
             return {
-                serviceId: newService.serviceId,
-                name: newService.name,
+                ...newServiceJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error adding service: ${error.message}`);
-            throw new Error(`Error adding service`);
+            if (error instanceof AlreadyExistsException) {
+                throw error;
+            }
+            throw new Error(`Error adding service: ${error.message}`);
         }
 
     }
 
     public async updateService(servicePayload: IServiceUpdatePayload): Promise<IServiceResponse | undefined> {
         const { serviceId } = servicePayload;
-        const service = await Service.findByPk(serviceId);
-        if (!service) {
-            throw new NotFoundException("Service", "serviceId", serviceId);
-        }
         try {
-            await service.update({ ...servicePayload });
+            const service = await Service.findByPk(serviceId);
+            if (!service) {
+                throw new NotFoundException("Service", "serviceId", serviceId);
+            }
+            const newService = await service.update({ ...servicePayload });
+            const newServiceJson = newService.toJSON() as IServiceResponse;
             return {
-                ...service.toJSON() as IServiceResponse,
+                ...newServiceJson,
             };
         }
 
         //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error updating service: ${error.message}`);
-            throw new Error(`Error updating service`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating service: ${error.message}`);
         }
 
     }
@@ -50,8 +56,10 @@ export default class ServicesService {
         if (!service) {
             throw new NotFoundException("Service", "serviceId", serviceId);
         }
+
+        const serviceJson = service.toJSON() as IServiceResponse;
         return {
-            ...service.toJSON() as IServiceResponse,
+            ...serviceJson,
         };
     }
 
@@ -66,16 +74,19 @@ export default class ServicesService {
     }
 
     public async deleteService(serviceId: string): Promise<void> {
-        const service = await Service.findByPk(serviceId);
-        if (!service) {
-            throw new NotFoundException("Service", "serviceId", serviceId);
-        }
         try {
+            const service = await Service.findByPk(serviceId);
+            if (!service) {
+                throw new NotFoundException("Service", "serviceId", serviceId);
+            }
             await service.destroy();
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error deleting service: ${error.message}`);
-            throw new Error(`Error deleting service`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error deleting service: ${error.message}`);
         }
     }
 
@@ -84,8 +95,10 @@ export default class ServicesService {
         if (!service) {
             throw new NotFoundException("Service", "name", serviceName);
         }
+
+        const serviceJson = service.toJSON() as IServiceResponse;
         return {
-            ...service.toJSON() as IServiceResponse,
+            ...serviceJson,
         };
     }
 
