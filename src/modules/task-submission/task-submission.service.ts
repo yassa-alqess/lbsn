@@ -42,7 +42,7 @@ export default class TaskSubmissionService {
             const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
                 ...newTaskSubmissionJson,
-                documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}`
+                documentUrl: newTaskSubmissionJson.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}` : ''
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -76,7 +76,7 @@ export default class TaskSubmissionService {
             const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
                 ...newTaskSubmissionJson,
-                documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}`
+                documentUrl: newTaskSubmissionJson.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}` : ''
             };
         } //eslint-disable-next-line
         catch (error: any) {
@@ -101,7 +101,7 @@ export default class TaskSubmissionService {
         const taskSubmissionJson = taskSubmission.toJSON() as ITaskSubmission;
         return {
             ...taskSubmissionJson,
-            documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmissionJson.documentUrl}`
+            documentUrl: taskSubmissionJson.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmissionJson.documentUrl}` : ''
         };
     }
 
