@@ -28,7 +28,7 @@ export default class TaskSubmissionService {
 
             // Update the associated task status
             await Task.update(
-                { status: TaskStatusEnum.SUBMITTED },
+                { status: TaskStatusEnum.SUBMITTED, submittedAt: new Date() },
                 { where: { taskId: taskSubmissionAddPayload.taskId }, transaction }
             );
 

@@ -1,4 +1,4 @@
-import { Table, Model, Column, DataType, BelongsTo, HasOne, ForeignKey } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsTo, HasOne, ForeignKey, AllowNull } from 'sequelize-typescript';
 import Profile from './profile';
 import TaskSubmission from './task-submission';
 import { TaskStatusEnum } from '../enums';
@@ -48,6 +48,12 @@ class Task extends Model {
 
   @HasOne(() => TaskSubmission, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
   declare taskSubmission: TaskSubmission;
+
+  @AllowNull(true)
+  @Column({
+    type: DataType.DATE,
+  })
+  declare submittedAt: Date;
 
 }
 
