@@ -11,6 +11,8 @@ import { USER_IMAGES_PATH } from "../../shared/constants";
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
 import { Op, Sequelize } from 'sequelize';
+import path from 'path';
+import fs from 'fs';
 
 export default class UserService {
 
@@ -146,6 +148,18 @@ export default class UserService {
                 if (existingUserWithTaxId) {
                     throw new AlreadyExistsException('User', 'taxId', companyTaxId as string);
                 }
+            }
+
+            // Delete old image if a new image is provided
+            const oldImage = user.image;
+            const newImage = userPayload.image;
+            if (newImage && oldImage !== newImage) {
+                this._deleteOldImage(oldImage);
+            }
+
+            // if no new image provided, don't update the image field (remove it from the update payload)
+            if (!newImage) {
+                delete userPayload.image;
             }
 
             // Update user if there are changes
@@ -396,5 +410,16 @@ export default class UserService {
             logger.error(`Couldn't Delete User, ${error.message}`);
             throw new Error(`Couldn't Delete User, ${error.message}`);
         }
+    }
+
+    private _deleteOldImage(imageFileName: string): void {
+        const filePath = path.join(USER_IMAGES_PATH, imageFileName);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
+            } else {
+                logger.info(`Old image file deleted: ${filePath}`);
+            }
+        });
     }
 }
