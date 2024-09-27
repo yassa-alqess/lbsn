@@ -53,7 +53,7 @@ export const UpdateUserInfoDto = Joi.object({
     userEmail: Joi.string().optional(),
     userPhone: Joi.string().optional(),
     userAddress: Joi.string().optional(),
-    companytaxId: Joi.string().optional(),
+    companyTaxId: Joi.string().optional(),
     companyName: Joi.string().optional(),
     companyEmail: Joi.string().optional(),
     companyPhone: Joi.string().optional(),

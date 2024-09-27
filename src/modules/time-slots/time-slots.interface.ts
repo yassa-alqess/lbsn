@@ -12,7 +12,6 @@ export interface ITimeSlotResponse {
 }
 export interface ITimeSlotUpdatePayload {
     timeSlotId: string;
-    time: Date;
     isAvailable: IsAvailableEnum;
 }
 

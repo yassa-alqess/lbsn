@@ -83,7 +83,7 @@ export default class UserService {
                 userEmail: newUser.userEmail,
                 userPhone: newUser.userPhone,
                 userAddress: newUser.userAddress,
-                companytaxId: newUser.companytaxId,
+                companyTaxId: newUser.companyTaxId,
                 companyName: newUser.companyName,
                 companyEmail: newUser.companyEmail,
                 companyPhone: newUser.companyPhone,
@@ -102,7 +102,7 @@ export default class UserService {
     }
 
     public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
-        const { userId, companytaxId, companyEmail, password, roles: newRoles, } = userPayload;
+        const { userId, companyTaxId, companyEmail, password, roles: newRoles, } = userPayload;
         const user = await User.findByPk(userId, {
             include: [{ model: Role, as: 'roles' }],
         });
@@ -134,16 +134,16 @@ export default class UserService {
                 }
             }
 
-            if (companytaxId) {
+            if (companyTaxId) {
                 const existingUserWithTaxId = await User.findOne({
                     where: {
-                        companytaxId,
+                        companyTaxId,
                         userId: { [Op.ne]: userId }, // Exclude the current user from the check
                     },
                     transaction,
                 });
                 if (existingUserWithTaxId) {
-                    throw new AlreadyExistsException('User', 'taxId', companytaxId as string);
+                    throw new AlreadyExistsException('User', 'taxId', companyTaxId as string);
                 }
             }
 
@@ -176,7 +176,7 @@ export default class UserService {
                 userEmail: user.userEmail,
                 userPhone: user.userPhone,
                 userAddress: user.userAddress,
-                companytaxId: user.companytaxId,
+                companyTaxId: user.companyTaxId,
                 companyName: user.companyName,
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,
@@ -287,7 +287,7 @@ export default class UserService {
                 userEmail: user.userEmail,
                 userPhone: user.userPhone,
                 userAddress: user.userAddress,
-                companytaxId: user.companytaxId,
+                companyTaxId: user.companyTaxId,
                 companyName: user.companyName,
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,
@@ -313,7 +313,7 @@ export default class UserService {
             userEmail: user.userEmail,
             userPhone: user.userPhone,
             userAddress: user.userAddress,
-            companytaxId: user.companytaxId,
+            companyTaxId: user.companyTaxId,
             companyName: user.companyName,
             companyEmail: user.companyEmail,
             companyPhone: user.companyPhone,
@@ -339,7 +339,7 @@ export default class UserService {
             userEmail: user.userEmail,
             userPhone: user.userPhone,
             userAddress: user.userAddress,
-            companytaxId: user.companytaxId,
+            companyTaxId: user.companyTaxId,
             companyName: user.companyName,
             companyEmail: user.companyEmail,
             companyPhone: user.companyPhone,
@@ -362,7 +362,7 @@ export default class UserService {
                 userEmail: user.userEmail,
                 userPhone: user.userPhone,
                 userAddress: user.userAddress,
-                companytaxId: user.companytaxId,
+                companyTaxId: user.companyTaxId,
                 companyName: user.companyName,
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,

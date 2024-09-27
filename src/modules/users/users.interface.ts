@@ -5,7 +5,7 @@ export interface IUserAddPayload {
     userEmail?: string;
     userPhone?: string;
     userAddress?: string;
-    companytaxId?: string;
+    companyTaxId?: string;
     companyName: string;
     companyEmail: string;
     companyPhone: string;
@@ -24,7 +24,7 @@ export interface IUserResponse {
     userEmail: string;
     userPhone: string;
     userAddress: string;
-    companytaxId: string;
+    companyTaxId: string;
     companyName: string;
     companyEmail: string;
     companyPhone: string;
@@ -40,7 +40,7 @@ export interface IUserUpdatePayload {
     userEmail?: string;
     userPhone?: string;
     userAddress?: string;
-    companytaxId?: string;
+    companyTaxId?: string;
     companyName?: string;
     companyEmail?: string;
     companyPhone?: string;
@@ -66,7 +66,7 @@ export interface IUserUpdateInfoPayload {
     userEmail?: string;
     userPhone?: string;
     userAddress?: string;
-    companytaxId?: string;
+    companyTaxId?: string;
     companyName?: string;
     companyEmail?: string;
     companyPhone?: string;

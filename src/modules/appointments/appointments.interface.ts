@@ -8,7 +8,7 @@ export interface IAppointmentsAddPayload {
     companyPhone: string;
     companyAddress: string;
     marketingBudget: MarketingBudgetEnum;
-    timeSlot: Date;
+    timeSlotId: string;
     serviceId: string;
 }
 
@@ -22,7 +22,8 @@ export interface IAppointment {
     companyPhone: string;
     companyAddress: string;
     marketingBudget: MarketingBudgetEnum;
-    timeSlot: Date;
+    timeSlotId: string;
+    time: Date;
     serviceId: string;
 }
 

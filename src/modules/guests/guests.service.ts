@@ -22,11 +22,10 @@ export default class GuestService {
         this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuest(guestPayload: IGuestAddPayload): Promise<IGuestResponse> {
-        const guest = await Guest.findOne({ where: { companyEmail: guestPayload.companyEmail } });
-        if (guest)
-            throw new AlreadyExistsException('Guest', 'email', guestPayload.companyEmail);
-
         try {
+            const guest = await Guest.findOne({ where: { companyEmail: guestPayload.companyEmail } });
+            if (guest)
+                throw new AlreadyExistsException('Guest', 'email', guestPayload.companyEmail);
             const newGuest = await Guest.create({ ...guestPayload, approved: IsApprovedEnum.PENDING });
             return {
                 ...newGuest.toJSON() as IGuestResponse
@@ -34,16 +33,19 @@ export default class GuestService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error adding guest: ${error.message}`);
-            throw new Error(`Error adding guest`);
+            if (error instanceof AlreadyExistsException) {
+                throw error;
+            }
+            throw new Error(`Error adding guest: ${error.message}`);
         }
     }
 
     public async updateGuest(guestPayload: IGuestUpdatePayload): Promise<IGuestResponse | undefined> {
         const { guestId } = guestPayload;
-        const guest = await Guest.findByPk(guestId);
-        if (!guest)
-            throw new NotFoundException('Guest', 'guestId', guestId);
         try {
+            const guest = await Guest.findByPk(guestId);
+            if (!guest)
+                throw new NotFoundException('Guest', 'guestId', guestId);
             await guest.update({ ...guestPayload });
             return {
                 ...guest.toJSON() as IGuestResponse
@@ -51,7 +53,10 @@ export default class GuestService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating guest: ${error.message}`);
-            throw new Error(`Error updating guest`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating guest: ${error.message}`);
         }
 
     }
@@ -166,7 +171,7 @@ export default class GuestService {
                 userEmail: guest.userEmail,
                 userPhone: guest.userPhone,
                 userAddress: guest.userAddress,
-                companytaxId: guest.companytaxId,
+                companyTaxId: guest.companyTaxId,
                 companyName: guest.companyName,
                 companyEmail: guest.companyEmail,
                 companyPhone: guest.companyPhone,
@@ -212,5 +217,36 @@ export default class GuestService {
         return {
             ...guest.toJSON() as IGuestResponse
         };
+    }
+
+    public async getOrCreateGuest(guestData: IGuestAddPayload): Promise<IGuestResponse> {
+        let guest;
+        try {
+            guest = await this.getGuestByEmail(guestData.companyEmail);
+            if (guest) {
+                logger.info(`Guest already exists, proceeding...`);
+            }
+            //eslint-disable-next-line
+        } catch (err: any) {
+            if (err instanceof NotFoundException) {
+                logger.info(err.message);
+                try {
+                    guest = await this.addGuest(guestData);
+                    logger.debug(`Guest created with ID: ${guest.guestId}`);
+                    //eslint-disable-next-line
+                } catch (err: any) {
+                    if (err instanceof AlreadyExistsException) {
+                        logger.info("Guest already exists, proceeding.");
+                    } else {
+                        logger.error(`Couldn't create a guest: ${err.message}`);
+                        throw new Error(`Couldn't create a guest`);
+                    }
+                }
+            } else {
+                logger.error(`Couldn't Get A Guest, ${err.message}`);
+                throw new Error(`Couldn't Get A Guest, ${err.message}`);
+            }
+        }
+        return guest!;
     }
 }

@@ -6,7 +6,7 @@ export interface IGuestAddPayload {
     userEmail?: string;
     userPhone?: string;
     userAddress?: string;
-    companytaxId?: string;
+    companyTaxId?: string;
     companyName: string;
     companyEmail: string;
     companyPhone: string;
@@ -19,7 +19,7 @@ export interface IGuestResponse {
     userEmail: string;
     userPhone: string;
     userAddress: string;
-    companytaxId: string;
+    companyTaxId: string;
     companyName: string;
     companyEmail: string;
     companyPhone: string;
@@ -32,7 +32,7 @@ export interface IGuestUpdatePayload {
     userEmail?: string;
     userPhone?: string;
     userAddress?: string;
-    companytaxId?: string;
+    companyTaxId?: string;
     companyName?: string;
     companyEmail?: string;
     companyPhone?: string;
