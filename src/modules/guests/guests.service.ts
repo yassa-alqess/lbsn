@@ -61,7 +61,6 @@ export default class GuestService {
             }
             throw new Error(`Error updating guest: ${error.message}`);
         }
-
     }
 
     public async getGuest(guestId: string): Promise<IGuestResponse | undefined> {
