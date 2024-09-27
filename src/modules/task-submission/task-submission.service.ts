@@ -6,6 +6,7 @@ import Task from "../../shared/models/task";
 import logger from "../../config/logger";
 import { Sequelize } from "sequelize";
 import DatabaseManager from "../../config/database/db-manager";
+import { TASK_SUBMISSIONS_FILES_PATH } from "../../shared/constants";
 
 export default class TaskSubmissionService {
     private _sequelize: Sequelize | null = null;
@@ -37,6 +38,7 @@ export default class TaskSubmissionService {
             const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
                 ...newTaskSubmissionJson,
+                documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}`
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -61,6 +63,7 @@ export default class TaskSubmissionService {
             const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
                 ...newTaskSubmissionJson,
+                documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}`
             };
         } //eslint-disable-next-line
         catch (error: any) {
@@ -85,6 +88,7 @@ export default class TaskSubmissionService {
         const taskSubmissionJson = taskSubmission.toJSON() as ITaskSubmission;
         return {
             ...taskSubmissionJson,
+            documentUrl: `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmissionJson.documentUrl}`
         };
     }
 
@@ -121,6 +125,7 @@ export default class TaskSubmissionService {
             throw new NotFoundException('Task Submission', 'taskId', taskId);
         }
         taskSubmission.status = TaskSubmissionStatusEnum.RESOLVED;
+        taskSubmission.approvedAt = new Date();
         try {
             await taskSubmission.save();
         } //eslint-disable-next-line
