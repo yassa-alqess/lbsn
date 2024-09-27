@@ -7,12 +7,14 @@ import logger from "../../config/logger";
 import EmailService from "../../config/mailer";
 import GuestRequestsService from "../guest-requests/guest-requests.service";
 import MeetingService from "../meetings/meeting.service";
-import { generateRandomPassword } from "../../shared/utils";
 import Appointment from "../../shared/models/appointment";
 import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
 import { ACQUISITION_MAIL, MAIN_MAIL } from "../../shared/constants";
 import { IMeeting } from "../meetings/meeting.interface";
 import { hashPassword } from "../../shared/utils/hash-password";
+import TimeSlotService from "../time-slots/time-slots.service";
+import { ITimeSlotResponse } from "../time-slots/time-slots.interface";
+import { IsAvailableEnum } from "../../shared/enums";
 
 
 export default class AppointmentService {
@@ -20,8 +22,11 @@ export default class AppointmentService {
     private _guestRequestsService = new GuestRequestsService();
     private _emailService = new EmailService();
     private _meetingService = new MeetingService();
-
+    private _timeSlotService = new TimeSlotService();
     public async makeAppointment(appointmentPayload: IAppointmentsAddPayload) {
+        // prepare meeting
+        const meeting = await this._prepareMeeting(appointmentPayload);
+
         // add to table guests
         const guest = await this._guestService.getOrCreateGuest(this._mapAppointmentToGuest(appointmentPayload));
 
@@ -35,16 +40,11 @@ export default class AppointmentService {
             ...guestRequest
         });
 
-        // prepare meeting
-        const meetingPassword = generateRandomPassword(); //sync procedure
-        const hashedPassword = await hashPassword(meetingPassword);
-        const meeting = await this._meetingService.scheduleMeeting("meeting invitation", appointmentPayload.timeSlot, meetingPassword);
-
         // create appointment
-        await this._createAppointmentRecord(guest, appointmentPayload, meeting, hashedPassword);
+        await this._createAppointmentRecord(guest, appointmentPayload, meeting);
 
         // send confirmation email
-        await this._sendConfirmationEmail(guest, appointmentPayload, meeting, meetingPassword);
+        await this._sendConfirmationEmail(guest, meeting);
     }
 
     private _mapAppointmentToGuest(appointmentPayload: IAppointmentsAddPayload): IGuestAddPayload {
@@ -62,11 +62,12 @@ export default class AppointmentService {
         guest: IGuestResponse,
         appointmentPayload: IAppointmentsAddPayload,
         meeting: IMeeting,
-        hashedPassword: string
     ): Promise<void> {
         try {
+            const hashedPassword = await hashPassword(meeting.password as string);
+
             await Appointment.create({
-                time: appointmentPayload.timeSlot,
+                time: meeting.time,
                 guestEmail: guest.companyEmail,
                 meetingUrl: meeting.start_url,
                 meetingJoinUrl: meeting.join_url,
@@ -77,17 +78,15 @@ export default class AppointmentService {
             //eslint-disable-next-line
         } catch (err: any) {
             logger.error(`Couldn't Create An Appointment, ${err.message}`);
-            throw new Error(`Couldn't Create An Appointment`);
+            throw new Error(`Couldn't Create An Appointment: ${err.message}`);
         }
     }
 
     private async _sendConfirmationEmail(
         guest: IGuestResponse,
-        appointmentPayload: IAppointmentsAddPayload,
         meeting: IMeeting,
-        meetingPassword: string
     ): Promise<void> {
-        const formatedDate = new Date(appointmentPayload.timeSlot).toLocaleString('en-US', {
+        const formatedDate = new Date(meeting.time).toLocaleString('en-US', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -104,12 +103,29 @@ export default class AppointmentService {
             subject: 'Appointment Confirmation',
             context: {
                 joinUrl: meeting.join_url,
-                meetingPassword,
+                meetingPassword: meeting.password,
                 meetingTime: formatedDate,
                 meetingDuration: '1 hr',
             },
         };
         await this._emailService.sendEmail(emailPayload);
+    }
+
+    private async _prepareMeeting(appointmentPayload: IAppointmentsAddPayload): Promise<IMeeting> {
+        try {
+            const { time, isAvailable } = await this._timeSlotService.getTimeSlot(appointmentPayload.timeSlotId as string) as ITimeSlotResponse;
+            if (isAvailable === IsAvailableEnum.UNAVAILABLE) {
+                throw new Error('Time is already allocated');
+            }
+            await this._timeSlotService.updateTimeSlot({ timeSlotId: appointmentPayload.timeSlotId as string, isAvailable: IsAvailableEnum.UNAVAILABLE });
+
+
+            return await this._meetingService.scheduleMeeting("meeting invitation", time);
+            //eslint-disable-next-line
+        } catch (err: any) {
+            logger.error(`Couldn't prepare meeting ${err.message}`);
+            throw new Error(`Couldn't prepare meeting: ${err.message}`);
+        }
     }
 
     public async getAppointments(guestId: string): Promise<IAppointmentsResponse | undefined> {
