@@ -186,8 +186,9 @@ export default class LeadsService {
     public async addLead(payload: ILeadAddPayload): Promise<ILead> {
         try {
             const lead = await Lead.create({ ...payload });
+            const leadJson = lead.toJSON() as ILead;
             return {
-                ...lead.toJSON() as ILead
+                ...leadJson
             }
 
             //eslint-disable-next-line
