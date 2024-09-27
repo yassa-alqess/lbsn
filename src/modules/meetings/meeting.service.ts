@@ -2,6 +2,7 @@ import axios from 'axios'
 import { MEETING_API_URL, MEETING_AUTH_API_URL, MEETING_ACCOUNT_ID, MEETING_CLIENT_ID, MEETING_CLIENT_SECRET } from '../../shared/constants/index'
 import logger from '../../config/logger'
 import { IMeeting } from './meeting.interface'
+import { generateRandomPassword } from '../../shared/utils'
 
 export default class MeetingService {
 
@@ -15,8 +16,7 @@ export default class MeetingService {
         return response.data.access_token
     }
 
-    public scheduleMeeting = async (topic: string, startTime: Date, password: string): Promise<IMeeting> => {
-
+    public scheduleMeeting = async (topic: string, startTime: Date, password?: string): Promise<IMeeting> => {
         const url = `${MEETING_API_URL}`
         let token;
         try {
@@ -30,13 +30,16 @@ export default class MeetingService {
         const headers = {
             Authorization: `Bearer ${token}`,
         }
+
+        const meetingPassword = password || generateRandomPassword();
+
         const payload = {
             topic,
             type: 2,
             start_time: startTime,
             timeZone: 'GMT+2',
             duration: 60,
-            password,
+            password: meetingPassword,
             default_password: false,
             pre_schedule: false,
         }
@@ -51,7 +54,11 @@ export default class MeetingService {
             logger.error(`Couldn't Create A Meeting ${err.message}`);
             throw new Error("Couldn't Create A Meeting");
         }
-
-        return response.data;
+        return {
+            time: startTime,
+            password: meetingPassword,
+            start_url: response.data.start_url,
+            join_url: response.data.join_url,
+        }
     }
 }
