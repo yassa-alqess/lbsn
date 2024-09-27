@@ -6,6 +6,7 @@ import { IsLockedEnum, IsVerifiedEnum } from "../../shared/enums";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
+import { USER_IMAGES_PATH } from "../../shared/constants";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -89,7 +90,7 @@ export default class UserService {
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
                 roles: userRoles.map((role) => role.name),
-                image: newUser.image,
+                image: `${USER_IMAGES_PATH}/${newUser.image}`,
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
@@ -182,7 +183,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 roles: updatedRoles.map((role) => role.name),
-                image: user.image,
+                image: `${USER_IMAGES_PATH}/${user.image}`,
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
             };
@@ -319,7 +320,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: user.image,
+            image: `${USER_IMAGES_PATH}/${user.image}`,
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -345,7 +346,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: user.image,
+            image: `${USER_IMAGES_PATH}/${user.image}`,
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
