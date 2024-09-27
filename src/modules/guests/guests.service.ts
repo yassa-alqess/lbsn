@@ -27,8 +27,9 @@ export default class GuestService {
             if (guest)
                 throw new AlreadyExistsException('Guest', 'email', guestPayload.companyEmail);
             const newGuest = await Guest.create({ ...guestPayload, approved: IsApprovedEnum.PENDING });
+            const newGuestJson = newGuest.toJSON() as IGuestResponse;
             return {
-                ...newGuest.toJSON() as IGuestResponse
+                ...newGuestJson
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -47,8 +48,10 @@ export default class GuestService {
             if (!guest)
                 throw new NotFoundException('Guest', 'guestId', guestId);
             await guest.update({ ...guestPayload });
+
+            const guestJson = guest.toJSON() as IGuestResponse;
             return {
-                ...guest.toJSON() as IGuestResponse
+                ...guestJson
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -66,8 +69,9 @@ export default class GuestService {
         if (!guest)
             throw new NotFoundException('Guest', 'guestId', guestId);
 
+        const guestJson = guest.toJSON() as IGuestResponse;
         return {
-            ...guest.toJSON() as IGuestResponse
+            ...guestJson
         };
     }
 
@@ -214,8 +218,10 @@ export default class GuestService {
         if (!guest) {
             throw new NotFoundException('Guest', 'email', email);
         }
+
+        const guestJson = guest.toJSON() as IGuestResponse;
         return {
-            ...guest.toJSON() as IGuestResponse
+            ...guestJson
         };
     }
 
