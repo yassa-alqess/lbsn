@@ -194,7 +194,7 @@ export default class LeadsService {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error adding lead: ${error.message}`);
-            throw new Error(`Error adding lead`);
+            throw new Error(`Error adding lead: ${error.message}`);
         }
     }
 }
