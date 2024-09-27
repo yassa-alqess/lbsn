@@ -97,7 +97,7 @@ export default class UserService {
         } catch (error: any) {
             logger.error(`Couldn't Add User, ${error.message}`);
             await transaction.rollback(); // Rollback in case of error
-            throw new Error(`Couldn't Add User`);
+            throw new Error(`Couldn't Add User, ${error.message}`);
         }
     }
 
@@ -190,7 +190,7 @@ export default class UserService {
         } catch (error: any) {
             await transaction.rollback();
             logger.error(`Couldn't Update User, ${error.message}`);
-            throw new Error(`Couldn't Update User`);
+            throw new Error(`Couldn't Update User, ${error.message}`);
         }
     }
 
@@ -393,8 +393,7 @@ export default class UserService {
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Couldn't Delete User, ${error.message}`);
-            throw new Error(`Couldn't Delete User`);
+            throw new Error(`Couldn't Delete User, ${error.message}`);
         }
     }
-
 }
