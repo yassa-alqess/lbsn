@@ -5,49 +5,59 @@ import logger from "../../config/logger";
 
 export default class RoleService {
     public async addRole(rolePayload: IRoleAddPayload): Promise<IRoleResponse> {
-        const role = await Role.findOne({ where: { name: rolePayload.name } });
-        if (role) {
-            throw new AlreadyExistsException('Role', 'name', rolePayload.name.toString());
-        }
         try {
-            const role = await Role.create({ ...rolePayload });
+            const role = await Role.findOne({ where: { name: rolePayload.name } });
+            if (role) {
+                throw new AlreadyExistsException('Role', 'name', rolePayload.name.toString());
+            }
+            const newRole = await Role.create({ ...rolePayload });
+            const newRoleJson = newRole.toJSON() as IRoleResponse;
             return {
-                ...role.toJSON() as IRoleResponse,
+                ...newRoleJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error adding role: ${error.message}`);
-            throw new Error(`Error adding role`);
+            if (error instanceof AlreadyExistsException) {
+                throw error;
+            }
+            throw new Error(`Error adding role: ${error.message}`);
         }
     }
 
     public async updateRole(rolePayload: IRoleUpdatePayload): Promise<IRoleResponse | undefined> {
         const { roleId } = rolePayload;
-        const role = await Role.findByPk(roleId);
-        if (!role) {
-            throw new NotFoundException('Role', 'roleId', roleId);
-        }
         try {
+            const role = await Role.findByPk(roleId);
+            if (!role) {
+                throw new NotFoundException('Role', 'roleId', roleId);
+            }
 
             await role.update({ ...rolePayload });
+            const roleJson = role.toJSON() as IRoleResponse;
             return {
-                ...role.toJSON() as IRoleResponse,
+                ...roleJson,
             };
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating role: ${error.message}`);
-            throw new Error(`Error updating role`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error updating role: ${error.message}`);
         }
 
     }
-    
+
     public async getRole(roleId: string): Promise<IRoleResponse | undefined> {
         const role = await Role.findByPk(roleId);
         if (!role) {
             throw new NotFoundException('Role', 'roleId', roleId);
         }
+
+        const roleJson = role.toJSON() as IRoleResponse;
         return {
-            ...role.toJSON() as IRoleResponse,
+            ...roleJson,
         };
     }
 
@@ -61,17 +71,19 @@ export default class RoleService {
     }
 
     public async deleteRole(roleId: string): Promise<void> {
-        const role = await Role.findByPk(roleId);
-        if (!role) {
-            throw new NotFoundException('Role', 'roleId', roleId);
-        }
         try {
-
+            const role = await Role.findByPk(roleId);
+            if (!role) {
+                throw new NotFoundException('Role', 'roleId', roleId);
+            }
             await role.destroy();
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error deleting role: ${error.message}`);
-            throw new Error(`Error deleting role`);
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            throw new Error(`Error deleting role: ${error.message}`);
         }
     }
 }
