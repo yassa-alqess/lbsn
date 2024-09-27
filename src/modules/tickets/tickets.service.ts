@@ -5,6 +5,11 @@ import { TicketStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
 import { TICKETS_FILES_PATH } from "../../shared/constants";
 
+
+// 3rd party dependencies
+import path from 'path';
+import fs from 'fs';
+
 export default class TicketService {
     public async addTicket(ticketPayload: ITicketsAddPayload): Promise<ITicket> {
         try {
@@ -84,6 +89,19 @@ export default class TicketService {
             if (!ticket) {
                 throw new NotFoundException('Ticket', 'ticketId', ticketId);
             }
+
+            // Delete old document if new document is uploaded
+            const oldDocumentUrl = ticket.documentUrl;
+            const newDocumentUrl = ticketPayload.documentUrl;
+            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+                this._deleteOldDocument(oldDocumentUrl);
+            }
+
+            // if no new document is uploaded, keep the old document
+            if (!newDocumentUrl) {
+                ticketPayload.documentUrl = oldDocumentUrl;
+            }
+
             const newTicket = await ticket.update({ ...ticketPayload });
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
@@ -115,5 +133,16 @@ export default class TicketService {
             }
             throw new Error(`Error deleting ticket: ${err.message} `);
         }
+    }
+
+    private _deleteOldDocument(documentUrl: string): void {
+        const filePath = path.join(TICKETS_FILES_PATH, documentUrl);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
+            } else {
+                logger.info(`Old image file deleted: ${filePath}`);
+            }
+        });
     }
 }
