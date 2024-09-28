@@ -11,6 +11,8 @@ import { USER_IMAGES_PATH } from "../../shared/constants";
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
 import { Op, Sequelize } from 'sequelize';
+import path from 'path';
+import fs from 'fs';
 
 export default class UserService {
 
@@ -90,7 +92,7 @@ export default class UserService {
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
                 roles: userRoles.map((role) => role.name),
-                image: `${USER_IMAGES_PATH}/${newUser.image}`,
+                image: newUser.image ? `${USER_IMAGES_PATH}/${newUser.image}` : '',
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
@@ -148,6 +150,18 @@ export default class UserService {
                 }
             }
 
+            // Delete old image if a new image is provided
+            const oldImage = user.image;
+            const newImage = userPayload.image;
+            if (newImage && oldImage !== newImage) {
+                this._deleteOldImage(oldImage);
+            }
+
+            // if no new image provided, don't update the image field (remove it from the update payload)
+            if (!newImage) {
+                delete userPayload.image;
+            }
+
             // Update user if there are changes
             if (Object.keys(userPayload).length > 0) {
                 user = await user.update(userPayload, { transaction });
@@ -183,7 +197,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 roles: updatedRoles.map((role) => role.name),
-                image: `${USER_IMAGES_PATH}/${user.image}`,
+                image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
             };
@@ -320,7 +334,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: `${USER_IMAGES_PATH}/${user.image}`,
+            image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -346,7 +360,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             roles: user.roles.map((role) => role.name), // extract role names
-            image: `${USER_IMAGES_PATH}/${user.image}`,
+            image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -369,7 +383,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 roles: user.roles.map((role) => role.name), // extract role names
-                image: user.image,
+                image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked,
             })),
@@ -396,5 +410,16 @@ export default class UserService {
             logger.error(`Couldn't Delete User, ${error.message}`);
             throw new Error(`Couldn't Delete User, ${error.message}`);
         }
+    }
+
+    private _deleteOldImage(imageFileName: string): void {
+        const filePath = path.join(USER_IMAGES_PATH, imageFileName);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
+            } else {
+                logger.info(`Old image file deleted: ${filePath}`);
+            }
+        });
     }
 }

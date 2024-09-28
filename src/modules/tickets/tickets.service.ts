@@ -5,6 +5,11 @@ import { TicketStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
 import { TICKETS_FILES_PATH } from "../../shared/constants";
 
+
+// 3rd party dependencies
+import path from 'path';
+import fs from 'fs';
+
 export default class TicketService {
     public async addTicket(ticketPayload: ITicketsAddPayload): Promise<ITicket> {
         try {
@@ -16,7 +21,7 @@ export default class TicketService {
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
                 ...newTicketJson,
-                documentUrl: `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}`
+                documentUrl: newTicketJson.documentUrl ? `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}` : ''
             };
             //eslint-disable-next-line
         } catch (err: any) {
@@ -38,7 +43,7 @@ export default class TicketService {
         return {
             tickets: tickets.map(ticket => ({
                 ...ticket.toJSON(),
-                documentUrl: `${TICKETS_FILES_PATH}/${ticket.documentUrl}`
+                documentUrl: ticket.documentUrl ? `${TICKETS_FILES_PATH}/${ticket.documentUrl}` : ''
 
             }))
         };
@@ -73,7 +78,7 @@ export default class TicketService {
         const ticketJson = ticket.toJSON() as ITicket;
         return {
             ...ticketJson,
-            documentUrl: `${TICKETS_FILES_PATH}/${ticketJson.documentUrl}`
+            documentUrl: ticketJson.documentUrl ? `${TICKETS_FILES_PATH}/${ticketJson.documentUrl}` : ''
         };
     }
 
@@ -84,11 +89,24 @@ export default class TicketService {
             if (!ticket) {
                 throw new NotFoundException('Ticket', 'ticketId', ticketId);
             }
+
+            // Delete old document if new document is uploaded
+            const oldDocumentUrl = ticket.documentUrl;
+            const newDocumentUrl = ticketPayload.documentUrl;
+            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+                this._deleteOldDocument(oldDocumentUrl);
+            }
+
+            // if no new document is uploaded, keep the old document
+            if (!newDocumentUrl) {
+                ticketPayload.documentUrl = oldDocumentUrl;
+            }
+
             const newTicket = await ticket.update({ ...ticketPayload });
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
                 ...newTicketJson,
-                documentUrl: `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}`
+                documentUrl: newTicketJson.documentUrl ? `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}` : ''
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -115,5 +133,16 @@ export default class TicketService {
             }
             throw new Error(`Error deleting ticket: ${err.message} `);
         }
+    }
+
+    private _deleteOldDocument(documentUrl: string): void {
+        const filePath = path.join(TICKETS_FILES_PATH, documentUrl);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
+            } else {
+                logger.info(`Old image file deleted: ${filePath}`);
+            }
+        });
     }
 }
