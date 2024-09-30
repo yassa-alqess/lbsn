@@ -48,7 +48,7 @@ export default class TaskSubmissionService {
         } catch (error: any) {
             await transaction.rollback();
             logger.error(`Error adding task submission: ${error.message}`);
-            throw new Error('Error adding task submission');
+            throw new Error(`Error adding task submission: ${error.message}`);
         }
     }
 
@@ -128,7 +128,7 @@ export default class TaskSubmissionService {
         } catch (error: any) {
             await transaction.rollback();
             logger.error(`Error deleting task submission: ${error.message}`);
-            throw new Error('Error deleting task submission');
+            throw new Error(`Error deleting task submission: ${error.message}`);
         }
     }
 
@@ -144,7 +144,7 @@ export default class TaskSubmissionService {
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error approving task submission: ${error.message}`);
-            throw new Error('Error approving task submission: ${error.message}');
+            throw new Error(`Error approving task submission: ${error.message}`);
         }
     }
 
