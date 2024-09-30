@@ -26,6 +26,7 @@ export interface IGuestResponse {
     companyAddress: string;
     approved: IsApprovedEnum;
 }
+
 export interface IGuestUpdatePayload {
     guestId: string;
     username?: string;
