@@ -38,6 +38,7 @@ export const TIME_SLOTS_PATH = "/time-slots"
 export const ROLES_PATH = "/roles"
 export const WARM_LEADS_PATH = "/warm-leads"
 export const CONTACT_US_PATH = "/contact-us"
+export const OVERVIEW_PATH = "/overview"
 
 
 export const DOMAIN = process.env.DOMAIN;
