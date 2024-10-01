@@ -23,13 +23,13 @@ export default class OverviewController implements Controller {
     private _initializeRoutes() {
         this.router.all(`${this.path}*`, accessTokenGuard);
         this.router.post(`${this.path}/leads-per-period`, validate(PeriodDto), this.getLeadsPerPeriod);
+        this.router.post(`${this.path}/leads-count`, validate(PeriodDto), this.getDealsCount);
+        this.router.post(`${this.path}/deals-value-count`, validate(PeriodDto), this.getDealsValueCount);
         // this.router.post(`${this.path}/deals-per-leads`, validate(PeriodDto), this.getDealsPerLeads);
-        // this.router.post(`${this.path}/leads-count`, validate(PeriodDto), this.getLeadsCount);
-        // this.router.post(`${this.path}/deals-value-count`, validate(PeriodDto), this.getDealsValueCount);
         // this.router.post(`${this.path}/conversion-rate`, validate(PeriodDto), this.getConversionRate);
     }
 
-    private getLeadsPerPeriod = async (req: Request, res: Response, next: NextFunction) => {
+    public getLeadsPerPeriod = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const periodPayload: IPeriod = req.body;
             const leads = await this._overviewService.getLeadCountByPeriod(periodPayload);
@@ -37,6 +37,28 @@ export default class OverviewController implements Controller {
         } catch (error) {
             logger.error(error);
             next(new InternalServerException("Failed to get leads per period"));
+        }
+    }
+
+    public getDealsCount = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const periodPayload: IPeriod = req.body;
+            const deals = await this._overviewService.getDealsCount(periodPayload);
+            res.status(StatusCodes.OK).json({ deals }).end();
+        } catch (error) {
+            logger.error(error);
+            next(new InternalServerException("Failed to get deals count"));
+        }
+    }
+
+    public getDealsValueCount = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const periodPayload: IPeriod = req.body;
+            const dealsValue = await this._overviewService.getDealsValueCount(periodPayload);
+            res.status(StatusCodes.OK).json({ dealsValue }).end();
+        } catch (error) {
+            logger.error(error);
+            next(new InternalServerException("Failed to get deals value count"));
         }
     }
 }
