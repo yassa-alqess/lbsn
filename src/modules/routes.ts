@@ -17,6 +17,7 @@ import LeadsController from './leads/leads.controller';
 import SalesController from './sales/sales.controller';
 import WarmController from './warm-leads/warm-leads.controller';
 import ContactUsController from './contact-us/contact-us.controller';
+import OverviewController from './overview/overview.controller';
 
 const restRouter = Router();
 for (const controller of [
@@ -36,7 +37,8 @@ for (const controller of [
     LeadsController,
     SalesController,
     WarmController,
-    ContactUsController
+    ContactUsController,
+    OverviewController,
 ]) {
     const instance = new controller();
     restRouter.use('/', instance.router);
