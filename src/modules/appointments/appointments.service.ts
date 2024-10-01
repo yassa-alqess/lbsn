@@ -15,6 +15,7 @@ import { hashPassword } from "../../shared/utils/hash-password";
 import TimeSlotService from "../time-slots/time-slots.service";
 import { ITimeSlotResponse } from "../time-slots/time-slots.interface";
 import { IsAvailableEnum } from "../../shared/enums";
+import TimeSlot from "../../shared/models/time-slot";
 
 
 export default class AppointmentService {
@@ -23,7 +24,14 @@ export default class AppointmentService {
     private _emailService = new EmailService();
     private _meetingService = new MeetingService();
     private _timeSlotService = new TimeSlotService();
-    public async makeAppointment(appointmentPayload: IAppointmentsAddPayload) {
+
+    /**
+     * the order is very importent, it's like a transaction...
+     * the guest & guest requests can be added and with the cron job will be deleted if the appointment is not created later
+     * but if the meating is not created, then we can't proceed with the appointment creation
+     * also if there is any error in the mail service, the appointment should not be created
+     */
+    public async makeAppointment(appointmentPayload: IAppointmentsAddPayload): Promise<IAppointment> {
         // prepare meeting
         const meeting = await this._prepareMeeting(appointmentPayload);
 
@@ -40,11 +48,12 @@ export default class AppointmentService {
             ...guestRequest
         });
 
-        // create appointment
-        await this._createAppointmentRecord(guest, appointmentPayload, meeting);
-
         // send confirmation email
         await this._sendConfirmationEmail(guest, meeting);
+
+        // create appointment record after the meeting is prepared & the guest-request-record is created & the email is sent
+        // also update the time slot to be unavailable
+        return await this._createAppointmentRecord(guest, appointmentPayload, meeting);
     }
 
     private _mapAppointmentToGuest(appointmentPayload: IAppointmentsAddPayload): IGuestAddPayload {
@@ -62,19 +71,34 @@ export default class AppointmentService {
         guest: IGuestResponse,
         appointmentPayload: IAppointmentsAddPayload,
         meeting: IMeeting,
-    ): Promise<void> {
+    ): Promise<IAppointment> {
         try {
             const hashedPassword = await hashPassword(meeting.password as string);
 
-            await Appointment.create({
-                time: meeting.time,
+            const appointment = await Appointment.create({
                 guestEmail: guest.companyEmail,
                 meetingUrl: meeting.start_url,
                 meetingJoinUrl: meeting.join_url,
                 meetingPassword: hashedPassword,
                 guestId: guest.guestId,
-                serviceId: appointmentPayload.serviceId
+                serviceId: appointmentPayload.serviceId,
+                timeSlotId: appointmentPayload.timeSlotId,
+
             });
+
+            // update time slot to be unavailable, after the appointment is created successfully
+            const time = await this._timeSlotService.updateTimeSlot({ timeSlotId: appointmentPayload.timeSlotId as string, isAvailable: IsAvailableEnum.UNAVAILABLE });
+
+            return {
+                appointmentId: appointment.appointmentId,
+                guestEmail: appointment.guestEmail,
+                meetingUrl: appointment.meetingUrl,
+                meetingJoinUrl: appointment.meetingJoinUrl,
+                guestId: appointment.guestId,
+                serviceId: appointment.serviceId,
+                timeSlotId: appointment.timeSlotId,
+                time: time?.time as Date,
+            }
             //eslint-disable-next-line
         } catch (err: any) {
             logger.error(`Couldn't Create An Appointment, ${err.message}`);
@@ -117,8 +141,6 @@ export default class AppointmentService {
             if (isAvailable === IsAvailableEnum.UNAVAILABLE) {
                 throw new Error('Time is already allocated');
             }
-            await this._timeSlotService.updateTimeSlot({ timeSlotId: appointmentPayload.timeSlotId as string, isAvailable: IsAvailableEnum.UNAVAILABLE });
-
 
             return await this._meetingService.scheduleMeeting("meeting invitation", time);
             //eslint-disable-next-line
@@ -132,11 +154,24 @@ export default class AppointmentService {
         const appointments = await Appointment.findAll({
             where: {
                 ...(guestId && { guestId }),
-            }
+            },
+            include: [
+                {
+                    model: TimeSlot,
+                    attributes: ['time'],
+                },
+            ],
         });
         return {
             appointments: appointments.map(appointment => ({
-                ...appointment.toJSON() as IAppointment
+                appointmentId: appointment.appointmentId,
+                guestEmail: appointment.guestEmail,
+                meetingUrl: appointment.meetingUrl,
+                meetingJoinUrl: appointment.meetingJoinUrl,
+                guestId: appointment.guestId,
+                serviceId: appointment.serviceId,
+                timeSlotId: appointment.timeSlotId,
+                time: appointment.timeSlot?.time,
             }))
         };
     }

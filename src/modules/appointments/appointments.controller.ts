@@ -31,8 +31,8 @@ export default class AppointmentController implements Controller {
     public makeAppointment = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const appointmentPayload: IAppointmentsAddPayload = req.body;
-            await this._appointmentService.makeAppointment(appointmentPayload);
-            res.status(StatusCodes.CREATED).json({}).end(); //not interested in returning anything
+            const appointment = await this._appointmentService.makeAppointment(appointmentPayload);
+            res.status(StatusCodes.CREATED).json({ appointment }).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -41,7 +41,7 @@ export default class AppointmentController implements Controller {
         }
     }
 
-    public getAppointments = async (req: Request, res: Response, next: NextFunction) =>  {
+    public getAppointments = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId } = req.query;
         try {
             const appointments = await this._appointmentService.getAppointments(guestId as string);
