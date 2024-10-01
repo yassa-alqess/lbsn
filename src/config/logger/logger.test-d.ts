@@ -11,7 +11,7 @@ if (ENV === "test") {
     ],
     level: process.env.LOG_LEVEL || 'warn',
     format: combine(
-      timestamp({ format: 'HH:mm:ss' }),
+      timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSSZZ' }),
       json(),
       printf(({ timestamp, level, message, service = '' }) => {
         return `[${timestamp}] ${service} [${level}]: ${message}`;
