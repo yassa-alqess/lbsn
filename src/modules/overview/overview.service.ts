@@ -2,11 +2,11 @@ import Lead from '../../shared/models/lead';
 import { PeriodEnum, SalesStageEnum } from '../../shared/enums';
 import { IPeriod } from './overview.interface';
 import logger from '../../config/logger';
+import Sale from '../../shared/models/sale';
 
 // 3rd party dependencies
 import sequelize, { Op } from 'sequelize';
 import moment from 'moment';
-import Sale from '@/shared/models/sale';
 
 export default class OverviewService {
     async getLeadCountByPeriod(periodPayload: IPeriod) {
