@@ -8,6 +8,7 @@ export interface ISalesGetPayload {
 }
 
 export interface ISaleUpdatePayload {
+    profileId: string;
     saleId: string;
     status?: LeadStatusEnum;
     otherType?: string;
@@ -18,11 +19,11 @@ export interface ISaleUpdatePayload {
 }
 
 export interface ISaleAddPayload {
+    profileId: string;
     stage: SalesStageEnum;
     dealValue: number;
     dealCurrency: DealCurrencyEnum;
     comment?: string;
-    profileId: string;
 }
 
 export interface ISalesGetResponse {
