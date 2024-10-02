@@ -6,7 +6,7 @@ import { ITicketsAddPayload, ITicketsGetPayload, ITicketsUpdatePayload } from '.
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TicketService from './tickets.service';
 import { RoleEnum, TicketStatusEnum } from '../../shared/enums';
-import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import upload from '../../config/storage/multer.config'
 import { AlreadyExistsException, InternalServerException, InvalidEnumValueException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
@@ -25,14 +25,16 @@ export default class TicketController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard)
-        this.router.post(this.path, upload(this.path)!.single("file"), validate(CreateTicketDto), this.addTicket);
-        this.router.get(`${this.path}`, this.getTickets);
-        this.router.get(`${this.path}/:ticketId`, this.getTicket);
-        this.router.patch(`${this.path}/:ticketId`, upload(this.path)!.single("file"), validate(UpdateTicketDto), this.updateTicket);
-        this.router.delete(`${this.path}/:ticketId`, this.deleteTicket);
-
+        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
         this.router.patch(`${this.path}/:ticketId/resolve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
+
+
+        //order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
+        this.router.post(this.path, upload(this.path)!.single("file"), validate(CreateTicketDto), isOwnerOfProfileGuard, this.addTicket);
+        this.router.get(`${this.path}`, isOwnerOfProfileGuard, this.getTickets);
+        this.router.get(`${this.path}/:ticketId`, isOwnerOfProfileGuard, this.getTicket);
+        this.router.patch(`${this.path}/:ticketId`, upload(this.path)!.single("file"), validate(UpdateTicketDto), isOwnerOfProfileGuard, this.updateTicket);
+        this.router.delete(`${this.path}/:ticketId`, isOwnerOfProfileGuard, this.deleteTicket);
     }
 
     public addTicket = async (req: Request, res: Response, next: NextFunction) => {

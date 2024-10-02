@@ -4,7 +4,7 @@ import { ITasksAddPayload, ITasksGetPayload, ITaskUpdatePayload } from './tasks.
 import { DUPLICATE_ERR, INVALID_UUID, TASKS_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TaskService from './tasks.service';
-import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import { RoleEnum, TaskStatusEnum } from '../../shared/enums';
 import { AlreadyExistsException, InternalServerException, InvalidEnumValueException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
@@ -23,13 +23,14 @@ export default class TaskController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.get(`${this.path}`, accessTokenGuard, this.getTasks);
-        this.router.get(`${this.path}/:taskId`, accessTokenGuard, this.getTask);
+        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
+        this.router.get(`${this.path}`, isOwnerOfProfileGuard, this.getTasks);
+        this.router.get(`${this.path}/:taskId`, isOwnerOfProfileGuard, this.getTask);
 
-        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
-        this.router.post(this.path, validate(CreateTaskDto), this.addTask);
-        this.router.patch(`${this.path}/:taskId`, validate(UpdateTaskDto), this.updateTask);
-        this.router.delete(`${this.path}/:taskId`, this.deleteTask);
+        // admin routes
+        this.router.post(this.path, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateTaskDto), this.addTask);
+        this.router.patch(`${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateTaskDto), this.updateTask);
+        this.router.delete(`${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
     }
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {

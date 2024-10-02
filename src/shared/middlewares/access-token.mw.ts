@@ -3,7 +3,7 @@ import { ACCESS_TOKEN_SECRET } from '../constants';
 import { IAuthPayload } from '../../modules/auth/auth.interface';
 import { TokenMissingException, InvalidTokenException, ExpiredException } from '../exceptions';
 import { initializeRedisClient } from '../../config/cache';
-import loggerPromise from '../../config/logger';
+import logger from '../../config/logger';
 
 //3rd party dependinces
 import { Request, Response, NextFunction } from 'express';
@@ -12,7 +12,6 @@ import jwt, { TokenExpiredError } from 'jsonwebtoken';
 
 
 export async function accessTokenGuard(req: Request, res: Response, next: NextFunction) {
-    const logger = await loggerPromise;
     const _redisClient = await initializeRedisClient();
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];

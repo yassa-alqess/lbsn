@@ -1,7 +1,7 @@
 import { INVALID_UUID, SALES_PATH } from "../../shared/constants";
 import { Controller } from "../../shared/interfaces";
 import logger from "../../config/logger";
-import { accessTokenGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
+import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
 import { InternalServerException, InvalidEnumValueException, InvalidIdException, ParamRequiredException } from "../../shared/exceptions";
 import { RoleEnum, SalesStageEnum } from "../../shared/enums";
 import { ISalesGetPayload, ISaleUpdatePayload } from "./sales.interface";
@@ -22,10 +22,13 @@ export default class SalesController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard);
-        this.router.get(this.path, this.getSales); //filter by profileId & status [there is pagination]
+        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
         this.router.get(`${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllSalesGrouped); //get all sales grouped by profileId
-        this.router.patch(`${this.path}/:saleId`, validate(UpdateSaleSchema), this.updateSale); //update sale status
+
+        // user routes
+        // order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
+        this.router.get(this.path, isOwnerOfProfileGuard, this.getSales); //filter by profileId & status [there is pagination]
+        this.router.patch(`${this.path}/:saleId`, validate(UpdateSaleSchema), isOwnerOfProfileGuard, this.updateSale); //update sale status
     }
     public getSales = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.query;

@@ -1,7 +1,7 @@
 import { ACCESS_TOKEN_SECRET, INVALID_UUID, LEAD_FETCH_INTERVAL, LEADS_PATH } from "../../shared/constants";
 import { Controller, ExtendedWebSocketServer } from "../../shared/interfaces";
 import logger from "../../config/logger";
-import { accessTokenGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
+import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
 import { InternalServerException, InvalidEnumValueException, InvalidIdException, ParamRequiredException } from "../../shared/exceptions";
 import { LeadStatusEnum, RoleEnum } from "../../shared/enums";
 import { ILeadsGetPayload, ILeadUpdatePayload } from "./leads.interface";
@@ -29,10 +29,13 @@ export default class LeadsController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard);
-        this.router.get(this.path, this.getLeads); //filter by profileId & status [there is pagination]
+        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
         this.router.get(`${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllLeadsGrouped); //get all leads grouped by profileId
-        this.router.patch(`${this.path}/:leadId`, validate(UpdateLeadSchema), this.updateLead); //update lead status
+
+        // user routes
+        // order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
+        this.router.get(this.path, isOwnerOfProfileGuard, this.getLeads); //filter by profileId & status [there is pagination]
+        this.router.patch(`${this.path}/:leadId`, validate(UpdateLeadSchema), isOwnerOfProfileGuard, this.updateLead); //update lead status
     }
 
     private _bindWebSocket() {
