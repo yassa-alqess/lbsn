@@ -52,7 +52,6 @@ export default class AppointmentService {
         await this._sendConfirmationEmail(guest, meeting);
 
         // create appointment record after the meeting is prepared & the guest-request-record is created & the email is sent
-        // also update the time slot to be unavailable
         return await this._createAppointmentRecord(guest, appointmentPayload, meeting);
     }
 
@@ -86,9 +85,6 @@ export default class AppointmentService {
 
             });
 
-            // update time slot to be unavailable, after the appointment is created successfully
-            const time = await this._timeSlotService.updateTimeSlot({ timeSlotId: appointmentPayload.timeSlotId as string, isAvailable: IsAvailableEnum.UNAVAILABLE });
-
             return {
                 appointmentId: appointment.appointmentId,
                 guestEmail: appointment.guestEmail,
@@ -97,7 +93,7 @@ export default class AppointmentService {
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 timeSlotId: appointment.timeSlotId,
-                time: time?.time as Date,
+                time: meeting.time,
             }
             //eslint-disable-next-line
         } catch (err: any) {
@@ -137,7 +133,8 @@ export default class AppointmentService {
 
     private async _prepareMeeting(appointmentPayload: IAppointmentsAddPayload): Promise<IMeeting> {
         try {
-            const { time, isAvailable } = await this._timeSlotService.getTimeSlot(appointmentPayload.timeSlotId as string) as ITimeSlotResponse;
+            const { time, isAvailable } = await this._timeSlotService.getTimeSlot(appointmentPayload.timeSlotId as string) as ITimeSlotResponse; //will throw error if not found
+            
             if (isAvailable === IsAvailableEnum.UNAVAILABLE) {
                 throw new Error('Time is already allocated');
             }
