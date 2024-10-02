@@ -244,12 +244,12 @@ export default class GuestService {
                         logger.info("Guest already exists, proceeding.");
                     } else {
                         logger.error(`Couldn't create a guest: ${err.message}`);
-                        throw new Error(`Couldn't create a guest`);
+                        throw err;
                     }
                 }
             } else {
                 logger.error(`Couldn't Get A Guest, ${err.message}`);
-                throw new Error(`Couldn't Get A Guest, ${err.message}`);
+                throw err;
             }
         }
         return guest!;

@@ -18,3 +18,6 @@ export interface ITimeSlotUpdatePayload {
 export interface ITimeSlotsGetResponse {
     timeSlots: ITimeSlotResponse[]
 }
+
+
+// time is given in UTC format (adjusted by the client)

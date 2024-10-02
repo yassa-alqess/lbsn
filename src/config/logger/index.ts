@@ -5,3 +5,6 @@ import { ENV } from '../../shared/constants';
 import { Logger } from 'winston';
 const logger = ENV === 'dev' ? devLogger : ENV === 'test' ? testLogger : prodLogger;
 export default logger as Logger;
+
+
+// timezone printed is UTC
