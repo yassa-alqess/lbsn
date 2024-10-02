@@ -15,6 +15,7 @@ import SheetsService from "../sheets/sheets.service";
 
 // 3rd party dependencies
 import { Sequelize, Transaction } from "sequelize";
+import { MAIN_MAIL } from "@/shared/constants";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
@@ -259,7 +260,7 @@ export default class GuestRequestsService {
 
                 const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`, requestData.name);
                 sheetUrl = sheet.spreadsheetId;
-                await this._sheetsService.shareSheetWithEmail(sheetUrl, approvalResult?.email as string);
+                await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
 
             } //eslint-disable-next-line
             catch (error: any) {
