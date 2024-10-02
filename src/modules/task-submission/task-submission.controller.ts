@@ -3,7 +3,7 @@
 // file dependinces
 import { ITaskSubmissionAddPayload, ItaskSubmissionGetByTaskIdPayload, ITaskSubmission, ITaskSubmissionUpdatePayload } from './task-submission.interface';
 import { DUPLICATE_ERR, INVALID_UUID, TASKS_PATH } from '../../shared/constants';
-import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import TaskSubmissionService from './task-submission.service';
 import upload from '../../config/storage/multer.config';
 import { Controller } from '../../shared/interfaces';
@@ -25,16 +25,21 @@ export default class TaskSubmissionController implements Controller {
         this._initializeRoutes();
     }
 
+    //careful with tasks & task-submissions routes as they use the same path
+    //that's why i'm specifying required middlewares for each endpoint
+    //except auth middleware which is required for all routes and for all app users (user & admin)
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard);
-        this.router.post(`${this.path}/:taskId/submission`, upload(this.path)!.single("file"),
-            validate(CreateTaskSubmissionDto), this.addTaskSubmission);
-        this.router.patch(`${this.path}/:taskId/submission/`, upload(this.path)!.single("file"),
-            validate(UpdateTaskSubmissionDto), this.updateTaskSubmission);
-        this.router.get(`${this.path}/:taskId/submission/`, this.getTaskSubmissionByTaskId);
-        this.router.delete(`${this.path}/:taskId/submission`, this.deleteTaskSubmission);
-
+        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
         this.router.patch(`${this.path}/:taskId/submission/approve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.approveTaskSubmission);
+
+        // user routes
+        //order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
+        this.router.post(`${this.path}/:taskId/submission`, upload(this.path)!.single("file"),
+            validate(CreateTaskSubmissionDto), isOwnerOfProfileGuard, this.addTaskSubmission);
+        this.router.patch(`${this.path}/:taskId/submission/`, upload(this.path)!.single("file"),
+            validate(UpdateTaskSubmissionDto), isOwnerOfProfileGuard, this.updateTaskSubmission);
+        this.router.get(`${this.path}/:taskId/submission/`, isOwnerOfProfileGuard, this.getTaskSubmissionByTaskId);
+        this.router.delete(`${this.path}/:taskId/submission`, isOwnerOfProfileGuard, this.deleteTaskSubmission);
     }
     public addTaskSubmission = async (req: Request, res: Response, next: NextFunction) => {
         const { taskId } = req.params;

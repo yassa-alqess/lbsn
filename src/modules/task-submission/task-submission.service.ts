@@ -39,11 +39,18 @@ export default class TaskSubmissionService {
 
             await transaction.commit();
 
-            const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
-                ...newTaskSubmissionJson,
-                documentUrl: newTaskSubmissionJson.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}` : ''
+                taskSubmissionId: newTaskSubmission.taskSubmissionId,
+                taskId: newTaskSubmission.taskId,
+                title: newTaskSubmission.title,
+                comment: newTaskSubmission.comment,
+                status: newTaskSubmission.status,
+                createdAt: newTaskSubmission.createdAt,
+                approvedAt: newTaskSubmission.approvedAt,
+                profileId: newTaskSubmission.task?.profileId,
+                documentUrl: newTaskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmission.documentUrl}` : ''
             };
+            
             //eslint-disable-next-line
         } catch (error: any) {
             await transaction.rollback();
@@ -54,7 +61,15 @@ export default class TaskSubmissionService {
 
     public async updateTaskSubmission(taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload): Promise<ITaskSubmission | undefined> {
         try {
-            const taskSubmission = await TaskSubmission.findOne({ where: { taskId: taskSubmissionUpdatePayload.taskId } });
+            const taskSubmission = await TaskSubmission.findOne({
+                where: { taskId: taskSubmissionUpdatePayload.taskId }, include: [
+                    {
+                        model: Task,
+                        attributes: ['profileId']
+                    }
+                ]
+            });
+
             if (!taskSubmission) {
                 throw new NotFoundException('Task Submission', 'taskId', taskSubmissionUpdatePayload.taskId);
             }
@@ -73,10 +88,16 @@ export default class TaskSubmissionService {
             }
 
             const newTaskSubmission = await taskSubmission.update({ ...taskSubmissionUpdatePayload });
-            const newTaskSubmissionJson = newTaskSubmission.toJSON() as ITaskSubmission;
             return {
-                ...newTaskSubmissionJson,
-                documentUrl: newTaskSubmissionJson.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmissionJson.documentUrl}` : ''
+                taskSubmissionId: newTaskSubmission.taskSubmissionId,
+                taskId: newTaskSubmission.taskId,
+                title: newTaskSubmission.title,
+                comment: newTaskSubmission.comment,
+                status: newTaskSubmission.status,
+                createdAt: newTaskSubmission.createdAt,
+                approvedAt: newTaskSubmission.approvedAt,
+                profileId: taskSubmission.task?.profileId,
+                documentUrl: newTaskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmission.documentUrl}` : ''
             };
         } //eslint-disable-next-line
         catch (error: any) {
@@ -92,16 +113,28 @@ export default class TaskSubmissionService {
         const taskSubmission = await TaskSubmission.findOne({
             where: {
                 taskId: taskSubmissionGetByTaskIdPayload.taskId
-            }
+            },
+            include: [
+                {
+                    model: Task,
+                    attributes: ['profileId']
+                }
+            ]
         });
         if (!taskSubmission) {
             throw new NotFoundException('Task Submission', 'taskId', taskSubmissionGetByTaskIdPayload.taskId);
         }
 
-        const taskSubmissionJson = taskSubmission.toJSON() as ITaskSubmission;
         return {
-            ...taskSubmissionJson,
-            documentUrl: taskSubmissionJson.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmissionJson.documentUrl}` : ''
+            taskSubmissionId: taskSubmission.taskSubmissionId,
+            taskId: taskSubmission.taskId,
+            title: taskSubmission.title,
+            comment: taskSubmission.comment,
+            status: taskSubmission.status,
+            createdAt: taskSubmission.createdAt,
+            approvedAt: taskSubmission.approvedAt,
+            profileId: taskSubmission.task?.profileId,
+            documentUrl: taskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmission.documentUrl}` : ''
         };
     }
 
