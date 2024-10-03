@@ -2,6 +2,7 @@ import Joi from 'joi';
 import _ from 'lodash';
 import { DealCurrencyEnum, LeadStatusEnum, SalesStageEnum } from '../../shared/enums';
 export const UpdateSaleSchema = Joi.object({
+    profileId: Joi.string().required(),
     status: Joi.string()
         .valid(..._.values(LeadStatusEnum))
         .optional(),
