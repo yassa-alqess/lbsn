@@ -42,4 +42,4 @@ jobs:
 
       - name: Deploy to Server
         run: |
-          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd ~/app/server-networks/ && echo $SSH_PASS | sudo -S ./deploy.sh"
+          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "cd ~/app/server-networks/ && echo $SSH_PASS | sudo -S ./deploy.dev.sh"
