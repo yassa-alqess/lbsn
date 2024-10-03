@@ -1,7 +1,6 @@
 import { TaskSubmissionStatusEnum } from "../../shared/enums";
 
 export interface ITaskSubmissionAddPayload {
-    profileId: string;
     taskId: string;
     title: string;
     comment?: string;
@@ -9,7 +8,6 @@ export interface ITaskSubmissionAddPayload {
 }
 
 export interface ITaskSubmissionUpdatePayload {
-    profileId: string;
     taskId: string;
     title?: string;
     comment?: string;

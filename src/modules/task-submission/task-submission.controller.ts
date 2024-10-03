@@ -2,7 +2,7 @@
 
 // file dependinces
 import { ITaskSubmissionAddPayload, ItaskSubmissionGetByTaskIdPayload, ITaskSubmission, ITaskSubmissionUpdatePayload } from './task-submission.interface';
-import { DUPLICATE_ERR, INVALID_UUID, TASKS_PATH } from '../../shared/constants';
+import { INVALID_UUID, TASKS_PATH } from '../../shared/constants';
 import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
 import TaskSubmissionService from './task-submission.service';
 import upload from '../../config/storage/multer.config';
@@ -33,7 +33,6 @@ export default class TaskSubmissionController implements Controller {
         this.router.patch(`${this.path}/:taskId/submission/approve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.approveTaskSubmission);
 
         // user routes
-        //order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
         this.router.post(`${this.path}/:taskId/submission`, upload(this.path)!.single("file"),
             validate(CreateTaskSubmissionDto), isOwnerOfProfileGuard, this.addTaskSubmission);
         this.router.patch(`${this.path}/:taskId/submission/`, upload(this.path)!.single("file"),
@@ -42,20 +41,18 @@ export default class TaskSubmissionController implements Controller {
         this.router.delete(`${this.path}/:taskId/submission`, isOwnerOfProfileGuard, this.deleteTaskSubmission);
     }
     public addTaskSubmission = async (req: Request, res: Response, next: NextFunction) => {
-        const { taskId } = req.params;
-        if (!taskId) {
-            return next(new ParamRequiredException('Task', 'taskId'));
-        }
-
-        let taskSubmission;
         try {
+            const { taskId } = req.params;
+            if (!taskId) {
+                throw new ParamRequiredException('Task', 'taskId');
+            }
             const path = req.file ? req.file.filename : '';
             const taskSubmissionAddPayload: ITaskSubmissionAddPayload = {
                 ...req.body,
                 taskId,
                 documentUrl: path
             }
-            taskSubmission = await this._taskSubmissionService.addTaskSubmission(taskSubmissionAddPayload); // path may be empty string
+            const taskSubmission = await this._taskSubmissionService.addTaskSubmission(taskSubmissionAddPayload); // path may be empty string
             res.status(StatusCodes.CREATED).json(taskSubmission).end();
 
             //eslint-disable-next-line
@@ -64,10 +61,7 @@ export default class TaskSubmissionController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
-            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return next(new AlreadyExistsException('Task Submission', 'taskISubmissionId', taskSubmission!.taskSubmissionId));
-            }
-            if (error instanceof AlreadyExistsException) {
+            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -76,20 +70,19 @@ export default class TaskSubmissionController implements Controller {
     };
 
     public updateTaskSubmission = async (req: Request, res: Response, next: NextFunction) => {
-        const { taskId } = req.params;
-        if (!taskId) {
-            return next(new ParamRequiredException('Task', 'taskId'));
-        }
-
-        let taskSubmission;
         try {
+            const { taskId } = req.params;
+            if (!taskId) {
+                throw new ParamRequiredException('Task', 'taskId');
+            }
+
             const path = req.file ? req.file.filename : '';
             const taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload = {
                 ...req.body,
                 taskId,
                 documentUrl: path
             }
-            taskSubmission = await this._taskSubmissionService.updateTaskSubmission(taskSubmissionUpdatePayload); // path may be empty string
+            const taskSubmission = await this._taskSubmissionService.updateTaskSubmission(taskSubmissionUpdatePayload); // path may be empty string
             res.status(StatusCodes.CREATED).json(taskSubmission).end();
 
             //eslint-disable-next-line
@@ -98,23 +91,19 @@ export default class TaskSubmissionController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
-            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return next(new AlreadyExistsException('Task Submission', 'taskISubmissionId', taskSubmission!.taskSubmissionId));
-            }
-            if (error instanceof AlreadyExistsException || error instanceof NotFoundException) {
+            if (error instanceof AlreadyExistsException || error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
-
             next(new InternalServerException(error.message));
         }
     };
 
     public getTaskSubmissionByTaskId = async (req: Request, res: Response, next: NextFunction) => {
-        const { taskId } = req.params;
-        if (!taskId) {
-            return next(new ParamRequiredException('Task', 'taskId'));
-        }
         try {
+            const { taskId } = req.params;
+            if (!taskId) {
+                throw new ParamRequiredException('Task', 'taskId');
+            }
             const taskSubmissionGetByIdPayload: ItaskSubmissionGetByTaskIdPayload = {
                 taskId,
             }
@@ -127,7 +116,7 @@ export default class TaskSubmissionController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 next(new InvalidIdException('taskId'));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
