@@ -261,6 +261,7 @@ export default class GuestRequestsService {
                 const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`, requestData.name);
                 sheetUrl = sheet.spreadsheetId;
                 await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
+                await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); //temporary for testing
 
             } //eslint-disable-next-line
             catch (error: any) {
