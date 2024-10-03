@@ -1,4 +1,4 @@
-import { INVALID_UUID, SALES_PATH } from "../../shared/constants";
+import { INVALID_UUID, PROFILES_PATH, SALES_PATH } from "../../shared/constants";
 import { Controller } from "../../shared/interfaces";
 import logger from "../../config/logger";
 import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
@@ -14,6 +14,7 @@ import { StatusCodes } from "http-status-codes";
 
 export default class SalesController implements Controller {
     path = SALES_PATH;
+    profilesPath = `/${PROFILES_PATH}`;
     router = express.Router();
     private _salesService = new SalesService();
 
@@ -22,16 +23,16 @@ export default class SalesController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.get(`${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllSalesGrouped); //get all sales grouped by profileId
+        this.router.get(`/${this.path}/all`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllSalesGrouped); //get all sales grouped by profileId
 
         // user routes
-        this.router.get(this.path, isOwnerOfProfileGuard, this.getSales); //filter by profileId & status [there is pagination]
-        this.router.patch(`${this.path}/:saleId`, validate(UpdateSaleSchema), isOwnerOfProfileGuard, this.updateSale); //update sale status
+        this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}`, this.getSales); //filter by profileId & status [there is pagination]
+        this.router.patch(`${this.profilesPath}/:profileId/${this.path}/:saleId`, validate(UpdateSaleSchema), this.updateSale); //update sale status
     }
     public getSales = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query;
+            const { profileId } = req.params;
             if (!profileId) {
                 throw new ParamRequiredException('profileId');
             }

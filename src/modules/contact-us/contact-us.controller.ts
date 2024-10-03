@@ -12,7 +12,7 @@ import { InternalServerException } from "../../shared/exceptions";
 
 export default class ContactUsController implements Controller {
 
-    path = CONTACT_US_PATH;
+    path = `/${CONTACT_US_PATH}`;
     router = express.Router();
     private _contactUsService = new ContactUsService();
     constructor() {

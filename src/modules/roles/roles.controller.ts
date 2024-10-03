@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class RolesController implements Controller {
 
-    path = ROLES_PATH;
+    path = `/${ROLES_PATH}`;
     router = express.Router();
     private _rolesService = new RolesService();
     constructor() {

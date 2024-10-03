@@ -13,7 +13,7 @@ import { StatusCodes } from 'http-status-codes';
 import { IAuthPayload } from './auth.interface';
 
 export default class AuthController implements Controller {
-    path = AUTH_PATH;
+    path = `/${AUTH_PATH}`;
     router = express.Router();
     private _authService = new AuthService();
     constructor() {

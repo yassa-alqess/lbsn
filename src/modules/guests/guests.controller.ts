@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class GuestController implements Controller {
 
-    path = GUESTS_PATH;
+    path = `/${GUESTS_PATH}`;
     router = express.Router();
     private _guestService = new GuestService();
     constructor() {

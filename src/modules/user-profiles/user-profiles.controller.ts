@@ -16,7 +16,7 @@ import logger from '../../config/logger';
 
 export default class UserProfilesController implements Controller {
 
-    path = PROFILES_PATH;
+    path = `/${PROFILES_PATH}`;
     router = express.Router();
     private _userProfilesService = new UserProfilesService();
     constructor() {
@@ -24,9 +24,8 @@ export default class UserProfilesController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard);
-        this.router.get(this.path, this.getUserProfiles);
-        this.router.post(this.path, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(createProfileDto), this.addUserProfile);
+        this.router.get(this.path, accessTokenGuard, this.getUserProfiles);
+        this.router.post(this.path, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(createProfileDto), this.addUserProfile);
     }
 
     public addUserProfile = async (req: Request, res: Response, next: NextFunction) => {

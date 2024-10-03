@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class ServiceController implements Controller {
 
-    path = SERVICES_PATH;
+    path = `/${SERVICES_PATH}`;
     router = express.Router();
     private _servicesService = new ServicesService();
     constructor() {

@@ -13,7 +13,7 @@ import { StatusCodes } from "http-status-codes";
 
 export default class OverviewController implements Controller {
 
-    path = OVERVIEW_PATH;
+    path = `/${OVERVIEW_PATH}`;
     router = express.Router();
     private _overviewService = new OverviewService();
     constructor() {

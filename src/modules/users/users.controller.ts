@@ -19,7 +19,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class UserController implements Controller {
 
-    path = USERS_PATH;
+    path = `/${USERS_PATH}`;
     router = express.Router();
     private _userService = new UserService();
     constructor() {

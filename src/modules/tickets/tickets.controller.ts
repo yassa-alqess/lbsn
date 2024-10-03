@@ -1,7 +1,7 @@
 
 
 // file dependinces
-import { DUPLICATE_ERR, INVALID_UUID, TICKETS_PATH } from '../../shared/constants';
+import { DUPLICATE_ERR, INVALID_UUID, PROFILES_PATH, TICKETS_PATH } from '../../shared/constants';
 import { ITicketsAddPayload, ITicketsGetPayload, ITicketsUpdatePayload } from './tickets.interface';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TicketService from './tickets.service';
@@ -18,6 +18,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class TicketController implements Controller {
     path = TICKETS_PATH;
+    profilesPath = `/${PROFILES_PATH}`;
     router = express.Router();
     private _ticketService = new TicketService();
     constructor() {
@@ -25,23 +26,28 @@ export default class TicketController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.patch(`${this.path}/:ticketId/resolve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
+        this.router.patch(`/${this.path}/:ticketId/resolve`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
 
 
         // user routes
-        this.router.post(this.path, upload(this.path)!.single("file"), validate(CreateTicketDto), isOwnerOfProfileGuard, this.addTicket);
-        this.router.get(`${this.path}`, isOwnerOfProfileGuard, this.getTickets);
-        this.router.get(`${this.path}/:ticketId`, isOwnerOfProfileGuard, this.getTicket);
-        this.router.patch(`${this.path}/:ticketId`, upload(this.path)!.single("file"), validate(UpdateTicketDto), isOwnerOfProfileGuard, this.updateTicket);
-        this.router.delete(`${this.path}/:ticketId`, isOwnerOfProfileGuard, this.deleteTicket);
+        this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}`, upload(this.path)!.single("file"), validate(CreateTicketDto), this.addTicket);
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}`, this.getTickets);
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}/:ticketId`, this.getTicket);
+        this.router.patch(`${this.profilesPath}/:profileId/${this.path}/:ticketId`, upload(this.path)!.single("file"), validate(UpdateTicketDto), this.updateTicket);
+        this.router.delete(`${this.profilesPath}/:profileId/${this.path}/:ticketId`, this.deleteTicket);
     }
 
     public addTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const { profileId } = req.params;
+            if (!profileId) {
+                throw new ParamRequiredException('profileId');
+            }
             const path = req.file ? req.file.filename : '';
             const ticketPayload: ITicketsAddPayload = {
                 ...req.body,
+                profileId,
                 documentUrl: path
             }
             const ticket = await this._ticketService.addTicket(ticketPayload);
@@ -53,7 +59,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.title));
             }
-            if (error instanceof AlreadyExistsException) {
+            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -62,7 +68,7 @@ export default class TicketController implements Controller {
 
     public getTickets = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query;
+            const { profileId } = req.params;
             if (!profileId) {
                 throw new ParamRequiredException('profileId');
             }

@@ -21,7 +21,6 @@ export interface ItaskSubmissionGetByTaskIdPayload {
 export interface ITaskSubmission {
     taskSubmissionId: string;
     taskId: string;
-    profileId: string;
     title: string;
     comment: string;
     documentUrl: string;

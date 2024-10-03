@@ -16,7 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class AppointmentController implements Controller {
 
-    path = APPOINTMENTS_PATH;
+    path = `/${APPOINTMENTS_PATH}`;
     router = express.Router();
     private _appointmentService = new AppointmentService();
 

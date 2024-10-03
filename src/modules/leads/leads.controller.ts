@@ -1,5 +1,5 @@
-import { INVALID_UUID, LEADS_PATH } from "../../shared/constants";
-import { Controller, ExtendedWebSocketServer } from "../../shared/interfaces";
+import { INVALID_UUID, LEADS_PATH, PROFILES_PATH } from "../../shared/constants";
+import { Controller } from "../../shared/interfaces";
 import logger from "../../config/logger";
 import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
 import { InternalServerException, InvalidEnumValueException, InvalidIdException, ParamRequiredException } from "../../shared/exceptions";
@@ -14,8 +14,8 @@ import { StatusCodes } from "http-status-codes";
 
 export default class LeadsController implements Controller {
     path = LEADS_PATH;
+    profilesPath = `/${PROFILES_PATH}`;
     router = express.Router();
-    private _wss: ExtendedWebSocketServer | null = null;
     private _leadsService = new LeadsService();
 
     constructor() {
@@ -23,17 +23,17 @@ export default class LeadsController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.get(`${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllLeadsGrouped); //get all leads grouped by profileId
+        this.router.get(`/${this.path}/all`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllLeadsGrouped); //get all leads grouped by profileId
 
         // user routes
-        this.router.get(this.path, isOwnerOfProfileGuard, this.getLeads); //filter by profileId & status [there is pagination]
-        this.router.patch(`${this.path}/:leadId`, validate(UpdateLeadSchema), isOwnerOfProfileGuard, this.updateLead); //update lead status
+        this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}`, this.getLeads); //filter by profileId & status [there is pagination]
+        this.router.patch(`${this.profilesPath}/:profileId/${this.path}/:leadId`, validate(UpdateLeadSchema), isOwnerOfProfileGuard, this.updateLead); //update lead status
     }
 
     public getLeads = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query;
+            const { profileId } = req.params;
             if (!profileId) {
                 throw new ParamRequiredException('profileId');
             }

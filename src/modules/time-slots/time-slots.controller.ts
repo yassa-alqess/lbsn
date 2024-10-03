@@ -16,7 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class TimeSlotsController implements Controller {
 
-    path = TIME_SLOTS_PATH;
+    path = `/${TIME_SLOTS_PATH}`;
     router = express.Router();
     private _timeSlotsService = new TimeSlotsService();
     constructor() {

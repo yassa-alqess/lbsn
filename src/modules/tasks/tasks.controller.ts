@@ -1,7 +1,7 @@
 
 // file dependinces
 import { ITasksAddPayload, ITasksGetPayload, ITaskUpdatePayload } from './tasks.interface';
-import { DUPLICATE_ERR, INVALID_UUID, TASKS_PATH } from '../../shared/constants';
+import { DUPLICATE_ERR, INVALID_UUID, PROFILES_PATH, TASKS_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TaskService from './tasks.service';
 import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
@@ -16,6 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class TaskController implements Controller {
     path = TASKS_PATH;
+    profilesPath = `/${PROFILES_PATH}`;
     router = express.Router();
     private _taskService = new TaskService();
     constructor() {
@@ -23,14 +24,15 @@ export default class TaskController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.get(`${this.path}`, isOwnerOfProfileGuard, this.getTasks);
-        this.router.get(`${this.path}/:taskId`, isOwnerOfProfileGuard, this.getTask);
+        this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}`, this.getTasks);
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}/:taskId`, this.getTask);
 
         // admin routes
-        this.router.post(this.path, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateTaskDto), this.addTask);
-        this.router.patch(`${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateTaskDto), this.updateTask);
-        this.router.delete(`${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
+        this.router.post(`/${this.path}*`, accessTokenGuard);
+        this.router.post(`/${this.path}`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateTaskDto), this.addTask);
+        this.router.patch(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateTaskDto), this.updateTask);
+        this.router.delete(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
     }
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
@@ -56,7 +58,7 @@ export default class TaskController implements Controller {
 
     public getTasks = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query;
+            const { profileId } = req.params;
             if (!profileId) {
                 throw new ParamRequiredException('profileId');
             }
