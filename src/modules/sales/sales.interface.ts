@@ -8,7 +8,6 @@ export interface ISalesGetPayload {
 }
 
 export interface ISaleUpdatePayload {
-    profileId: string;
     saleId: string;
     status?: LeadStatusEnum;
     otherType?: string;

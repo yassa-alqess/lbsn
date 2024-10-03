@@ -9,7 +9,6 @@ export interface ILeadsGetPayload {
 }
 
 export interface ILeadUpdatePayload {
-    profileId: string;
     leadId: string;
     status?: LeadStatusEnum;
     otherType?: string;

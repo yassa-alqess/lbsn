@@ -26,21 +26,19 @@ export default class SalesController implements Controller {
         this.router.get(`${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllSalesGrouped); //get all sales grouped by profileId
 
         // user routes
-        // order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
         this.router.get(this.path, isOwnerOfProfileGuard, this.getSales); //filter by profileId & status [there is pagination]
         this.router.patch(`${this.path}/:saleId`, validate(UpdateSaleSchema), isOwnerOfProfileGuard, this.updateSale); //update sale status
     }
     public getSales = async (req: Request, res: Response, next: NextFunction) => {
-        const { profileId } = req.query;
-        if (!profileId) {
-            return next(new ParamRequiredException('Sale-made', 'profileId'));
-        }
-        const { stage, limit, offset } = req.query;
-        if (stage && !Object.values(SalesStageEnum).includes(stage as SalesStageEnum)) {
-            return next(new InvalidEnumValueException('SaleStage'));
-        }
-
         try {
+            const { profileId } = req.query;
+            if (!profileId) {
+                throw new ParamRequiredException('Sale-made', 'profileId');
+            }
+            const { stage, limit, offset } = req.query;
+            if (stage && !Object.values(SalesStageEnum).includes(stage as SalesStageEnum)) {
+                throw new InvalidEnumValueException('SaleStage');
+            }
             const payload: ISalesGetPayload = {
                 profileId: profileId as string,
                 stage: stage as SalesStageEnum,
@@ -56,14 +54,18 @@ export default class SalesController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('profileId'));
             }
+            if (error instanceof ParamRequiredException || error instanceof InvalidEnumValueException) {
+                return next(error);
+            }
             next(new InternalServerException(error.message));
         }
     };
 
     public updateSale = async (req: Request, res: Response, next: NextFunction) => {
-        const { saleId } = req.params;
-        if (!saleId) return next(new ParamRequiredException('Sale-made', 'saleId'));
         try {
+            const { saleId } = req.params;
+            if (!saleId) throw new ParamRequiredException('Sale-made', 'saleId');
+
             const saleUpdatePayload: ISaleUpdatePayload = {
                 ...req.body, //status
                 saleId
@@ -76,6 +78,9 @@ export default class SalesController implements Controller {
             logger.error(`error at UpdateSale action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('saleId'));
+            }
+            if (error instanceof ParamRequiredException) {
+                return next(error);
             }
             next(new InternalServerException(error.message));
         }

@@ -50,7 +50,6 @@ export default class TicketService {
     }
 
     public async resolveTicket(ticketId: string): Promise<void> {
-
         try {
             const ticket = await Ticket.findByPk(ticketId);
             if (!ticket) {
@@ -83,8 +82,8 @@ export default class TicketService {
     }
 
     public async updateTicket(ticketPayload: ITicketsUpdatePayload): Promise<ITicket | undefined> {
-        const { ticketId } = ticketPayload;
         try {
+            const { ticketId } = ticketPayload;
             const ticket = await Ticket.findByPk(ticketId);
             if (!ticket) {
                 throw new NotFoundException('Ticket', 'ticketId', ticketId);
