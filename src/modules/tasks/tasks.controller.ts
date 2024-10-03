@@ -35,13 +35,8 @@ export default class TaskController implements Controller {
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query as { profileId: string };
-            if (!profileId) {
-                throw new ParamRequiredException('Task', 'profileId');
-            }
             const taskPayload: ITasksAddPayload = {
                 ...req.body,
-                profileId
             }
             const task = await this._taskService.addTask(taskPayload);
             res.status(StatusCodes.CREATED).json(task).end();
@@ -52,7 +47,7 @@ export default class TaskController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.title));
             }
-            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
+            if (error instanceof AlreadyExistsException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
