@@ -39,14 +39,9 @@ export default class TicketController implements Controller {
 
     public addTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query as { profileId: string };
-            if (!profileId) {
-                throw new ParamRequiredException('Task', 'profileId');
-            }
             const path = req.file ? req.file.filename : '';
             const ticketPayload: ITicketsAddPayload = {
                 ...req.body,
-                profileId,
                 documentUrl: path
             }
             const ticket = await this._ticketService.addTicket(ticketPayload);
@@ -58,7 +53,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.title));
             }
-            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
+            if (error instanceof AlreadyExistsException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
