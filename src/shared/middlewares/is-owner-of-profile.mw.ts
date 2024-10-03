@@ -11,9 +11,9 @@ export async function isOwnerOfProfileGuard(req: Request, res: Response, next: N
     logger.debug('validating if user is owner of profile');
 
     try {
-        const { profileId } = (req.query || req.body || req.params) as { profileId: string }; // profileId can be a query string or body param
+        const { profileId } = (req.params) as { profileId: string }; // profileId for user endpoints is a param in the path
         if (!profileId) {
-            throw new ParamRequiredException('Profile', 'profileId');
+            throw new ParamRequiredException('profileId');
         }
         const { id: userId } = req.user as IAuthPayload;
         const profile = await Profile.findOne({ where: { profileId } });
