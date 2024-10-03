@@ -35,7 +35,14 @@ export default class TaskController implements Controller {
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const taskPayload: ITasksAddPayload = req.body;
+            const { profileId } = req.query as { profileId: string };
+            if (!profileId) {
+                throw new ParamRequiredException('Task', 'profileId');
+            }
+            const taskPayload: ITasksAddPayload = {
+                ...req.body,
+                profileId
+            }
             const task = await this._taskService.addTask(taskPayload);
             res.status(StatusCodes.CREATED).json(task).end();
 
@@ -45,7 +52,7 @@ export default class TaskController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.title));
             }
-            if (error instanceof AlreadyExistsException) {
+            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -53,15 +60,15 @@ export default class TaskController implements Controller {
     };
 
     public getTasks = async (req: Request, res: Response, next: NextFunction) => {
-        const { profileId } = req.query;
-        if (!profileId) {
-            return next(new ParamRequiredException('Task', 'profileId'));
-        }
-        const { status } = req.query;
-        if (status && !Object.values(TaskStatusEnum).includes(status as TaskStatusEnum)) {
-            return next(new InvalidEnumValueException('TaskStatus'));
-        }
         try {
+            const { profileId } = req.query;
+            if (!profileId) {
+                throw new ParamRequiredException('Task', 'profileId');
+            }
+            const { status } = req.query;
+            if (status && !Object.values(TaskStatusEnum).includes(status as TaskStatusEnum)) {
+                throw new InvalidEnumValueException('TaskStatus');
+            }
             const payload: ITasksGetPayload = {
                 profileId: profileId as string,
                 status: status as TaskStatusEnum
@@ -72,14 +79,20 @@ export default class TaskController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error('error at getTasks action', error);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return next(new InvalidIdException('profileId'));
+            }
+            if (error instanceof InvalidEnumValueException || error instanceof ParamRequiredException) {
+                return next(error);
+            }
             next(new InternalServerException(error.message));
         }
     };
 
     public getTask = async (req: Request, res: Response, next: NextFunction) => {
-        const { taskId } = req.params;
-        if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
         try {
+            const { taskId } = req.params;
+            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
             const task = await this._taskService.getTask(taskId);
             res.status(StatusCodes.OK).json(task).end();
 
@@ -89,7 +102,7 @@ export default class TaskController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -97,9 +110,10 @@ export default class TaskController implements Controller {
     }
 
     public updateTask = async (req: Request, res: Response, next: NextFunction) => {
-        const { taskId } = req.params;
-        if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
         try {
+            const { taskId } = req.params;
+            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+
             const taskUpdatePayload: ITaskUpdatePayload = {
                 ...req.body,
                 taskId
@@ -116,7 +130,7 @@ export default class TaskController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.time.toString()));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -124,9 +138,9 @@ export default class TaskController implements Controller {
     }
 
     public deleteTask = async (req: Request, res: Response, next: NextFunction) => {
-        const { taskId } = req.params;
-        if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
         try {
+            const { taskId } = req.params;
+            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
             await this._taskService.deleteTask(taskId);
             res.status(StatusCodes.OK).json({}).end();
 
@@ -135,7 +149,7 @@ export default class TaskController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('taskId'));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
