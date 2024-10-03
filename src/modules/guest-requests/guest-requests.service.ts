@@ -12,10 +12,10 @@ import { IEmailOptions } from "../../config/mailer/email.interface";
 import DatabaseManager from "../../config/database/db-manager";
 import { IProfileAddPayload } from "../user-profiles/user-profiles.interface";
 import SheetsService from "../sheets/sheets.service";
+import { MAIN_MAIL } from "../../shared/constants";
 
 // 3rd party dependencies
 import { Sequelize, Transaction } from "sequelize";
-import { MAIN_MAIL } from "@/shared/constants";
 
 export default class GuestRequestsService {
     private _guestService = new GuestService();
