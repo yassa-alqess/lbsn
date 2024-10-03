@@ -44,7 +44,7 @@ export default class TaskSubmissionController implements Controller {
         try {
             const { taskId } = req.params;
             if (!taskId) {
-                throw new ParamRequiredException('Task', 'taskId');
+                throw new ParamRequiredException('taskId');
             }
             const path = req.file ? req.file.filename : '';
             const taskSubmissionAddPayload: ITaskSubmissionAddPayload = {
@@ -73,7 +73,7 @@ export default class TaskSubmissionController implements Controller {
         try {
             const { taskId } = req.params;
             if (!taskId) {
-                throw new ParamRequiredException('Task', 'taskId');
+                throw new ParamRequiredException('taskId');
             }
 
             const path = req.file ? req.file.filename : '';
@@ -102,7 +102,7 @@ export default class TaskSubmissionController implements Controller {
         try {
             const { taskId } = req.params;
             if (!taskId) {
-                throw new ParamRequiredException('Task', 'taskId');
+                throw new ParamRequiredException('taskId');
             }
             const taskSubmissionGetByIdPayload: ItaskSubmissionGetByTaskIdPayload = {
                 taskId,
@@ -125,7 +125,7 @@ export default class TaskSubmissionController implements Controller {
 
     public deleteTaskSubmission = async (req: Request, res: Response, next: NextFunction) => {
         const { taskId } = req.params;
-        if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
+        if (!taskId) return next(new ParamRequiredException('taskId'));
         try {
             await this._taskSubmissionService.deleteTaskSubmission(taskId);
             res.status(StatusCodes.OK).json({}).end();
@@ -145,7 +145,7 @@ export default class TaskSubmissionController implements Controller {
 
     public approveTaskSubmission = async (req: Request, res: Response, next: NextFunction) => {
         const { taskId } = req.params;
-        if (!taskId) return next(new ParamRequiredException('Task', 'taskId'));
+        if (!taskId) return next(new ParamRequiredException('taskId'));
         try {
             await this._taskSubmissionService.approveTaskSubmission(taskId);
             res.status(StatusCodes.OK).json({}).end();

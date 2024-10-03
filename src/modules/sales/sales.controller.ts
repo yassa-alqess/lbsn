@@ -33,7 +33,7 @@ export default class SalesController implements Controller {
         try {
             const { profileId } = req.query;
             if (!profileId) {
-                throw new ParamRequiredException('Sale-made', 'profileId');
+                throw new ParamRequiredException('profileId');
             }
             const { stage, limit, offset } = req.query;
             if (stage && !Object.values(SalesStageEnum).includes(stage as SalesStageEnum)) {
@@ -64,7 +64,7 @@ export default class SalesController implements Controller {
     public updateSale = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { saleId } = req.params;
-            if (!saleId) throw new ParamRequiredException('Sale-made', 'saleId');
+            if (!saleId) throw new ParamRequiredException('saleId');
 
             const saleUpdatePayload: ISaleUpdatePayload = {
                 ...req.body, //status

@@ -1,4 +1,4 @@
-import {  INVALID_UUID, LEADS_PATH } from "../../shared/constants";
+import { INVALID_UUID, LEADS_PATH } from "../../shared/constants";
 import { Controller, ExtendedWebSocketServer } from "../../shared/interfaces";
 import logger from "../../config/logger";
 import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from "../../shared/middlewares";
@@ -35,14 +35,14 @@ export default class LeadsController implements Controller {
         try {
             const { profileId } = req.query;
             if (!profileId) {
-                throw new ParamRequiredException('Leads', 'profileId');
+                throw new ParamRequiredException('profileId');
             }
 
             const { status, otherType, limit, offset } = req.query;
             if (status && !Object.values(LeadStatusEnum).includes(status as LeadStatusEnum)) {
                 throw new InvalidEnumValueException('LeadStatus');
             }
-            
+
             const payload: ILeadsGetPayload = {
                 profileId: profileId as string,
                 status: status as LeadStatusEnum,
@@ -69,7 +69,7 @@ export default class LeadsController implements Controller {
     public updateLead = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { leadId } = req.params;
-            if (!leadId) throw new ParamRequiredException('Lead', 'leadId');
+            if (!leadId) throw new ParamRequiredException('leadId');
 
             const leadUpdatePayload: ILeadUpdatePayload = {
                 ...req.body, //status & otherType

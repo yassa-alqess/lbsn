@@ -58,7 +58,7 @@ export default class TaskController implements Controller {
         try {
             const { profileId } = req.query;
             if (!profileId) {
-                throw new ParamRequiredException('Task', 'profileId');
+                throw new ParamRequiredException('profileId');
             }
             const { status } = req.query;
             if (status && !Object.values(TaskStatusEnum).includes(status as TaskStatusEnum)) {
@@ -87,7 +87,7 @@ export default class TaskController implements Controller {
     public getTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { taskId } = req.params;
-            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+            if (!taskId) throw new ParamRequiredException('taskId');
             const task = await this._taskService.getTask(taskId);
             res.status(StatusCodes.OK).json(task).end();
 
@@ -107,7 +107,7 @@ export default class TaskController implements Controller {
     public updateTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { taskId } = req.params;
-            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+            if (!taskId) throw new ParamRequiredException('taskId');
 
             const taskUpdatePayload: ITaskUpdatePayload = {
                 ...req.body,
@@ -135,7 +135,7 @@ export default class TaskController implements Controller {
     public deleteTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { taskId } = req.params;
-            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+            if (!taskId) throw new ParamRequiredException('taskId');
             await this._taskService.deleteTask(taskId);
             res.status(StatusCodes.OK).json({}).end();
 

@@ -64,7 +64,7 @@ export default class TicketController implements Controller {
         try {
             const { profileId } = req.query;
             if (!profileId) {
-                throw new ParamRequiredException('Task', 'profileId');
+                throw new ParamRequiredException('profileId');
             }
 
             const { status } = req.query;
@@ -92,7 +92,7 @@ export default class TicketController implements Controller {
     public resolveTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { ticketId } = req.params;
-            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
+            if (!ticketId) throw new ParamRequiredException('ticketId');
             await this._ticketService.resolveTicket(ticketId);
             res.status(StatusCodes.OK).json({}).end();
 
@@ -112,7 +112,7 @@ export default class TicketController implements Controller {
     public getTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { ticketId } = req.params;
-            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
+            if (!ticketId) throw new ParamRequiredException('ticketId');
             const ticket = await this._ticketService.getTicket(ticketId);
             res.status(StatusCodes.OK).json(ticket).end();
 
@@ -132,7 +132,7 @@ export default class TicketController implements Controller {
     public updateTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { ticketId } = req.params;
-            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
+            if (!ticketId) throw new ParamRequiredException('ticketId');
 
             const ticketUpdatePayload: ITicketsUpdatePayload = {
                 ...req.body,
@@ -160,7 +160,7 @@ export default class TicketController implements Controller {
     public deleteTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { ticketId } = req.params;
-            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
+            if (!ticketId) throw new ParamRequiredException('ticketId');
             await this._ticketService.deleteTicket(ticketId);
             res.status(StatusCodes.OK).json({}).end();
 

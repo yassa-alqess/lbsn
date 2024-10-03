@@ -32,7 +32,7 @@ export default class ProfileController implements Controller {
     public updateProfile = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.params;
         if (!profileId) {
-            return next(new ParamRequiredException('Profile', 'profileId'));
+            return next(new ParamRequiredException('profileId'));
         }
         try {
             const profileUpdatePayload: IProfileUpdatePayload = {
@@ -61,7 +61,7 @@ export default class ProfileController implements Controller {
     public getProfile = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.params;
         if (!profileId) {
-            return next(new ParamRequiredException('Profile', 'profileId'));
+            return next(new ParamRequiredException('profileId'));
         }
         try {
             const profile = await this._profileProfile.getProfile(profileId);
@@ -83,7 +83,7 @@ export default class ProfileController implements Controller {
     public deleteProfile = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.params;
         if (!profileId) {
-            return next(new ParamRequiredException('Profile', 'profileId'));
+            return next(new ParamRequiredException('profileId'));
         }
         try {
             await this._profileProfile.deleteProfile(profileId);
