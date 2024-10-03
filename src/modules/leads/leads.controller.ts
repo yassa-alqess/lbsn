@@ -33,7 +33,6 @@ export default class LeadsController implements Controller {
         this.router.get(`${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllLeadsGrouped); //get all leads grouped by profileId
 
         // user routes
-        // order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
         this.router.get(this.path, isOwnerOfProfileGuard, this.getLeads); //filter by profileId & status [there is pagination]
         this.router.patch(`${this.path}/:leadId`, validate(UpdateLeadSchema), isOwnerOfProfileGuard, this.updateLead); //update lead status
     }
@@ -104,16 +103,15 @@ export default class LeadsController implements Controller {
     }
 
     public getLeads = async (req: Request, res: Response, next: NextFunction) => {
-        const { profileId } = req.query;
-        if (!profileId) {
-            return next(new ParamRequiredException('Leads', 'profileId'));
-        }
-        const { status, otherType, limit, offset } = req.query;
-        if (status && !Object.values(LeadStatusEnum).includes(status as LeadStatusEnum)) {
-            return next(new InvalidEnumValueException('LeadStatus'));
-        }
-
         try {
+            const { profileId } = req.query;
+            if (!profileId) {
+                throw new ParamRequiredException('Leads', 'profileId');
+            }
+            const { status, otherType, limit, offset } = req.query;
+            if (status && !Object.values(LeadStatusEnum).includes(status as LeadStatusEnum)) {
+                throw new InvalidEnumValueException('LeadStatus');
+            }
             const payload: ILeadsGetPayload = {
                 profileId: profileId as string,
                 status: status as LeadStatusEnum,
@@ -130,14 +128,18 @@ export default class LeadsController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('profileId'));
             }
+            if (error instanceof ParamRequiredException || error instanceof InvalidEnumValueException) {
+                return next(error);
+            }
             next(new InternalServerException(error.message));
         }
     };
 
     public updateLead = async (req: Request, res: Response, next: NextFunction) => {
-        const { leadId } = req.params;
-        if (!leadId) return next(new ParamRequiredException('Lead', 'leadId'));
         try {
+            const { leadId } = req.params;
+            if (!leadId) throw new ParamRequiredException('Lead', 'leadId');
+
             const leadUpdatePayload: ILeadUpdatePayload = {
                 ...req.body, //status & otherType
                 leadId
@@ -150,6 +152,9 @@ export default class LeadsController implements Controller {
             logger.error(`error at UpdateLead action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('leadId'));
+            }
+            if (error instanceof ParamRequiredException) {
+                return next(error);
             }
             next(new InternalServerException(error.message));
         }

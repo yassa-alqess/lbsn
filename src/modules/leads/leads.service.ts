@@ -46,7 +46,7 @@ export default class LeadsService {
                         }
                     } else {
                         // Create a new lead if it does not exist
-                        const newLead = await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.LEAD, profileId });
+                        const newLead = await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.PENDING_VISIT, profileId });
                         leadResult.leads.push(newLead.toJSON() as ILead);
                     }
                 } catch (error) {
