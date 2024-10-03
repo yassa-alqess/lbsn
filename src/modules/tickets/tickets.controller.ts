@@ -29,7 +29,7 @@ export default class TicketController implements Controller {
         this.router.patch(`${this.path}/:ticketId/resolve`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
 
 
-        //order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
+        // user routes
         this.router.post(this.path, upload(this.path)!.single("file"), validate(CreateTicketDto), isOwnerOfProfileGuard, this.addTicket);
         this.router.get(`${this.path}`, isOwnerOfProfileGuard, this.getTickets);
         this.router.get(`${this.path}/:ticketId`, isOwnerOfProfileGuard, this.getTicket);
@@ -39,9 +39,14 @@ export default class TicketController implements Controller {
 
     public addTicket = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const { profileId } = req.query as { profileId: string };
+            if (!profileId) {
+                throw new ParamRequiredException('Task', 'profileId');
+            }
             const path = req.file ? req.file.filename : '';
             const ticketPayload: ITicketsAddPayload = {
                 ...req.body,
+                profileId,
                 documentUrl: path
             }
             const ticket = await this._ticketService.addTicket(ticketPayload);
@@ -53,7 +58,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.title));
             }
-            if (error instanceof AlreadyExistsException) {
+            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -61,16 +66,16 @@ export default class TicketController implements Controller {
     };
 
     public getTickets = async (req: Request, res: Response, next: NextFunction) => {
-        const { profileId } = req.query;
-        if (!profileId) {
-            return next(new ParamRequiredException('Task', 'profileId'));
-        }
-
-        const { status } = req.query;
-        if (status && !Object.values(TicketStatusEnum).includes(status as TicketStatusEnum)) {
-            return next(new InvalidEnumValueException('TicketStatus'));
-        }
         try {
+            const { profileId } = req.query;
+            if (!profileId) {
+                throw new ParamRequiredException('Task', 'profileId');
+            }
+
+            const { status } = req.query;
+            if (status && !Object.values(TicketStatusEnum).includes(status as TicketStatusEnum)) {
+                throw new InvalidEnumValueException('TicketStatus');
+            }
 
             const payload: ITicketsGetPayload = {
                 profileId: profileId as string,
@@ -82,34 +87,37 @@ export default class TicketController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error('error at getTickets action', error);
+            if (error instanceof InvalidEnumValueException || error instanceof ParamRequiredException) {
+                return next(error);
+            }
             next(new InternalServerException(error.message));
         }
     };
 
     public resolveTicket = async (req: Request, res: Response, next: NextFunction) => {
-        const { ticketId } = req.params;
-        if (!ticketId) return next(new ParamRequiredException('Ticket', 'ticketId'));
         try {
+            const { ticketId } = req.params;
+            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
             await this._ticketService.resolveTicket(ticketId);
             res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error('error at resolveTicket action', error);
-            if (error instanceof NotFoundException) {
-                return next(error);
-            }
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('ticketId'));
+            }
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
+                return next(error);
             }
             next(new InternalServerException(error.message));
         }
     }
 
     public getTicket = async (req: Request, res: Response, next: NextFunction) => {
-        const { ticketId } = req.params;
-        if (!ticketId) return next(new ParamRequiredException('Ticket', 'ticketId'));
         try {
+            const { ticketId } = req.params;
+            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
             const ticket = await this._ticketService.getTicket(ticketId);
             res.status(StatusCodes.OK).json(ticket).end();
 
@@ -119,7 +127,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('ticketId'));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -127,9 +135,10 @@ export default class TicketController implements Controller {
     }
 
     public updateTicket = async (req: Request, res: Response, next: NextFunction) => {
-        const { ticketId } = req.params;
-        if (!ticketId) return next(new ParamRequiredException('Ticket', 'ticketId'));
         try {
+            const { ticketId } = req.params;
+            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
+
             const ticketUpdatePayload: ITicketsUpdatePayload = {
                 ...req.body,
                 ticketId
@@ -146,7 +155,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Ticket', 'title', req.body.time.toString()));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -154,9 +163,9 @@ export default class TicketController implements Controller {
     }
 
     public deleteTicket = async (req: Request, res: Response, next: NextFunction) => {
-        const { ticketId } = req.params;
-        if (!ticketId) return next(new ParamRequiredException('Ticket', 'ticketId'));
         try {
+            const { ticketId } = req.params;
+            if (!ticketId) throw new ParamRequiredException('Ticket', 'ticketId');
             await this._ticketService.deleteTicket(ticketId);
             res.status(StatusCodes.OK).json({}).end();
 
@@ -166,7 +175,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('ticketId'));
             }
-            if (error instanceof NotFoundException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
