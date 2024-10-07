@@ -3,7 +3,6 @@ import { PeriodEnum, SalesStageEnum } from '../../shared/enums';
 import { IPeriod } from './overview.interface';
 import logger from '../../config/logger';
 import Sale from '../../shared/models/sale';
-
 // 3rd party dependencies
 import sequelize, { Op } from 'sequelize';
 import moment from 'moment';
@@ -99,6 +98,31 @@ export default class OverviewService {
             week: lead.get('week'),
             count: lead.get('count')
         }));
+    }
+
+    async getDealCountByPeriod(periodPayload: IPeriod) {
+        const { profileId, period, start: startDate, end: endDate } = periodPayload;
+        const today = moment().startOf('day');
+
+        switch (period) {
+            case PeriodEnum.DAILY:
+                return await this._getDealsGroupedByHour(profileId, today);
+
+            case PeriodEnum.WEEKLY:
+                return await this._getDealsGroupedByDay(profileId, today.clone().startOf('isoWeek'));
+
+            case PeriodEnum.MONTHLY:
+                return await this._getDealsGroupedByWeek(profileId, today.clone().startOf('month'));
+
+            case PeriodEnum.CUSTOM:
+                if (!startDate || !endDate) {
+                    throw new Error('Custom period requires both startDate and endDate');
+                }
+                return await this._getDealsValueGroupedByDay(profileId, moment(startDate), moment(endDate));
+
+            default:
+                throw new Error('Invalid period');
+        }
     }
 
     async getDealsCount(periodPayload: IPeriod) {
@@ -289,5 +313,5 @@ export default class OverviewService {
             week: lead.get('week'),
             value: lead.get('value')
         }));
-    }
+    }    
 }
