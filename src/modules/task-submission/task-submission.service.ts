@@ -47,10 +47,9 @@ export default class TaskSubmissionService {
                 status: newTaskSubmission.status,
                 createdAt: newTaskSubmission.createdAt,
                 approvedAt: newTaskSubmission.approvedAt,
-                profileId: newTaskSubmission.task?.profileId,
                 documentUrl: newTaskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmission.documentUrl}` : ''
             };
-            
+
             //eslint-disable-next-line
         } catch (error: any) {
             await transaction.rollback();
@@ -62,12 +61,7 @@ export default class TaskSubmissionService {
     public async updateTaskSubmission(taskSubmissionUpdatePayload: ITaskSubmissionUpdatePayload): Promise<ITaskSubmission | undefined> {
         try {
             const taskSubmission = await TaskSubmission.findOne({
-                where: { taskId: taskSubmissionUpdatePayload.taskId }, include: [
-                    {
-                        model: Task,
-                        attributes: ['profileId']
-                    }
-                ]
+                where: { taskId: taskSubmissionUpdatePayload.taskId }
             });
 
             if (!taskSubmission) {
@@ -96,7 +90,6 @@ export default class TaskSubmissionService {
                 status: newTaskSubmission.status,
                 createdAt: newTaskSubmission.createdAt,
                 approvedAt: newTaskSubmission.approvedAt,
-                profileId: taskSubmission.task?.profileId,
                 documentUrl: newTaskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmission.documentUrl}` : ''
             };
         } //eslint-disable-next-line
@@ -113,13 +106,7 @@ export default class TaskSubmissionService {
         const taskSubmission = await TaskSubmission.findOne({
             where: {
                 taskId: taskSubmissionGetByTaskIdPayload.taskId
-            },
-            include: [
-                {
-                    model: Task,
-                    attributes: ['profileId']
-                }
-            ]
+            }
         });
         if (!taskSubmission) {
             throw new NotFoundException('Task Submission', 'taskId', taskSubmissionGetByTaskIdPayload.taskId);
@@ -133,7 +120,6 @@ export default class TaskSubmissionService {
             status: taskSubmission.status,
             createdAt: taskSubmission.createdAt,
             approvedAt: taskSubmission.approvedAt,
-            profileId: taskSubmission.task?.profileId,
             documentUrl: taskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmission.documentUrl}` : ''
         };
     }

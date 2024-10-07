@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class GuestController implements Controller {
 
-    path = GUESTS_PATH;
+    path = `/${GUESTS_PATH}`;
     router = express.Router();
     private _guestService = new GuestService();
     constructor() {
@@ -53,7 +53,7 @@ export default class GuestController implements Controller {
 
     public updateGuest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId } = req.params;
-        if (!guestId) return next(new ParamRequiredException('Guest', 'guestId'));
+        if (!guestId) return next(new ParamRequiredException('guestId'));
         try {
             const guestUpdatePayload: IGuestUpdatePayload = {
                 ...req.body,
@@ -80,7 +80,7 @@ export default class GuestController implements Controller {
 
     public getGuest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId } = req.params;
-        if (!guestId) return next(new ParamRequiredException('Guest', 'guestId'));
+        if (!guestId) return next(new ParamRequiredException('guestId'));
 
         try {
             const guest = await this._guestService.getGuest(guestId);
@@ -113,7 +113,7 @@ export default class GuestController implements Controller {
 
     public deleteGuest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId } = req.params;
-        if (!guestId) return next(new ParamRequiredException('Guest', 'guestId'));
+        if (!guestId) return next(new ParamRequiredException('guestId'));
         try {
             await this._guestService.deleteGuest(guestId);
             res.status(StatusCodes.OK).json({}).end();
@@ -132,7 +132,7 @@ export default class GuestController implements Controller {
     }
     public approveGuest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId } = req.params;
-        if (!guestId) return next(new ParamRequiredException('Guest', 'guestId'));
+        if (!guestId) return next(new ParamRequiredException('guestId'));
 
         try {
             await this._guestService.approveGuest(guestId);
@@ -153,7 +153,7 @@ export default class GuestController implements Controller {
 
     public getGuestByEmail = async (req: Request, res: Response, next: NextFunction) => {
         const { email } = req.query;
-        if (!email) return next(new ParamRequiredException('Guest', 'email'));
+        if (!email) return next(new ParamRequiredException('email'));
         try {
 
             const guest = await this._guestService.getGuestByEmail(email as string);

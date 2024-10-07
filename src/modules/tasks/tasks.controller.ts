@@ -1,7 +1,7 @@
 
 // file dependinces
 import { ITasksAddPayload, ITasksGetPayload, ITaskUpdatePayload } from './tasks.interface';
-import { DUPLICATE_ERR, INVALID_UUID, TASKS_PATH } from '../../shared/constants';
+import { DUPLICATE_ERR, INVALID_UUID, PROFILES_PATH, TASKS_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TaskService from './tasks.service';
 import { accessTokenGuard, isOwnerOfProfileGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
@@ -16,6 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class TaskController implements Controller {
     path = TASKS_PATH;
+    profilesPath = `/${PROFILES_PATH}`;
     router = express.Router();
     private _taskService = new TaskService();
     constructor() {
@@ -23,25 +24,21 @@ export default class TaskController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.get(`${this.path}`, isOwnerOfProfileGuard, this.getTasks);
-        this.router.get(`${this.path}/:taskId`, isOwnerOfProfileGuard, this.getTask);
+        this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}`, this.getTasks);
+        this.router.get(`${this.profilesPath}/:profileId/${this.path}/:taskId`, this.getTask);
 
         // admin routes
-        this.router.post(this.path, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateTaskDto), this.addTask);
-        this.router.patch(`${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateTaskDto), this.updateTask);
-        this.router.delete(`${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
+        this.router.post(`/${this.path}*`, accessTokenGuard);
+        this.router.post(`/${this.path}`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateTaskDto), this.addTask);
+        this.router.patch(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateTaskDto), this.updateTask);
+        this.router.delete(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
     }
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query as { profileId: string };
-            if (!profileId) {
-                throw new ParamRequiredException('Task', 'profileId');
-            }
             const taskPayload: ITasksAddPayload = {
                 ...req.body,
-                profileId
             }
             const task = await this._taskService.addTask(taskPayload);
             res.status(StatusCodes.CREATED).json(task).end();
@@ -52,7 +49,7 @@ export default class TaskController implements Controller {
             if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
                 return next(new AlreadyExistsException('Task', 'title', req.body.title));
             }
-            if (error instanceof AlreadyExistsException || error instanceof ParamRequiredException) {
+            if (error instanceof AlreadyExistsException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));
@@ -61,9 +58,9 @@ export default class TaskController implements Controller {
 
     public getTasks = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { profileId } = req.query;
+            const { profileId } = req.params;
             if (!profileId) {
-                throw new ParamRequiredException('Task', 'profileId');
+                throw new ParamRequiredException('profileId');
             }
             const { status } = req.query;
             if (status && !Object.values(TaskStatusEnum).includes(status as TaskStatusEnum)) {
@@ -92,7 +89,7 @@ export default class TaskController implements Controller {
     public getTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { taskId } = req.params;
-            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+            if (!taskId) throw new ParamRequiredException('taskId');
             const task = await this._taskService.getTask(taskId);
             res.status(StatusCodes.OK).json(task).end();
 
@@ -112,7 +109,7 @@ export default class TaskController implements Controller {
     public updateTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { taskId } = req.params;
-            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+            if (!taskId) throw new ParamRequiredException('taskId');
 
             const taskUpdatePayload: ITaskUpdatePayload = {
                 ...req.body,
@@ -140,7 +137,7 @@ export default class TaskController implements Controller {
     public deleteTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { taskId } = req.params;
-            if (!taskId) throw new ParamRequiredException('Task', 'taskId');
+            if (!taskId) throw new ParamRequiredException('taskId');
             await this._taskService.deleteTask(taskId);
             res.status(StatusCodes.OK).json({}).end();
 

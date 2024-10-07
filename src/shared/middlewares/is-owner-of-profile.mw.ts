@@ -9,13 +9,13 @@ import { Request, Response, NextFunction } from "express";
 
 export async function isOwnerOfProfileGuard(req: Request, res: Response, next: NextFunction) {
     logger.debug('validating if user is owner of profile');
-    const profileId = req.query?.profileId as string || req.body?.profileId as string; // profileId can be a query string or body param
-    if (!profileId) {
-        return next(new ParamRequiredException('Profile', 'profileId'));
-    }
-    const { id: userId } = req.user as IAuthPayload;
 
     try {
+        const { profileId } = (req.params) as { profileId: string }; // profileId for user endpoints is a param in the path
+        if (!profileId) {
+            throw new ParamRequiredException('profileId');
+        }
+        const { id: userId } = req.user as IAuthPayload;
         const profile = await Profile.findOne({ where: { profileId } });
 
         if (!profile) {

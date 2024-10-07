@@ -13,7 +13,7 @@ import { StatusCodes } from 'http-status-codes';
 import { IAuthPayload } from './auth.interface';
 
 export default class AuthController implements Controller {
-    path = AUTH_PATH;
+    path = `/${AUTH_PATH}`;
     router = express.Router();
     private _authService = new AuthService();
     constructor() {
@@ -159,7 +159,7 @@ export default class AuthController implements Controller {
     public verifyResetToken = async (req: Request, res: Response, next: NextFunction) => {
         const { token } = req.query;
         if (!token) {
-            return next(new ParamRequiredException('Reset Password', 'token'));
+            return next(new ParamRequiredException('token'));
         }
         try {
             await this._authService.verifyResetToken(token as string);
@@ -179,7 +179,7 @@ export default class AuthController implements Controller {
         const { token } = req.query;
         const { newPassword } = req.body;
         if (!token) {
-            return next(new ParamRequiredException('Email Verification', 'token'));
+            return next(new ParamRequiredException('token'));
         }
         try {
             await this._authService.resetPassword(token as string, newPassword);

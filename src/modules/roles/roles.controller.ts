@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class RolesController implements Controller {
 
-    path = ROLES_PATH;
+    path = `/${ROLES_PATH}`;
     router = express.Router();
     private _rolesService = new RolesService();
     constructor() {
@@ -52,7 +52,7 @@ export default class RolesController implements Controller {
 
     public updateRole = async (req: Request, res: Response, next: NextFunction) => {
         const { roleId } = req.params;
-        if (!roleId) return next(new ParamRequiredException('Role', 'roleId'));
+        if (!roleId) return next(new ParamRequiredException('roleId'));
         try {
             const roleUpdatePayload: IRoleUpdatePayload = {
                 ...req.body,
@@ -79,7 +79,7 @@ export default class RolesController implements Controller {
 
     public getRole = async (req: Request, res: Response, next: NextFunction) => {
         const { roleId } = req.params;
-        if (!roleId) return next(new ParamRequiredException('Role', 'roleId'));
+        if (!roleId) return next(new ParamRequiredException('roleId'));
         try {
             const role = await this._rolesService.getRole(roleId);
             res.status(StatusCodes.OK).json(role).end();
@@ -111,7 +111,7 @@ export default class RolesController implements Controller {
 
     public deleteRole = async (req: Request, res: Response, next: NextFunction) => {
         const { roleId } = req.params;
-        if (!roleId) return next(new ParamRequiredException('Role', 'roleId'));
+        if (!roleId) return next(new ParamRequiredException('roleId'));
         try {
             await this._rolesService.deleteRole(roleId);
             res.status(StatusCodes.OK).json({}).end();

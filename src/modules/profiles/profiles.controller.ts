@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class ProfileController implements Controller {
 
-    path = PROFILES_PATH;
+    path = `/${PROFILES_PATH}`;
     router = express.Router();
     private _profileProfile = new ProfileService();
     constructor() {
@@ -23,16 +23,15 @@ export default class ProfileController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard)
-        this.router.patch(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(updateProfileDto), this.updateProfile);
-        this.router.get(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getProfile);
-        this.router.delete(`${this.path}/:profileId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteProfile);
+        this.router.patch(`${this.path}/:profileId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(updateProfileDto), this.updateProfile);
+        this.router.get(`${this.path}/:profileId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getProfile);
+        this.router.delete(`${this.path}/:profileId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteProfile);
     }
 
     public updateProfile = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.params;
         if (!profileId) {
-            return next(new ParamRequiredException('Profile', 'profileId'));
+            return next(new ParamRequiredException('profileId'));
         }
         try {
             const profileUpdatePayload: IProfileUpdatePayload = {
@@ -61,7 +60,7 @@ export default class ProfileController implements Controller {
     public getProfile = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.params;
         if (!profileId) {
-            return next(new ParamRequiredException('Profile', 'profileId'));
+            return next(new ParamRequiredException('profileId'));
         }
         try {
             const profile = await this._profileProfile.getProfile(profileId);
@@ -83,7 +82,7 @@ export default class ProfileController implements Controller {
     public deleteProfile = async (req: Request, res: Response, next: NextFunction) => {
         const { profileId } = req.params;
         if (!profileId) {
-            return next(new ParamRequiredException('Profile', 'profileId'));
+            return next(new ParamRequiredException('profileId'));
         }
         try {
             await this._profileProfile.deleteProfile(profileId);

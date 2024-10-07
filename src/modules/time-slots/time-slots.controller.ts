@@ -16,7 +16,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class TimeSlotsController implements Controller {
 
-    path = TIME_SLOTS_PATH;
+    path = `/${TIME_SLOTS_PATH}`;
     router = express.Router();
     private _timeSlotsService = new TimeSlotsService();
     constructor() {
@@ -54,7 +54,7 @@ export default class TimeSlotsController implements Controller {
 
     public updateTimeSlot = async (req: Request, res: Response, next: NextFunction) => {
         const { timeSlotId } = req.params;
-        if (!timeSlotId) return next(new ParamRequiredException('TimeSlot', 'timeSlotId'));
+        if (!timeSlotId) return next(new ParamRequiredException('timeSlotId'));
         try {
             const timeSlotUpdatePayload: ITimeSlotUpdatePayload = {
                 ...req.body,
@@ -81,7 +81,7 @@ export default class TimeSlotsController implements Controller {
 
     public getTimeSlot = async (req: Request, res: Response, next: NextFunction) => {
         const { timeSlotId } = req.params;
-        if (!timeSlotId) return next(new ParamRequiredException('TimeSlot', 'timeSlotId'));
+        if (!timeSlotId) return next(new ParamRequiredException('timeSlotId'));
         try {
             const timeSlot = await this._timeSlotsService.getTimeSlot(timeSlotId);
             res.status(StatusCodes.OK).json(timeSlot).end();
@@ -119,7 +119,7 @@ export default class TimeSlotsController implements Controller {
 
     public deleteTimeSlot = async (req: Request, res: Response, next: NextFunction) => {
         const { timeSlotId } = req.params;
-        if (!timeSlotId) return next(new ParamRequiredException('TimeSlot', 'timeSlotId'));
+        if (!timeSlotId) return next(new ParamRequiredException('timeSlotId'));
         try {
             await this._timeSlotsService.deleteTimeSlot(timeSlotId);
             res.status(StatusCodes.OK).json({}).end();

@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class ServiceController implements Controller {
 
-    path = SERVICES_PATH;
+    path = `/${SERVICES_PATH}`;
     router = express.Router();
     private _servicesService = new ServicesService();
     constructor() {
@@ -55,7 +55,7 @@ export default class ServiceController implements Controller {
 
     public updateService = async (req: Request, res: Response, next: NextFunction) => {
         const { serviceId } = req.params;
-        if (!serviceId) return next(new ParamRequiredException('Service', 'serviceId'));
+        if (!serviceId) return next(new ParamRequiredException('serviceId'));
         try {
             const serviceUpdatePayload: IServiceUpdatePayload = {
                 ...req.body,
@@ -83,7 +83,7 @@ export default class ServiceController implements Controller {
     public getService = async (req: Request, res: Response, next: NextFunction) => {
 
         const { serviceId } = req.params;
-        if (!serviceId) return next(new ParamRequiredException('Service', 'serviceId'));
+        if (!serviceId) return next(new ParamRequiredException('serviceId'));
 
         try {
             const service = await this._servicesService.getService(serviceId);
@@ -116,7 +116,7 @@ export default class ServiceController implements Controller {
 
     public deleteService = async (req: Request, res: Response, next: NextFunction) => {
         const { serviceId } = req.params;
-        if (!serviceId) return next(new ParamRequiredException('Service', 'serviceId'));
+        if (!serviceId) return next(new ParamRequiredException('serviceId'));
 
         try {
             await this._servicesService.deleteService(serviceId);

@@ -8,6 +8,7 @@ import { LeadStatusEnum } from "../../shared/enums";
 import { GroupedLeads, ILead, ILeadAddPayload, ILeadsGetPayload, ILeadsGetResponse, ILeadUpdatePayload } from "./leads.interface";
 
 import { fn, col } from "sequelize";
+import { IProfileResponse } from "../profiles/profiles.interface";
 
 export default class LeadsService {
     private _sheetsService: SheetsService;
@@ -17,19 +18,12 @@ export default class LeadsService {
         this._profileService = new ProfileService();
     }
 
-    public async getSheetLeads(profileId: string) {
+    public async _syncSheetLeads(profile: IProfileResponse): Promise<void> {
         try {
-            const profile = await this._profileService.getProfile(profileId);
-            if (!profile) {
-                throw new NotFoundException('Profile', 'profileId', profileId);
-            }
-
             const { sheetUrl, sheetName } = profile;
             const leads = await this._sheetsService.getSpreadSheetValues({ spreadsheetId: sheetUrl.split('/')[5], sheetName });
-            logger.info(`leads: ${JSON.stringify(leads)}`);
 
             // Use Promise.all to insert all leads concurrently
-            const leadResult: ILeadsGetResponse = { leads: [], total: leads.length };
             await Promise.all(leads.map(async (leadData) => {
                 const { _id, ...record } = leadData;
                 try {
@@ -39,15 +33,12 @@ export default class LeadsService {
                     if (lead) {
                         // Update the existing lead
                         await Lead.update({ record }, { where: { leadId: _id as string } });
-                        // Fetch the updated lead
-                        const updatedLead = await Lead.findByPk(_id as string);
-                        if (updatedLead) {
-                            leadResult.leads.push(updatedLead.toJSON() as ILead);
-                        }
+
                     } else {
-                        // Create a new lead if it does not exist
-                        const newLead = await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.PENDING_VISIT, profileId });
-                        leadResult.leads.push(newLead.toJSON() as ILead);
+                        const sale = await Sale.findByPk(_id as string);
+
+                        // Create a new lead if it does not exist and it's not a sale
+                        if (!sale) await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.PENDING_VISIT, profileId: profile.profileId });
                     }
                 } catch (error) {
                     logger.error('Error processing lead:', error);
@@ -55,8 +46,6 @@ export default class LeadsService {
                     // Handle the error as needed, e.g., pushing an error message or logging
                 }
             }));
-
-            return leadResult;
 
             //eslint-disable-next-line
         } catch (error: any) {
@@ -73,6 +62,9 @@ export default class LeadsService {
             if (!profile) {
                 throw new NotFoundException('Profile', 'profileId', profileId);
             }
+            // sync the leads from the sheet
+            await this._syncSheetLeads(profile);
+
             // Fetch leads and total count
             const { rows: leads, count: total } = await Lead.findAndCountAll({
                 where: {

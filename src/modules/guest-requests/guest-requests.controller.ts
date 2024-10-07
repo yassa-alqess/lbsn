@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class GuestRequestsController implements Controller {
 
-    path = GUESTS_PATH;
+    path = `/${GUESTS_PATH}`;
     router = express.Router();
     private _guestRequestsService = new GuestRequestsService();
     constructor() {
@@ -35,10 +35,10 @@ export default class GuestRequestsController implements Controller {
     public addGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId, requestId } = req.params;
         if (!guestId) {
-            return next(new ParamRequiredException('Guest', 'guestId'));
+            return next(new ParamRequiredException('guestId'));
         }
         if (!requestId) {
-            return next(new ParamRequiredException('Request', 'requestId'));
+            return next(new ParamRequiredException('requestId'));
         }
         try {
             const guestRequestPayload: IGuestRequestAddPayload = {
@@ -68,10 +68,10 @@ export default class GuestRequestsController implements Controller {
     public updateGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId, requestId } = req.params;
         if (!guestId) {
-            return next(new ParamRequiredException('Guest', 'guestId'));
+            return next(new ParamRequiredException('guestId'));
         }
         if (!requestId) {
-            return next(new ParamRequiredException('Request', 'requestId'));
+            return next(new ParamRequiredException('requestId'));
         }
         try {
             const guestRequestPayload: IGuestRequestUpdatePayload = {
@@ -98,7 +98,7 @@ export default class GuestRequestsController implements Controller {
     public getGuestRequests = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId } = req.params;
         if (!guestId) {
-            return next(new ParamRequiredException('Guest', 'guestId'));
+            return next(new ParamRequiredException('guestId'));
         }
         try {
             const guestRequests = await this._guestRequestsService.getGuestRequests(guestId);
@@ -123,10 +123,10 @@ export default class GuestRequestsController implements Controller {
     public deleteGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId, requestId } = req.params;
         if (!guestId) {
-            return next(new ParamRequiredException('Guest', 'guestId'));
+            return next(new ParamRequiredException('guestId'));
         }
         if (!requestId) {
-            return next(new ParamRequiredException('Request', 'requestId'));
+            return next(new ParamRequiredException('requestId'));
         }
         try {
             await this._guestRequestsService.deleteGuestRequest(guestId, requestId);
@@ -148,10 +148,10 @@ export default class GuestRequestsController implements Controller {
     public approveGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId, requestId } = req.params;
         if (!guestId) {
-            next(new ParamRequiredException('Guest', 'guestId'));
+            next(new ParamRequiredException('guestId'));
         }
         if (!requestId) {
-            next(new ParamRequiredException('Request', 'requestId'));
+            next(new ParamRequiredException('requestId'));
         }
         try {
             await this._guestRequestsService.approveGuestRequest(guestId, requestId); //not interested in the response
@@ -173,10 +173,10 @@ export default class GuestRequestsController implements Controller {
     public getGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
         const { guestId, requestId } = req.params;
         if (!guestId) {
-            return next(new ParamRequiredException('Guest', 'guestId'));
+            return next(new ParamRequiredException('guestId'));
         }
         if (!requestId) {
-            return next(new ParamRequiredException('Request', 'requestId'));
+            return next(new ParamRequiredException('requestId'));
         }
         try {
             const guestRequest = await this._guestRequestsService.getGuestRequest(guestId, requestId);

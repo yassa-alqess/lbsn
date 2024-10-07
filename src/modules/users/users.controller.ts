@@ -19,7 +19,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class UserController implements Controller {
 
-    path = USERS_PATH;
+    path = `/${USERS_PATH}`;
     router = express.Router();
     private _userService = new UserService();
     constructor() {
@@ -81,7 +81,7 @@ export default class UserController implements Controller {
     public updateUser = async (req: Request, res: Response, next: NextFunction) => {
         const { userId } = req.params;
         if (!userId) {
-            return next(new ParamRequiredException('user', 'userId'));
+            return next(new ParamRequiredException('userId'));
         }
         try {
             const path = req.file ? req.file.filename : '';
@@ -112,7 +112,7 @@ export default class UserController implements Controller {
 
     public getUser = async (req: Request, res: Response, next: NextFunction) => {
         const { userId } = req.params;
-        if (!userId) return next(new ParamRequiredException('user', 'userId'));
+        if (!userId) return next(new ParamRequiredException('userId'));
         try {
             const user = await this._userService.getUser(userId);
             res.status(StatusCodes.OK).json(user).end();
@@ -145,7 +145,7 @@ export default class UserController implements Controller {
     public deleteUser = async (req: Request, res: Response, next: NextFunction) => {
         const { userId } = req.params;
         if (!userId) {
-            return next(new ParamRequiredException('user', 'userId'));
+            return next(new ParamRequiredException('userId'));
         }
         try {
             await this._userService.deleteUser(userId);
