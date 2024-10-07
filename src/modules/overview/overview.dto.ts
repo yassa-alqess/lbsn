@@ -3,7 +3,6 @@ import Joi from 'joi'
 import _ from 'lodash';
 
 export const PeriodDto = Joi.object({
-    profileId: Joi.string().required(),
     period: Joi.string()
         .valid(..._.values(PeriodEnum))
         .required(),

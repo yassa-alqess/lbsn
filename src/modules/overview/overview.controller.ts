@@ -6,6 +6,7 @@ import logger from "../../config/logger";
 import OverviewService from "./overview.service";
 import { InternalServerException } from "../../shared/exceptions";
 import { IPeriod } from "./overview.interface";
+import {  PROFILES_PATH } from "../../shared/constants";
 
 // 3rd party dependencies
 import express, { NextFunction, Request, Response } from 'express';
@@ -13,7 +14,8 @@ import { StatusCodes } from "http-status-codes";
 
 export default class OverviewController implements Controller {
 
-    path = `/${OVERVIEW_PATH}`;
+    path = `${OVERVIEW_PATH}`;
+    profilesPath = `/${PROFILES_PATH}`;
     router = express.Router();
     private _overviewService = new OverviewService();
     constructor() {
@@ -23,17 +25,18 @@ export default class OverviewController implements Controller {
     private _initializeRoutes() {
         //order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
         this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.post(`${this.path}/leads-per-period`, validate(PeriodDto), isOwnerOfProfileGuard, this.getLeadsPerPeriod);
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/leads-per-period`,  this.getLeadsPerPeriod);
         this.router.post(`${this.path}/leads-count`, validate(PeriodDto), isOwnerOfProfileGuard, this.getDealsCount);
         this.router.post(`${this.path}/deals-value-count`, validate(PeriodDto), isOwnerOfProfileGuard, this.getDealsValueCount);
-        // this.router.post(`${this.path}/deals-per-leads`, validate(PeriodDto), this.getDealsPerLeads);
-        // this.router.post(`${this.path}/conversion-rate`, validate(PeriodDto), this.getConversionRate);
+  
     }
 
     public getLeadsPerPeriod = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const {profileId} = req.params;
             const periodPayload: IPeriod = {
                 ...req.body,
+                profileId
             }
             const leads = await this._overviewService.getLeadCountByPeriod(periodPayload);
             res.status(StatusCodes.OK).json({ leads }).end();
