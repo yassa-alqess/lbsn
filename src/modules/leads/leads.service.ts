@@ -110,7 +110,8 @@ export default class LeadsService {
                             stage,
                             dealValue,
                             dealCurrency,
-                            comment
+                            comment,
+                            record: lead.record
                         });
                         await lead.destroy();
                         return;
