@@ -38,7 +38,7 @@ export default class LeadsController implements Controller {
                 throw new ParamRequiredException('profileId');
             }
 
-            const { status, otherType, limit, offset } = req.query;
+            const { status, otherType, limit = 10, page = 1 } = req.query;
             if (status && !Object.values(LeadStatusEnum).includes(status as LeadStatusEnum)) {
                 throw new InvalidEnumValueException('LeadStatus');
             }
@@ -47,8 +47,8 @@ export default class LeadsController implements Controller {
                 profileId: profileId as string,
                 status: status as LeadStatusEnum,
                 otherType: otherType as string || undefined,
-                limit: limit ? parseInt(limit as string) : undefined,
-                offset: offset ? parseInt(offset as string) : undefined
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             };
             const leads = await this._leadsService.getLeads(payload);
             res.status(StatusCodes.OK).json(leads).end();

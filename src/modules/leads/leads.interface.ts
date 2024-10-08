@@ -28,6 +28,7 @@ export interface ILeadAddPayload {
 export interface ILeadsGetResponse {
     leads: ILead[];
     total: number;
+    pages: number;
 }
 
 export interface ILead {

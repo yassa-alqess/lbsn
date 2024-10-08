@@ -36,15 +36,15 @@ export default class SalesController implements Controller {
             if (!profileId) {
                 throw new ParamRequiredException('profileId');
             }
-            const { stage, limit, offset } = req.query;
+            const { stage, limit = 10, page = 1 } = req.query;
             if (stage && !Object.values(SalesStageEnum).includes(stage as SalesStageEnum)) {
                 throw new InvalidEnumValueException('SaleStage');
             }
             const payload: ISalesGetPayload = {
                 profileId: profileId as string,
                 stage: stage as SalesStageEnum,
-                limit: limit ? parseInt(limit as string) : undefined,
-                offset: offset ? parseInt(offset as string) : undefined
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             };
             const sales = await this._salesService.getSales(payload);
             res.status(StatusCodes.OK).json(sales).end();

@@ -36,7 +36,8 @@ export default class SalesService {
 
             return {
                 sales: sales.map(sale => sale.toJSON() as ISale),
-                total
+                total,
+                pages: Math.ceil(total / (limit || 10))
             }
             //eslint-disable-next-line
         } catch (error: any) {
