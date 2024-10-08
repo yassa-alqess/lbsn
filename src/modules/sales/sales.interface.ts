@@ -28,6 +28,7 @@ export interface ISaleAddPayload {
 export interface ISalesGetResponse {
     sales: ISale[];
     total: number;
+    pages: number;
 }
 
 export interface ISale {
