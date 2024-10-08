@@ -8,19 +8,23 @@ import sequelize, { Op } from 'sequelize';
 import moment from 'moment';
 
 export default class OverviewService {
-    async getLeadCountByPeriod(periodPayload: IPeriod) {
+    async getLeadsCountByPeriod(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
+        const lastYear = today.clone().subtract(1, 'year');
 
         switch (period) {
-            case PeriodEnum.DAILY:
-                return await this._getLeadsGroupedByHour(profileId, today);
-
-            case PeriodEnum.WEEKLY:
-                return await this._getLeadsGroupedByDay(profileId, today.clone().startOf('isoWeek'));
+            case PeriodEnum.YEARLY:
+                return await this._getLeadsGroupedByMonth(profileId, lastYear);
 
             case PeriodEnum.MONTHLY:
-                return await this._getLeadsGroupedByWeek(profileId, today.clone().startOf('month'));
+                return await this._getLeadsGroupedByDay(profileId, today.clone().subtract(1, 'month').startOf('month'), today.clone().startOf('month').endOf('month'));
+
+            case PeriodEnum.WEEKLY:
+                return await this._getLeadsGroupedByDay(profileId, today.clone().startOf('isoWeek'), today);
+
+            case PeriodEnum.DAILY:
+                return await this._getLeadsGroupedByHour(profileId, today);
 
             case PeriodEnum.CUSTOM:
                 if (!startDate || !endDate) {
@@ -33,8 +37,51 @@ export default class OverviewService {
         }
     }
 
+    private async _getLeadsGroupedByMonth(profileId: string, startOfYear: moment.Moment) {
+        const leads = await Lead.findAll({
+            where: {
+                profileId,
+                createdAt: {
+                    [Op.gte]: startOfYear.startOf('month').toDate(),
+                    [Op.lte]: moment().toDate() // till now
+                },
+            },
+            attributes: [
+                [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt')), 'month'],
+                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
+            ],
+            group: [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt'))],
+        });
+
+        return leads.map(lead => ({
+            month: lead.get('month'),
+            count: lead.get('count')
+        }));
+    }
+
+    private async _getLeadsGroupedByDay(profileId: string, startDate: moment.Moment, endDate: moment.Moment = moment()) {
+        const leads = await Lead.findAll({
+            where: {
+                profileId,
+                createdAt: {
+                    [Op.gte]: startDate.toDate(),
+                    [Op.lte]: endDate.toDate() // till now or end of custom period
+                },
+            },
+            attributes: [
+                [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'day'],
+                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
+            ],
+            group: [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt'))],
+        });
+
+        return leads.map(lead => ({
+            day: lead.get('day'),
+            count: lead.get('count')
+        }));
+    }
+
     private async _getLeadsGroupedByHour(profileId: string, startOfDay: moment.Moment) {
-        logger.debug(`starting from ${startOfDay.toDate()} till moment ${moment().toDate()}`);
         const leads = await Lead.findAll({
             where: {
                 profileId,
@@ -56,88 +103,22 @@ export default class OverviewService {
         }));
     }
 
-    private async _getLeadsGroupedByDay(profileId: string, startOfWeek: moment.Moment, endOfWeek: moment.Moment = moment()) {
-        const leads = await Lead.findAll({
-            where: {
-                profileId,
-                createdAt: {
-                    [Op.gte]: startOfWeek.toDate(),
-                    [Op.lte]: endOfWeek.toDate() // till now or end of custom period
-                },
-            },
-            attributes: [
-                [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'day'],
-                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
-            ],
-            group: [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt'))],
-        });
-
-        return leads.map(lead => ({
-            day: lead.get('day'),
-            count: lead.get('count')
-        }));
-    }
-
-    private async _getLeadsGroupedByWeek(profileId: string, startOfMonth: moment.Moment) {
-        const leads = await Lead.findAll({
-            where: {
-                profileId,
-                createdAt: {
-                    [Op.gte]: startOfMonth.toDate(),
-                    [Op.lte]: moment().toDate(), // till now
-                },
-            },
-            attributes: [
-                [sequelize.fn('date_trunc', 'week', sequelize.col('createdAt')), 'week'],
-                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
-            ],
-            group: [sequelize.fn('date_trunc', 'week', sequelize.col('createdAt'))],
-        });
-
-        return leads.map(lead => ({
-            week: lead.get('week'),
-            count: lead.get('count')
-        }));
-    }
-
-    async getDealCountByPeriod(periodPayload: IPeriod) {
+    async getDealsCountByPeriod(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
         switch (period) {
-            case PeriodEnum.DAILY:
-                return await this._getDealsGroupedByHour(profileId, today);
-
-            case PeriodEnum.WEEKLY:
-                return await this._getDealsGroupedByDay(profileId, today.clone().startOf('isoWeek'));
+            case PeriodEnum.YEARLY:
+                return await this._getDealsGroupedByMonth(profileId, today.clone().subtract(1, 'year').startOf('year'), today.clone());
 
             case PeriodEnum.MONTHLY:
-                return await this._getDealsGroupedByWeek(profileId, today.clone().startOf('month'));
-
-            case PeriodEnum.CUSTOM:
-                if (!startDate || !endDate) {
-                    throw new Error('Custom period requires both startDate and endDate');
-                }
-                return await this._getDealsValueGroupedByDay(profileId, moment(startDate), moment(endDate));
-
-            default:
-                throw new Error('Invalid period');
-        }
-    }
-
-    async getDealsCount(periodPayload: IPeriod) {
-        const { profileId, period, start: startDate, end: endDate } = periodPayload;
-        const today = moment().startOf('day');
-
-        switch (period) {
-            case PeriodEnum.DAILY:
-                return await this._getDealsGroupedByHour(profileId, today);
+                return await this._getDealsGroupedByDay(profileId, today.clone().subtract(1, 'month').startOf('month'), today.clone().subtract(1, 'month').endOf('month'));
 
             case PeriodEnum.WEEKLY:
-                return await this._getDealsGroupedByDay(profileId, today.clone().startOf('isoWeek'));
+                return await this._getDealsGroupedByDay(profileId, today.clone().subtract(1, 'week').startOf('isoWeek'));
 
-            case PeriodEnum.MONTHLY:
-                return await this._getDealsGroupedByWeek(profileId, today.clone().startOf('month'));
+            case PeriodEnum.DAILY:
+                return await this._getDealsGroupedByHour(profileId, today);
 
             case PeriodEnum.CUSTOM:
                 if (!startDate || !endDate) {
@@ -174,14 +155,14 @@ export default class OverviewService {
         }));
     }
 
-    private async _getDealsGroupedByDay(profileId: string, startOfWeek: moment.Moment, endOfWeek: moment.Moment = moment()) {
+    private async _getDealsGroupedByDay(profileId: string, startDate: moment.Moment, endDate: moment.Moment = moment()) {
         const leads = await Sale.findAll({
             where: {
                 profileId,
                 stage: SalesStageEnum.CLOSED_DEAL,
                 createdAt: {
-                    [Op.gte]: startOfWeek.toDate(),
-                    [Op.lte]: endOfWeek.toDate() // till now or end of custom period
+                    [Op.gte]: startDate.toDate(),
+                    [Op.lte]: endDate.toDate() // till now or end of custom period
                 },
             },
             attributes: [
@@ -197,121 +178,128 @@ export default class OverviewService {
         }));
     }
 
-    private async _getDealsGroupedByWeek(profileId: string, startOfMonth: moment.Moment) {
+    private async _getDealsGroupedByMonth(profileId: string, startOfYear: moment.Moment, endOfYear: moment.Moment) {
         const leads = await Sale.findAll({
             where: {
                 profileId,
                 stage: SalesStageEnum.CLOSED_DEAL,
                 createdAt: {
-                    [Op.gte]: startOfMonth.toDate(),
-                    [Op.lte]: moment().toDate(), // till now
+                    [Op.gte]: startOfYear.toDate(),
+                    [Op.lte]: endOfYear.toDate() // till now
                 },
             },
             attributes: [
-                [sequelize.fn('date_trunc', 'week', sequelize.col('createdAt')), 'week'],
+                [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt')), 'month'],
                 [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
             ],
-            group: [sequelize.fn('date_trunc', 'week', sequelize.col('createdAt'))],
+            group: [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt'))],
         });
 
         return leads.map(lead => ({
-            week: lead.get('week'),
+            month: lead.get('month'),
             count: lead.get('count')
         }));
     }
 
-    async getDealsValueCount(periodPayload: IPeriod) {
+    public async getDealsCount(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
+        // eslint-disable-next-line
+        const whereClause: any = {
+            profileId,
+            stage: SalesStageEnum.CLOSED_DEAL,
+            createdAt: {},
+        };
+
         switch (period) {
             case PeriodEnum.DAILY:
-                return await this._getDealsValueGroupedByHour(profileId, today);
+                whereClause.createdAt[Op.gte] = today.toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
 
             case PeriodEnum.WEEKLY:
-                return await this._getDealsValueGroupedByDay(profileId, today.clone().startOf('isoWeek'));
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'week').startOf('isoWeek').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
 
             case PeriodEnum.MONTHLY:
-                return await this._getDealsValueGroupedByWeek(profileId, today.clone().startOf('month'));
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'month').startOf('month').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.YEARLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'year').startOf('year').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
 
             case PeriodEnum.CUSTOM:
                 if (!startDate || !endDate) {
                     throw new Error('Custom period requires both startDate and endDate');
                 }
-                return await this._getDealsValueGroupedByDay(profileId, moment(startDate), moment(endDate));
+                whereClause.createdAt[Op.gte] = moment(startDate).toDate();
+                whereClause.createdAt[Op.lte] = moment(endDate).toDate(); // till end of custom period
+                break;
 
             default:
                 throw new Error('Invalid period');
         }
-    }
 
-    private async _getDealsValueGroupedByHour(profileId: string, startOfDay: moment.Moment) {
-        logger.debug(`starting from ${startOfDay.toDate()} till moment ${moment().toDate()}`);
-        const leads = await Sale.findAll({
-            where: {
-                profileId,
-                stage: SalesStageEnum.CLOSED_DEAL,
-                createdAt: {
-                    [Op.gte]: startOfDay.toDate(),
-                    [Op.lte]: moment().toDate() // till now
-                },
-            },
-            attributes: [
-                [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'hour'],
-                [sequelize.fn('SUM', sequelize.col('dealValue')), 'value'],
-            ],
-            group: [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt'))],
+        const countResult = await Sale.count({
+            where: whereClause,
         });
 
-        return leads.map(lead => ({
-            hour: lead.get('hour'),
-            value: lead.get('value')
-        }));
+        return countResult;
     }
 
-    private async _getDealsValueGroupedByDay(profileId: string, startOfWeek: moment.Moment, endOfWeek: moment.Moment = moment()) {
-        const leads = await Sale.findAll({
-            where: {
-                profileId,
-                stage: SalesStageEnum.CLOSED_DEAL,
-                createdAt: {
-                    [Op.gte]: startOfWeek.toDate(),
-                    [Op.lte]: endOfWeek.toDate() // till now or end of custom period
-                },
-            },
-            attributes: [
-                [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'day'],
-                [sequelize.fn('SUM', sequelize.col('dealValue')), 'value'],
-            ],
-            group: [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt'))],
+    public async getDealsValueSum(periodPayload: IPeriod) {
+        const { profileId, period, start: startDate, end: endDate } = periodPayload;
+        const today = moment().startOf('day');
+
+        // eslint-disable-next-line
+        let whereClause: any = {
+            profileId,
+            stage: SalesStageEnum.CLOSED_DEAL,
+            createdAt: {},
+        };
+
+        switch (period) {
+            case PeriodEnum.DAILY:
+                whereClause.createdAt[Op.gte] = today.toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.WEEKLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'week').startOf('isoWeek').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.MONTHLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'month').startOf('month').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.YEARLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'year').startOf('year').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.CUSTOM:
+                if (!startDate || !endDate) {
+                    throw new Error('Custom period requires both startDate and endDate');
+                }
+                whereClause.createdAt[Op.gte] = moment(startDate).toDate();
+                whereClause.createdAt[Op.lte] = moment(endDate).toDate(); // till end of custom period
+                break;
+
+            default:
+                throw new Error('Invalid period');
+        }
+
+        const sumResult = await Sale.sum('dealsValue', {
+            where: whereClause,
         });
 
-        return leads.map(lead => ({
-            day: lead.get('day'),
-            value: lead.get('value')
-        }));
+        return sumResult || 0; // Return 0 if no deals are found
     }
-
-    private async _getDealsValueGroupedByWeek(profileId: string, startOfMonth: moment.Moment) {
-        const leads = await Sale.findAll({
-            where: {
-                profileId,
-                stage: SalesStageEnum.CLOSED_DEAL,
-                createdAt: {
-                    [Op.gte]: startOfMonth.toDate(),
-                    [Op.lte]: moment().toDate(), // till now
-                },
-            },
-            attributes: [
-                [sequelize.fn('date_trunc', 'week', sequelize.col('createdAt')), 'week'],
-                [sequelize.fn('SUM', sequelize.col('dealValue')), 'value'],
-            ],
-            group: [sequelize.fn('date_trunc', 'week', sequelize.col('createdAt'))],
-        });
-
-        return leads.map(lead => ({
-            week: lead.get('week'),
-            value: lead.get('value')
-        }));
-    }    
 }

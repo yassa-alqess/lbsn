@@ -6,7 +6,7 @@ import logger from "../../config/logger";
 import OverviewService from "./overview.service";
 import { InternalServerException } from "../../shared/exceptions";
 import { IPeriod } from "./overview.interface";
-import {  PROFILES_PATH } from "../../shared/constants";
+import { PROFILES_PATH } from "../../shared/constants";
 
 // 3rd party dependencies
 import express, { NextFunction, Request, Response } from 'express';
@@ -23,26 +23,40 @@ export default class OverviewController implements Controller {
     }
 
     private _initializeRoutes() {
-        //order is importenetm I'm validating profileId of the body before checking if it's owner of the profile
-        this.router.all(`${this.path}*`, accessTokenGuard); // protect all routes
-        this.router.post(`${this.profilesPath}/:profileId/${this.path}/leads-per-period`,  this.getLeadsPerPeriod);
-        this.router.post(`${this.path}/leads-count`, validate(PeriodDto), isOwnerOfProfileGuard, this.getDealsCount);
-        this.router.post(`${this.path}/deals-value-count`, validate(PeriodDto), isOwnerOfProfileGuard, this.getDealsValueCount);
-  
+        this.router.all(`${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/leads-per-period`, validate(PeriodDto), this.getLeadsPerPeriod);
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-per-period`, validate(PeriodDto), this.getDealsPerPeriod);
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-count`, validate(PeriodDto), this.getDealsCount);
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-value-count`, validate(PeriodDto), this.getDealsValueCount);
     }
 
     public getLeadsPerPeriod = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const {profileId} = req.params;
+            const { profileId } = req.params;
             const periodPayload: IPeriod = {
                 ...req.body,
                 profileId
             }
-            const leads = await this._overviewService.getLeadCountByPeriod(periodPayload);
+            const leads = await this._overviewService.getLeadsCountByPeriod(periodPayload);
             res.status(StatusCodes.OK).json({ leads }).end();
         } catch (error) {
             logger.error(error);
             next(new InternalServerException("Failed to get leads per period"));
+        }
+    }
+
+    public getDealsPerPeriod = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { profileId } = req.params;
+            const periodPayload: IPeriod = {
+                ...req.body,
+                profileId
+            }
+            const deals = await this._overviewService.getDealsCountByPeriod(periodPayload);
+            res.status(StatusCodes.OK).json({ deals }).end();
+        } catch (error) {
+            logger.error(error);
+            next(new InternalServerException("Failed to get deals per period"));
         }
     }
 
@@ -64,7 +78,7 @@ export default class OverviewController implements Controller {
             const periodPayload: IPeriod = {
                 ...req.body,
             }
-            const dealsValue = await this._overviewService.getDealsValueCount(periodPayload);
+            const dealsValue = await this._overviewService.getDealsValueSum(periodPayload);
             res.status(StatusCodes.OK).json({ dealsValue }).end();
         } catch (error) {
             logger.error(error);
