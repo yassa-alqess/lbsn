@@ -79,7 +79,8 @@ export default class LeadsService {
 
             return {
                 leads: leads.map(lead => lead.toJSON() as ILead),
-                total
+                total,
+                pages: Math.ceil(total / (limit || 10))
             }
             //eslint-disable-next-line
         } catch (error: any) {
