@@ -23,11 +23,11 @@ export default class OverviewController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
+        this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
         this.router.post(`${this.profilesPath}/:profileId/${this.path}/leads-per-period`, validate(PeriodDto), this.getLeadsPerPeriod);
         this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-per-period`, validate(PeriodDto), this.getDealsPerPeriod);
         this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-count`, validate(PeriodDto), this.getDealsCount);
-        this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-value-count`, validate(PeriodDto), this.getDealsValueCount);
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/deals-value-count`, validate(PeriodDto), this.getDealsValueSum);
     }
 
     public getLeadsPerPeriod = async (req: Request, res: Response, next: NextFunction) => {
@@ -73,7 +73,7 @@ export default class OverviewController implements Controller {
         }
     }
 
-    public getDealsValueCount = async (req: Request, res: Response, next: NextFunction) => {
+    public getDealsValueSum = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const periodPayload: IPeriod = {
                 ...req.body,

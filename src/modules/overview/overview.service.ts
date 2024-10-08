@@ -1,7 +1,6 @@
 import Lead from '../../shared/models/lead';
 import { PeriodEnum, SalesStageEnum } from '../../shared/enums';
 import { IPeriod } from './overview.interface';
-import logger from '../../config/logger';
 import Sale from '../../shared/models/sale';
 // 3rd party dependencies
 import sequelize, { Op } from 'sequelize';
@@ -11,11 +10,10 @@ export default class OverviewService {
     async getLeadsCountByPeriod(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
-        const lastYear = today.clone().subtract(1, 'year');
 
         switch (period) {
             case PeriodEnum.YEARLY:
-                return await this._getLeadsGroupedByMonth(profileId, lastYear);
+                return await this._getLeadsGroupedByMonth(profileId, today.clone().subtract(1, 'year'));
 
             case PeriodEnum.MONTHLY:
                 return await this._getLeadsGroupedByDay(profileId, today.clone().subtract(1, 'month').startOf('month'), today.clone().startOf('month').endOf('month'));
@@ -103,19 +101,23 @@ export default class OverviewService {
         }));
     }
 
-    async getDealsCountByPeriod(periodPayload: IPeriod) {
+    public async getDealsCountByPeriod(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
         switch (period) {
             case PeriodEnum.YEARLY:
-                return await this._getDealsGroupedByMonth(profileId, today.clone().subtract(1, 'year').startOf('year'), today.clone());
+                return await this._getDealsGroupedByMonth(profileId, today.clone().subtract(1, 'year'));
 
             case PeriodEnum.MONTHLY:
-                return await this._getDealsGroupedByDay(profileId, today.clone().subtract(1, 'month').startOf('month'), today.clone().subtract(1, 'month').endOf('month'));
+                return await this._getDealsGroupedByDay(
+                    profileId,
+                    today.clone().subtract(1, 'month').startOf('month'),
+                    today.clone().startOf('month').endOf('month')
+                );
 
             case PeriodEnum.WEEKLY:
-                return await this._getDealsGroupedByDay(profileId, today.clone().subtract(1, 'week').startOf('isoWeek'));
+                return await this._getDealsGroupedByDay(profileId, today.clone().startOf('isoWeek'), today);
 
             case PeriodEnum.DAILY:
                 return await this._getDealsGroupedByHour(profileId, today);
@@ -131,32 +133,31 @@ export default class OverviewService {
         }
     }
 
-    private async _getDealsGroupedByHour(profileId: string, startOfDay: moment.Moment) {
-        logger.debug(`starting from ${startOfDay.toDate()} till moment ${moment().toDate()}`);
-        const leads = await Sale.findAll({
+    private async _getDealsGroupedByMonth(profileId: string, startOfYear: moment.Moment) {
+        const deals = await Sale.findAll({
             where: {
                 profileId,
                 stage: SalesStageEnum.CLOSED_DEAL,
                 createdAt: {
-                    [Op.gte]: startOfDay.toDate(),
+                    [Op.gte]: startOfYear.startOf('month').toDate(),
                     [Op.lte]: moment().toDate() // till now
                 },
             },
             attributes: [
-                [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'hour'],
-                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
+                [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt')), 'month'],
+                [sequelize.fn('COUNT', sequelize.col('saleId')), 'count'],
             ],
-            group: [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt'))],
+            group: [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt'))],
         });
 
-        return leads.map(lead => ({
-            hour: lead.get('hour'),
-            count: lead.get('count')
+        return deals.map(deal => ({
+            month: deal.get('month'),
+            count: deal.get('count')
         }));
     }
 
     private async _getDealsGroupedByDay(profileId: string, startDate: moment.Moment, endDate: moment.Moment = moment()) {
-        const leads = await Sale.findAll({
+        const deals = await Sale.findAll({
             where: {
                 profileId,
                 stage: SalesStageEnum.CLOSED_DEAL,
@@ -167,37 +168,37 @@ export default class OverviewService {
             },
             attributes: [
                 [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'day'],
-                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
+                [sequelize.fn('COUNT', sequelize.col('saleId')), 'count'],
             ],
             group: [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt'))],
         });
 
-        return leads.map(lead => ({
-            day: lead.get('day'),
-            count: lead.get('count')
+        return deals.map(deal => ({
+            day: deal.get('day'),
+            count: deal.get('count')
         }));
     }
 
-    private async _getDealsGroupedByMonth(profileId: string, startOfYear: moment.Moment, endOfYear: moment.Moment) {
-        const leads = await Sale.findAll({
+    private async _getDealsGroupedByHour(profileId: string, startOfDay: moment.Moment) {
+        const deals = await Sale.findAll({
             where: {
                 profileId,
                 stage: SalesStageEnum.CLOSED_DEAL,
                 createdAt: {
-                    [Op.gte]: startOfYear.toDate(),
-                    [Op.lte]: endOfYear.toDate() // till now
+                    [Op.gte]: startOfDay.toDate(),
+                    [Op.lte]: moment().toDate() // till now
                 },
             },
             attributes: [
-                [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt')), 'month'],
-                [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
+                [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'hour'],
+                [sequelize.fn('COUNT', sequelize.col('saleId')), 'count'],
             ],
-            group: [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt'))],
+            group: [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt'))],
         });
 
-        return leads.map(lead => ({
-            month: lead.get('month'),
-            count: lead.get('count')
+        return deals.map(deal => ({
+            hour: deal.get('hour'),
+            count: deal.get('count')
         }));
     }
 
