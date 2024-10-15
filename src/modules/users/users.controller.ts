@@ -1,6 +1,6 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, USERS_PATH } from '../../shared/constants';
-import { IUserAddPayload, IUserUpdateInfoPayload, IUserUpdatePayload } from './users.interface';
+import { IUserAddPayload, IUsersGetPayload, IUserUpdateInfoPayload, IUserUpdatePayload } from './users.interface';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import UserService from './users.service';
 import { RoleEnum } from '../../shared/enums';
@@ -132,7 +132,12 @@ export default class UserController implements Controller {
 
     public getUsers = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const users = await this._userService.getUsers();
+            const { limit = 10, page = 1 } = req.query;
+            const usersGetPayload: IUsersGetPayload = {
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
+            }
+            const users = await this._userService.getUsers(usersGetPayload);
             res.status(StatusCodes.OK).json(users).end();
 
             //eslint-disable-next-line

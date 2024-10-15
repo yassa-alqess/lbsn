@@ -1,8 +1,8 @@
-import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetResponse, IUserUpdatePayload } from "./users.interface";
+import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetPayload, IUsersGetResponse, IUserUpdatePayload } from "./users.interface";
 import User from "../../shared/models/user";
 import { readXlsx } from "../../shared/utils";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
-import { IsLockedEnum, IsVerifiedEnum } from "../../shared/enums";
+import { IsLockedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
@@ -30,27 +30,6 @@ export default class UserService {
                 throw new AlreadyExistsException('User', 'email', userPayload.companyEmail);
             }
 
-            // Validate and get the roles from the database
-            let roles;
-            try {
-                roles = await Role.findAll({
-                    where: {
-                        name: {
-                            [Op.in]: userPayload.roles,
-                        },
-                    }, transaction,
-                });
-            } //eslint-disable-next-line
-            catch (error: any) {
-                logger.error(`Couldn't Fetch Roles, ${error.message}`);
-                throw new Error(`Couldn't Fetch Roles`);
-            }
-
-            if (roles.length !== userPayload.roles.length) {
-                logger.error('One or more roles are invalid');
-                throw new Error('One or more roles are invalid');
-            }
-
             // Set default values for isVerified and isLocked if not provided
             const { isVerified, isLocked } = userPayload;
             if (!isVerified) userPayload.isVerified = IsVerifiedEnum.PENDING;
@@ -64,22 +43,19 @@ export default class UserService {
                 logger.error(`Couldn't Hash The Password, ${err.message}`);
                 throw new Error(`Couldn't Hash The Password`);
             }
-            // Create the user
+
+            // Create the user & assign role USER to it
             const newUser = await User.create({ ...userPayload, isVerified, isLocked, password: hashedPassword }, { transaction });
 
-            // Associate user with roles
-            await newUser.$set('roles', roles, { transaction });
+            const role = await Role.findOne({ where: { name: RoleEnum.USER } });
+            if (!role) {
+                throw new NotFoundException('Role', 'name', RoleEnum.USER);
+            }
+            await newUser.$add('roles', role, { transaction });
 
             // Commit the transaction
             await transaction.commit();
 
-            // Fetch roles to return
-            const userRoles = await newUser.$get('roles');
-
-            // return {
-            //     ...newUser.toJSON(),
-            //     roles: userRoles.map((role) => role.name),
-            // };
             return {
                 userId: newUser.userId,
                 username: newUser.username,
@@ -91,7 +67,6 @@ export default class UserService {
                 companyEmail: newUser.companyEmail,
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
-                roles: userRoles.map((role) => role.name),
                 image: newUser.image ? `${USER_IMAGES_PATH}/${newUser.image}` : '',
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
@@ -105,9 +80,8 @@ export default class UserService {
     }
 
     public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
-        const { userId, companyTaxId, companyEmail, password, roles: newRoles, } = userPayload;
+        const { userId, companyTaxId, companyEmail, password } = userPayload;
         let user = await User.findByPk(userId, {
-            include: [{ model: Role, as: 'roles' }],
         });
         if (!user) {
             throw new NotFoundException('User', 'userId', userId);
@@ -167,23 +141,8 @@ export default class UserService {
                 user = await user.update(userPayload, { transaction });
             }
 
-            // Update roles if provided
-            if (newRoles) {
-                const roles = await Role.findAll({
-                    where: { name: { [Op.in]: newRoles } },
-                    transaction,
-                });
-
-                if (roles.length !== newRoles.length) {
-                    throw new Error('One or more roles are invalid');
-                }
-
-                await user.$set('roles', roles, { transaction });
-            }
-
             await transaction.commit();
 
-            const updatedRoles = await user.$get('roles');
 
             return {
                 userId: user.userId,
@@ -196,7 +155,6 @@ export default class UserService {
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
-                roles: updatedRoles.map((role) => role.name),
                 image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
@@ -316,9 +274,7 @@ export default class UserService {
     }
 
     public async getUser(userId: string): Promise<IUserResponse | undefined> {
-        const user = await User.findByPk(userId, {
-            include: [{ model: Role, as: 'roles' }], // Include roles
-        });
+        const user = await User.findByPk(userId);
         if (!user) {
             throw new NotFoundException('User', 'userId', userId);
         }
@@ -333,7 +289,6 @@ export default class UserService {
             companyEmail: user.companyEmail,
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
-            roles: user.roles.map((role) => role.name), // extract role names
             image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
@@ -343,7 +298,6 @@ export default class UserService {
     public async getUserByEmail(email: string): Promise<IUserResponse | undefined> {
         const user = await User.findOne({
             where: { companyEmail: email },
-            include: [{ model: Role, as: 'roles' }], // Include roles
         });
         if (!user) {
             throw new NotFoundException('User', 'email', email);
@@ -359,16 +313,24 @@ export default class UserService {
             companyEmail: user.companyEmail,
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
-            roles: user.roles.map((role) => role.name), // extract role names
             image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
     }
 
-    public async getUsers(): Promise<IUsersGetResponse | undefined> {
-        const users = await User.findAll({
-            include: [{ model: Role, as: 'roles' }], // Include roles
+    public async getUsers(usersGetPayload: IUsersGetPayload): Promise<IUsersGetResponse | undefined> {
+        const { limit, offset } = usersGetPayload;
+        const { rows: users, count } = await User.findAndCountAll({
+            where: {
+                isLocked: IsLockedEnum.UNLOCKED,
+                roles: {
+                    [Op.contains]: [RoleEnum.USER]
+                }
+            },
+            limit,
+            offset,
+            order: [['createdAt', 'DESC']]
         });
         return {
             users: users.map(user => ({
@@ -382,11 +344,12 @@ export default class UserService {
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
-                roles: user.roles.map((role) => role.name), // extract role names
                 image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked,
             })),
+            total: count,
+            pages: Math.ceil(count / (limit || 10)),
         };
     }
 
