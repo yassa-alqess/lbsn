@@ -3,23 +3,36 @@ import Task from "../../shared/models/task";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TaskStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
+import { TASKS_FILES_PATH } from "../../shared/constants";
+import ProfileService from "../profiles/profiles.service";
+
+// 3rd party dependencies
+import path from 'path';
+import fs from 'fs';
 
 export default class TaskService {
+    private _profileService = new ProfileService();
     public async addTask(taskPayload: ITasksAddPayload): Promise<ITask> {
         try {
             const task = await Task.findOne({ where: { title: taskPayload.title, profileId: taskPayload.profileId } });
             if (task) {
                 throw new AlreadyExistsException("Task", "title", taskPayload.title);
             }
+
+            const profile = await this._profileService.getProfile(taskPayload.profileId);
+            if (!profile) {
+                throw new NotFoundException("Profile", "profileId", taskPayload.profileId);
+            }
             const newTask = await Task.create({ ...taskPayload, status: TaskStatusEnum.PENDING });
             const newTaskJson = newTask.toJSON() as ITask;
             return {
                 ...newTaskJson,
+                documentUrl: newTaskJson.documentUrl ? `${TASKS_FILES_PATH}/${newTaskJson.documentUrl}` : ''
             };
         } //eslint-disable-next-line
         catch (err: any) {
             logger.error(`Error adding task: ${err.message}`);
-            if (err instanceof AlreadyExistsException) {
+            if (err instanceof AlreadyExistsException || err instanceof NotFoundException) {
                 throw err;
             }
             throw new Error(`Error adding task: ${err.message}`);
@@ -27,16 +40,23 @@ export default class TaskService {
     }
 
     public async getTasks(payload: ITasksGetPayload): Promise<ITasksGetRespones | undefined> {
-        const tasks = await Task.findAll({
+        const { limit, offset } = payload;
+        const { rows: tasks, count } = await Task.findAndCountAll({
             where: {
                 profileId: payload.profileId,
                 ...(payload.status && { status: payload.status }),
-            }
+            },
+            limit,
+            offset,
         });
+
         return {
             tasks: tasks.map(task => ({
-                ...task.toJSON() as ITask
-            }))
+                ...task.toJSON() as ITask,
+                documentUrl: task.documentUrl ? `${TASKS_FILES_PATH}/${task.documentUrl}` : ''
+            })),
+            total: count,
+            pages: Math.ceil(count / (limit || 10))
         };
     }
 
@@ -48,11 +68,24 @@ export default class TaskService {
                 throw new NotFoundException('Task', 'taskId', taskId);
             }
 
+            // Delete old document if new document is uploaded
+            const oldDocumentUrl = task.documentUrl;
+            const newDocumentUrl = taskPayload.documentUrl;
+            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+                this._deleteOldDocument(oldDocumentUrl);
+            }
+
+            // if no new document is uploaded, keep the old document
+            if (!newDocumentUrl) {
+                delete taskPayload.documentUrl;
+            }
+
             const newTask = await task.update({ ...taskPayload });
 
             const newTaskJson = newTask.toJSON() as ITask;
             return {
                 ...newTaskJson,
+                documentUrl: newTaskJson.documentUrl ? `${TASKS_FILES_PATH}/${newTaskJson.documentUrl}` : ''
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -74,6 +107,7 @@ export default class TaskService {
         const taskJson = task.toJSON() as ITask;
         return {
             ...taskJson,
+            documentUrl: taskJson.documentUrl ? `${TASKS_FILES_PATH}/${taskJson.documentUrl}` : ''
         };
     }
 
@@ -93,5 +127,16 @@ export default class TaskService {
             }
             throw new Error(`Error deleting task: ${error.message}`);
         }
+    }
+
+    private _deleteOldDocument(documentUrl: string): void {
+        const filePath = path.join(TASKS_FILES_PATH, documentUrl);
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
+            } else {
+                logger.info(`Old image file deleted: ${filePath}`);
+            }
+        });
     }
 }

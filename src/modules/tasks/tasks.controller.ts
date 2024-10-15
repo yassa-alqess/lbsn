@@ -9,6 +9,7 @@ import { RoleEnum, TaskStatusEnum } from '../../shared/enums';
 import { AlreadyExistsException, InternalServerException, InvalidEnumValueException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import logger from '../../config/logger';
 import { CreateTaskDto, UpdateTaskDto } from './tasks.dto';
+import upload from '../../config/storage/multer.config';
 
 // 3rd party dependencies
 import express, { Request, Response, NextFunction } from 'express';
@@ -30,15 +31,17 @@ export default class TaskController implements Controller {
 
         // admin routes
         this.router.post(`/${this.path}*`, accessTokenGuard);
-        this.router.post(`/${this.path}`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateTaskDto), this.addTask);
-        this.router.patch(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateTaskDto), this.updateTask);
+        this.router.post(`/${this.path}`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), upload(`${this.path}`)!.single("file"), validate(CreateTaskDto), this.addTask);
+        this.router.patch(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), upload(`${this.path}`)!.single("file"), validate(UpdateTaskDto), this.updateTask);
         this.router.delete(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
     }
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const path = req.file ? req.file.filename : '';
             const taskPayload: ITasksAddPayload = {
                 ...req.body,
+                documentUrl: path
             }
             const task = await this._taskService.addTask(taskPayload);
             res.status(StatusCodes.CREATED).json(task).end();
@@ -62,13 +65,15 @@ export default class TaskController implements Controller {
             if (!profileId) {
                 throw new ParamRequiredException('profileId');
             }
-            const { status } = req.query;
+            const { status, limit = 10, page = 1 } = req.query;
             if (status && !Object.values(TaskStatusEnum).includes(status as TaskStatusEnum)) {
                 throw new InvalidEnumValueException('TaskStatus');
             }
             const payload: ITasksGetPayload = {
                 profileId: profileId as string,
-                status: status as TaskStatusEnum
+                status: status as TaskStatusEnum,
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             };
             const tasks = await this._taskService.getTasks(payload);
             res.status(StatusCodes.OK).json(tasks).end();
@@ -111,9 +116,12 @@ export default class TaskController implements Controller {
             const { taskId } = req.params;
             if (!taskId) throw new ParamRequiredException('taskId');
 
+            const path = req.file ? req.file.filename : '';
             const taskUpdatePayload: ITaskUpdatePayload = {
                 ...req.body,
-                taskId
+                taskId,
+                documentUrl: path
+
             }
             const task = await this._taskService.updateTask(taskUpdatePayload);
             res.status(StatusCodes.OK).json(task).end();
