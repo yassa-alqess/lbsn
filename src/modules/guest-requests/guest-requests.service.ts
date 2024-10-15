@@ -273,7 +273,6 @@ export default class GuestRequestsService {
             try {
                 const profilePayload: IProfileAddPayload = {
                     userId: approvalResult?.userId as string,
-                    name: requestData.name,
                     marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
                     sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`,
                     sheetName: requestData.name,

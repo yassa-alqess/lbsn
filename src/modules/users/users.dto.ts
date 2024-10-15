@@ -1,4 +1,4 @@
-import { IsLockedEnum, IsVerifiedEnum, RoleEnum } from '../../shared/enums'
+import { IsLockedEnum, IsVerifiedEnum } from '../../shared/enums'
 import Joi from 'joi'
 import _ from 'lodash'
 
@@ -19,10 +19,6 @@ export const CreateUserDto = Joi.object({
     isLocked: Joi.string()
         .valid(..._.values(IsLockedEnum))
         .optional(),
-    roles: Joi.array()
-        .items(Joi.string().valid(..._.values(RoleEnum)))
-        .min(1)
-        .required()
 })
 
 export const UpdateUserDto = Joi.object({
@@ -42,10 +38,6 @@ export const UpdateUserDto = Joi.object({
     isLocked: Joi.string()
         .valid(..._.values(IsLockedEnum))
         .optional(),
-    roles: Joi.array()
-        .items(Joi.string().valid(..._.values(RoleEnum)))
-        .min(1)
-        .optional()
 })
 
 export const UpdateUserInfoDto = Joi.object({
