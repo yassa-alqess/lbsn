@@ -38,7 +38,7 @@ export default class LeadsService {
                         const sale = await Sale.findByPk(_id as string);
 
                         // Create a new lead if it does not exist and it's not a sale
-                        if (!sale) await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.PENDING_VISIT, profileId: profile.profileId });
+                        if (!sale) await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.PENDING_VISIT, profileId: profile.profileId, createdAt: new Date(record.Timestamp).toISOString() });
                     }
                 } catch (error) {
                     logger.error('Error processing lead:', error);
@@ -78,7 +78,14 @@ export default class LeadsService {
             });
 
             return {
-                leads: leads.map(lead => lead.toJSON() as ILead),
+                leads: leads.map(lead => ({
+                    leadId: lead.leadId,
+                    status: lead.status,
+                    otherType: lead.otherType,
+                    record: lead.record,
+                    createdAt: lead.createdAt,
+                    updatedAt: lead.updatedAt
+                })),
                 total,
                 pages: Math.ceil(total / (limit || 10))
             }
