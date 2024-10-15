@@ -29,13 +29,22 @@ export default class SalesService {
                     profileId,
                     ...(stage && { stage })
                 },
-                ...(limit !== undefined && { limit }),  // Apply limit only if provided
-                ...(offset !== undefined && { offset }), // Apply offset only if provided
+                ...(limit !== undefined && { limit }),
+                ...(offset !== undefined && { offset }),
                 order: [['createdAt', 'DESC']]
             });
 
             return {
-                sales: sales.map(sale => sale.toJSON() as ISale),
+                sales: sales.map(sale => ({
+                    saleId: sale.saleId,
+                    stage: sale.stage,
+                    dealValue: sale.dealValue,
+                    dealCurrency: sale.dealCurrency,
+                    comment: sale.comment,
+                    record: sale.record,
+                    createdAt: sale.createdAt,
+                    updatedAt: sale.updatedAt
+                })),
                 total,
                 pages: Math.ceil(total / (limit || 10))
             }

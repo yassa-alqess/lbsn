@@ -277,6 +277,7 @@ export default class GuestRequestsService {
                     marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
                     sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`,
                     sheetName: requestData.name,
+                    serviceId: requestData.serviceId,
                 }
                 await this._userProfilesService.addUserProfile(profilePayload, transaction);
                 //eslint-disable-next-line

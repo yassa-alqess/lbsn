@@ -73,14 +73,16 @@ export default class TicketController implements Controller {
                 throw new ParamRequiredException('profileId');
             }
 
-            const { status } = req.query;
+            const { status, limit = 10, page = 1 } = req.query;
             if (status && !Object.values(TicketStatusEnum).includes(status as TicketStatusEnum)) {
                 throw new InvalidEnumValueException('TicketStatus');
             }
 
             const payload: ITicketsGetPayload = {
                 profileId: profileId as string,
-                status: status as TicketStatusEnum
+                status: status as TicketStatusEnum,
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
             }
             const tickets = await this._ticketService.getTickets(payload);
             res.status(StatusCodes.OK).json(tickets).end();

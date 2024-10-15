@@ -34,9 +34,9 @@ export default class TaskSubmissionController implements Controller {
 
         // user routes
         this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
-        this.router.post(`${this.profilesPath}/:profileId/${this.path}/:taskId/submission`, upload(this.path)!.single("file"),
+        this.router.post(`${this.profilesPath}/:profileId/${this.path}/:taskId/submission`, upload(`${this.path}/submissions`)!.single("file"),
             validate(CreateTaskSubmissionDto), this.addTaskSubmission);
-        this.router.patch(`${this.profilesPath}/:profileId/${this.path}/:taskId/submission/`, upload(this.path)!.single("file"),
+        this.router.patch(`${this.profilesPath}/:profileId/${this.path}/:taskId/submission/`, upload(`${this.path}/submissions`)!.single("file"),
             validate(UpdateTaskSubmissionDto), this.updateTaskSubmission);
         this.router.get(`${this.profilesPath}/:profileId/${this.path}/:taskId/submission/`, this.getTaskSubmissionByTaskId);
         this.router.delete(`${this.profilesPath}/:profileId/${this.path}/:taskId/submission`, this.deleteTaskSubmission);

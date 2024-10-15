@@ -98,12 +98,12 @@ export default class SheetsService {
                 const record: { [key: string]: any } = {};
 
                 // Add the combined value to the record
-                if (timestampIndex >= 0 && phoneIndex >= 0) {
-                    const timestamp = row[timestampIndex] || 'No Timestamp'; // Provide default value
-                    const phone = row[phoneIndex] || 'No Phone'; // Provide default value
+                if (timestampIndex >= 0 && phoneIndex >= 0 && row[timestampIndex] && row[phoneIndex]) {
+                    const timestamp = row[timestampIndex] || 'No Timestamp';
+                    const phone = row[phoneIndex]
                     record['_id'] = `${timestamp}-${phone}`;
                 } else {
-                    record['_id'] = 'N/A'; // Handle the case where Timestamp or Phone is missing
+                    continue; // Skip the row if either column is missing
                 }
 
                 // Add the existing columns

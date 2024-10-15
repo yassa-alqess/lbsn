@@ -4,19 +4,26 @@ import { AlreadyExistsException, NotFoundException } from "../../shared/exceptio
 import { TicketStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
 import { TICKETS_FILES_PATH } from "../../shared/constants";
-
+import ProfileService from "../profiles/profiles.service";
 
 // 3rd party dependencies
 import path from 'path';
 import fs from 'fs';
 
 export default class TicketService {
+    private _profileService = new ProfileService();
     public async addTicket(ticketPayload: ITicketsAddPayload): Promise<ITicket> {
         try {
             const ticket = await Ticket.findOne({ where: { title: ticketPayload.title, profileId: ticketPayload.profileId } });
             if (ticket) {
                 throw new AlreadyExistsException("Ticket", "title", ticketPayload.title);
             }
+
+            const profile = await this._profileService.getProfile(ticketPayload.profileId);
+            if (!profile) {
+                throw new NotFoundException("Profile", "profileId", ticketPayload.profileId);
+            }
+
             const newTicket = await Ticket.create({ ...ticketPayload, status: TicketStatusEnum.PENDING });
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
@@ -26,7 +33,7 @@ export default class TicketService {
             //eslint-disable-next-line
         } catch (err: any) {
             logger.error(`Error adding ticket: ${err.message}`);
-            if (err instanceof AlreadyExistsException) {
+            if (err instanceof AlreadyExistsException || err instanceof NotFoundException) {
                 throw err;
             }
             throw new Error(`Error adding ticket: ${err.message}`);
@@ -34,18 +41,22 @@ export default class TicketService {
     }
 
     public async getTickets(payload: ITicketsGetPayload): Promise<ITicketsGetResponse | undefined> {
-        const tickets = await Ticket.findAll({
+        const { limit, offset } = payload;
+        const { rows: tickets, count } = await Ticket.findAndCountAll({
             where: {
                 profileId: payload.profileId,
                 ...(payload.status && { status: payload.status }),
-            }
+            },
+            limit,
+            offset,
         });
         return {
             tickets: tickets.map(ticket => ({
                 ...ticket.toJSON(),
                 documentUrl: ticket.documentUrl ? `${TICKETS_FILES_PATH}/${ticket.documentUrl}` : ''
-
-            }))
+            })),
+            total: count,
+            pages: Math.ceil(count / (limit || 10))
         };
     }
 

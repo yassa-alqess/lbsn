@@ -9,4 +9,5 @@ export const updateProfileDto = Joi.object({
     .optional(),
   sheetUrl: Joi.string().optional(),
   sheetName: Joi.string().optional(),
+  serviceId: Joi.string().optional(),
 });

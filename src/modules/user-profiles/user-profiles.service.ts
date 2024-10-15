@@ -27,9 +27,9 @@ export default class UserProfilesService {
             throw new NotFoundException('User', 'userId', profilePayload.userId);
         }
 
-        const service = await this._serviceService.getServiceByName(profilePayload.name);
+        const service = await this._serviceService.getService(profilePayload.serviceId as string);
         if (!service) {
-            throw new NotFoundException('Service', 'name', profilePayload.name);
+            throw new NotFoundException('Service', 'serviceId', profilePayload.serviceId as string);
         }
 
         try {

@@ -3,6 +3,7 @@ import Ticket from './ticket';
 import Task from './task';
 import Lead from './lead';
 import User from './user';
+import Service from './service';
 import { MarketingBudgetEnum } from '../enums';
 
 //3rd party dependencies
@@ -53,6 +54,15 @@ class Profile extends Model {
 
     @HasMany(() => Lead)
     declare leads: Lead[];
+
+    @ForeignKey(() => Service)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare serviceId: string;
+
+    @BelongsTo(() => Service, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare service: Service;
 
     @ForeignKey(() => User)
     @Column({

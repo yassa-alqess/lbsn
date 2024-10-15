@@ -3,11 +3,14 @@ import { TicketStatusEnum } from "../../shared/enums";
 export interface ITicketsGetPayload {
     profileId: string;
     status?: TicketStatusEnum;
+    limit: number;
+    offset: number;
 }
 
 export interface ITicketsGetResponse {
     tickets: ITicket[];
-
+    total: number;
+    pages: number;
 }
 
 export interface ITicket {

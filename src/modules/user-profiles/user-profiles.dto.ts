@@ -9,4 +9,5 @@ export const createProfileDto = Joi.object({
         .required(),
     sheetUrl: Joi.string().required(),
     sheetName: Joi.string().required(),
+    serviceId: Joi.string().required(),
 });

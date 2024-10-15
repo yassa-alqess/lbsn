@@ -27,6 +27,11 @@ class Task extends Model {
   declare comment: string;
 
   @Column({
+    type: DataType.TEXT,
+  })
+  declare documentUrl: string;
+
+  @Column({
     type: DataType.ENUM({
       values: statueses
     }),
