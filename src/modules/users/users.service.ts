@@ -322,11 +322,9 @@ export default class UserService {
     public async getUsers(usersGetPayload: IUsersGetPayload): Promise<IUsersGetResponse | undefined> {
         const { limit, offset } = usersGetPayload;
         const { rows: users, count } = await User.findAndCountAll({
+            include: [{ model: Role, as: 'roles', where: { name: RoleEnum.USER } }],
             where: {
-                isLocked: IsLockedEnum.UNLOCKED,
-                roles: {
-                    [Op.contains]: [RoleEnum.USER]
-                }
+                isLocked: IsLockedEnum.UNLOCKED
             },
             limit,
             offset,
