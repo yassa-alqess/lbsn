@@ -2,6 +2,7 @@ import { Table, Model, Column, DataType, BelongsToMany, HasMany } from 'sequeliz
 import GuestRequest from './guest-request';
 import Guest from './guest';
 import Appointment from './appointment';
+import Profile from './profile';
 
 
 @Table({ schema: 'public', timestamps: true })
@@ -18,6 +19,9 @@ class Service extends Model {
         unique: true,
     })
     declare name: string;
+
+    @HasMany(() => Profile)
+    declare profiles: Profile[];
 
     @HasMany(() => Appointment)
     declare appointments: Appointment[];
