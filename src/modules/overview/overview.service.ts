@@ -2,6 +2,7 @@ import Lead from '../../shared/models/lead';
 import { PeriodEnum, SalesStageEnum } from '../../shared/enums';
 import { IPeriod } from './overview.interface';
 import Sale from '../../shared/models/sale';
+
 // 3rd party dependencies
 import sequelize, { Op } from 'sequelize';
 import moment from 'moment';
@@ -251,11 +252,71 @@ export default class OverviewService {
                 throw new Error('Invalid period');
         }
 
-        const countResult = await Sale.count({
-            where: whereClause,
-        });
+        try {
+            const countResult = await Sale.count({
+                where: whereClause,
+            });
+            return countResult;
 
-        return countResult;
+            //eslint-disable-next-line
+        } catch (error: any) {
+            throw new Error(`Failed to get deals count: ${error.message}`);
+        }
+    }
+
+    public async getLeadsCount(periodPayload: IPeriod) {
+        const { profileId, period, start: startDate, end: endDate } = periodPayload;
+        const today = moment().startOf('day');
+
+        // eslint-disable-next-line
+        const whereClause: any = {
+            profileId,
+            createdAt: {},
+        };
+
+        switch (period) {
+            case PeriodEnum.DAILY:
+                whereClause.createdAt[Op.gte] = today.toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.WEEKLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'week').startOf('isoWeek').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.MONTHLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'month').startOf('month').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.YEARLY:
+                whereClause.createdAt[Op.gte] = today.clone().subtract(1, 'year').startOf('year').toDate();
+                whereClause.createdAt[Op.lte] = moment().toDate(); // till now
+                break;
+
+            case PeriodEnum.CUSTOM:
+                if (!startDate || !endDate) {
+                    throw new Error('Custom period requires both startDate and endDate');
+                }
+                whereClause.createdAt[Op.gte] = moment(startDate).toDate();
+                whereClause.createdAt[Op.lte] = moment(endDate).toDate(); // till end of custom period
+                break;
+
+            default:
+                throw new Error('Invalid period');
+        }
+
+        try {
+            const countResult = await Lead.count({
+                where: whereClause,
+            });
+            return countResult;
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            throw new Error(`Failed to get leads count: ${error.message}`);
+        }
     }
 
     public async getDealsValueSum(periodPayload: IPeriod) {
@@ -302,10 +363,32 @@ export default class OverviewService {
                 throw new Error('Invalid period');
         }
 
-        const sumResult = await Sale.sum('dealsValue', {
-            where: whereClause,
-        });
+        try {
+            const sumResult = await Sale.sum('dealValue', {
+                where: whereClause,
+            });
+            return sumResult || 0; // Return 0 if no deals are found
 
-        return sumResult || 0; // Return 0 if no deals are found
+            //eslint-disable-next-line
+        } catch (error: any) {
+            throw new Error(`Failed to get deals value sum: ${error.message}`);
+        }
+    }
+
+    public async getConversionRate(periodPayload: IPeriod) {
+        try {
+
+            const leads = await this.getLeadsCount(periodPayload);
+            const deals = await this.getDealsCount(periodPayload);
+
+            if (leads === 0) {
+                return 0;
+            }
+            return (deals / leads) * 100;
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            throw new Error(`Failed to get conversion rate: ${error.message}`);
+        }
     }
 }
