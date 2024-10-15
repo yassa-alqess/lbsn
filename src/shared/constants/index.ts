@@ -38,6 +38,7 @@ export const ROLES_PATH = "roles"
 export const WARM_LEADS_PATH = "warm-leads"
 export const CONTACT_US_PATH = "contact-us"
 export const OVERVIEW_PATH = "overview"
+export const DOWNLOAD_PATH = "download"
 
 
 export const DOMAIN = process.env.DOMAIN;
@@ -63,5 +64,6 @@ export const LEAD_FETCH_INTERVAL = '1m'
 
 export const FILE_URL = "api/uploads"
 export const USER_IMAGES_PATH = `${FILE_URL}/users/images`
-export const TASK_SUBMISSIONS_FILES_PATH = `${FILE_URL}/tasks`
+export const TASKS_FILES_PATH = `${FILE_URL}/tasks`
+export const TASK_SUBMISSIONS_FILES_PATH = `${FILE_URL}/tasks/submissions`
 export const TICKETS_FILES_PATH = `${FILE_URL}/tickets`
