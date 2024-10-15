@@ -181,7 +181,6 @@ export default class GuestService {
                 companyAddress: guest.companyAddress,
                 password: hashedPassword,
                 isVerified: IsVerifiedEnum.PENDING,
-                roles: [RoleEnum.USER],
             };
 
             const newUser = await User.create({ ...userPayload }, { transaction });
