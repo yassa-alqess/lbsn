@@ -21,11 +21,6 @@ class Profile extends Model {
     declare profileId: string;
 
     @Column({
-        type: DataType.STRING(200),
-    })
-    declare name: string;
-
-    @Column({
         type: DataType.TEXT,
     })
     declare sheetUrl: string;
