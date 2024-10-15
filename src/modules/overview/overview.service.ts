@@ -48,6 +48,7 @@ export default class OverviewService {
                 [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt')), 'month'],
                 [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
             ],
+            order: [[sequelize.fn('date_trunc', 'month', sequelize.col('createdAt')), 'ASC']],
             group: [sequelize.fn('date_trunc', 'month', sequelize.col('createdAt'))],
         });
 
@@ -70,6 +71,7 @@ export default class OverviewService {
                 [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'day'],
                 [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
             ],
+            order: [[sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'ASC']],
             group: [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt'))],
         });
 
@@ -92,6 +94,7 @@ export default class OverviewService {
                 [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'hour'],
                 [sequelize.fn('COUNT', sequelize.col('leadId')), 'count'],
             ],
+            order: [[sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'ASC']],
             group: [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt'))],
         });
 
@@ -170,6 +173,7 @@ export default class OverviewService {
                 [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'day'],
                 [sequelize.fn('COUNT', sequelize.col('saleId')), 'count'],
             ],
+            order: [[sequelize.fn('date_trunc', 'day', sequelize.col('createdAt')), 'ASC']],
             group: [sequelize.fn('date_trunc', 'day', sequelize.col('createdAt'))],
         });
 
@@ -193,6 +197,7 @@ export default class OverviewService {
                 [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'hour'],
                 [sequelize.fn('COUNT', sequelize.col('saleId')), 'count'],
             ],
+            order: [[sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt')), 'ASC']],
             group: [sequelize.fn('date_trunc', 'hour', sequelize.col('createdAt'))],
         });
 
