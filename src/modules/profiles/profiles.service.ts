@@ -15,15 +15,17 @@ export default class ProfileService {
                 throw new NotFoundException('Profile', 'profileId', profileId);
             }
 
-            const service = await this._servicesService.getServiceByName(profilePayload.name as string);
+            const service = await this._servicesService.getService(profilePayload.serviceId as string);
             if (!service) {
-                throw new NotFoundException('Serice', 'name', service!.name);
+                throw new NotFoundException('Service', 'serviceId', profilePayload.serviceId as string);
             }
+
             const newProfile = await profile.update({ ...profilePayload });
             const newProfileJSON = newProfile.toJSON() as IProfileResponse;
             return {
                 ...newProfileJSON,
             };
+
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error updating profile: ${error.message}`);
