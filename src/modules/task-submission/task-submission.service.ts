@@ -48,7 +48,7 @@ export default class TaskSubmissionService {
                 createdAt: newTaskSubmission.createdAt,
                 approvedAt: newTaskSubmission.approvedAt,
                 documentUrl: newTaskSubmission.documentUrl ? newTaskSubmission.documentUrl : '',
-                size: await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, newTaskSubmission.documentUrl))
+                size: newTaskSubmission.documentUrl ? await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, newTaskSubmission.documentUrl)) : '0KB'
             };
 
             //eslint-disable-next-line
@@ -92,7 +92,7 @@ export default class TaskSubmissionService {
                 createdAt: newTaskSubmission.createdAt,
                 approvedAt: newTaskSubmission.approvedAt,
                 documentUrl: newTaskSubmission.documentUrl ? newTaskSubmission.documentUrl : '',
-                size: await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, newTaskSubmission.documentUrl))
+                size: newTaskSubmission.documentUrl ? await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, newTaskSubmission.documentUrl)) : '0KB'
             };
         } //eslint-disable-next-line
         catch (error: any) {
@@ -123,7 +123,7 @@ export default class TaskSubmissionService {
             createdAt: taskSubmission.createdAt,
             approvedAt: taskSubmission.approvedAt,
             documentUrl: taskSubmission.documentUrl ? taskSubmission.documentUrl : '',
-            size: await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, taskSubmission.documentUrl))
+            size: taskSubmission.documentUrl ? await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, taskSubmission.documentUrl)) : '0KB'
         };
     }
 

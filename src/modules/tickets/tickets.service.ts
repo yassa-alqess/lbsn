@@ -29,7 +29,7 @@ export default class TicketService {
             return {
                 ...newTicketJson,
                 documentUrl: newTicketJson.documentUrl ? newTicketJson.documentUrl : '',
-                size: await getFileSizeAsync(path.join(TICKETS_FILES_PATH, newTicketJson.documentUrl))
+                size: newTicketJson.documentUrl ? await getFileSizeAsync(path.join(TICKETS_FILES_PATH, newTicketJson.documentUrl)) : '0KB'
             };
             //eslint-disable-next-line
         } catch (err: any) {
@@ -90,7 +90,7 @@ export default class TicketService {
         return {
             ...ticketJson,
             documentUrl: ticketJson.documentUrl ? ticketJson.documentUrl : '',
-            size: await getFileSizeAsync(path.join(TICKETS_FILES_PATH, ticketJson.documentUrl))
+            size: ticketJson.documentUrl ? await getFileSizeAsync(path.join(TICKETS_FILES_PATH, ticketJson.documentUrl)) : '0KB'
         };
     }
 
@@ -119,7 +119,7 @@ export default class TicketService {
             return {
                 ...newTicketJson,
                 documentUrl: newTicketJson.documentUrl ? newTicketJson.documentUrl : '',
-                size: await getFileSizeAsync(path.join(TICKETS_FILES_PATH, newTicketJson.documentUrl))
+                size: newTicketJson.documentUrl ? await getFileSizeAsync(path.join(TICKETS_FILES_PATH, newTicketJson.documentUrl)) : '0KB'
             };
             //eslint-disable-next-line
         } catch (error: any) {

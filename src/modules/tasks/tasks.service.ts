@@ -28,7 +28,7 @@ export default class TaskService {
             return {
                 ...newTaskJson,
                 documentUrl: newTaskJson.documentUrl ? newTaskJson.documentUrl : '',
-                size: await getFileSizeAsync(path.join(TASKS_FILES_PATH, newTaskJson.documentUrl))
+                size: newTaskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, newTaskJson.documentUrl)) : '0KB'
             };
         } //eslint-disable-next-line
         catch (err: any) {
@@ -87,7 +87,7 @@ export default class TaskService {
             return {
                 ...newTaskJson,
                 documentUrl: newTaskJson.documentUrl ? newTaskJson.documentUrl : '',
-                size: await getFileSizeAsync(path.join(TASKS_FILES_PATH, newTaskJson.documentUrl))
+                size: newTaskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, newTaskJson.documentUrl)) : '0KB'
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -110,7 +110,7 @@ export default class TaskService {
         return {
             ...taskJson,
             documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
-            size: await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl))
+            size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB'
         };
     }
 
