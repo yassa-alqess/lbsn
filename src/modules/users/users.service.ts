@@ -275,7 +275,9 @@ export default class UserService {
     }
 
     public async getUser(userId: string): Promise<IUserResponse | undefined> {
-        const user = await User.findByPk(userId);
+        const user = await User.findByPk(userId, {
+            include: [{ model: Role, as: 'roles' }],
+        });
         if (!user) {
             throw new NotFoundException('User', 'userId', userId);
         }
@@ -292,6 +294,7 @@ export default class UserService {
             companyAddress: user.companyAddress,
             image: user.image ? user.image : '',
             size: user.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)) : '0KB',
+            roles: user.roles.map((role) => role.name),
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
