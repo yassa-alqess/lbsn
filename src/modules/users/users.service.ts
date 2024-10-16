@@ -67,7 +67,7 @@ export default class UserService {
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
                 image: newUser.image ? newUser.image : '',
-                size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, newUser.image)),
+                size: newUser.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, newUser.image)) : '0KB',
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
@@ -156,7 +156,7 @@ export default class UserService {
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
                 image: user.image ? user.image : '',
-                size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)),
+                size: user.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)) : '0KB',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
             };
@@ -291,7 +291,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             image: user.image ? user.image : '',
-            size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)),
+            size: user.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)) : '0KB',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -316,7 +316,7 @@ export default class UserService {
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
             image: user.image ? user.image : '',
-            size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)),
+            size: user.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)) : '0KB',
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
