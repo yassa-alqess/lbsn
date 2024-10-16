@@ -1,3 +1,5 @@
+import path from "path"
+
 // database errors
 export const DUPLICATE_ERR = "23505"
 export const INVALID_UUID = "22P02"
@@ -62,7 +64,7 @@ export const MEETING_CLIENT_SECRET = process.env.MEETING_CLIENT_SECRET || ""
 export const LEAD_FETCH_INTERVAL = '1m'
 
 
-export const FILE_URL = "api/uploads"
+export const FILE_URL = path.join(__dirname, '../../../upload');
 export const USER_IMAGES_PATH = `${FILE_URL}/users/images`
 export const TASKS_FILES_PATH = `${FILE_URL}/tasks`
 export const TASK_SUBMISSIONS_FILES_PATH = `${FILE_URL}/tasks/submissions`
