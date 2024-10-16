@@ -5,10 +5,10 @@ import { TaskStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
 import { TASKS_FILES_PATH } from "../../shared/constants";
 import ProfileService from "../profiles/profiles.service";
+import { deleteFile, getFileSizeAsync } from "../../shared/utils";
 
 // 3rd party dependencies
 import path from 'path';
-import fs from 'fs';
 
 export default class TaskService {
     private _profileService = new ProfileService();
@@ -27,7 +27,8 @@ export default class TaskService {
             const newTaskJson = newTask.toJSON() as ITask;
             return {
                 ...newTaskJson,
-                documentUrl: newTaskJson.documentUrl ? `${TASKS_FILES_PATH}/${newTaskJson.documentUrl}` : ''
+                documentUrl: newTaskJson.documentUrl ? newTaskJson.documentUrl : '',
+                size: await getFileSizeAsync(path.join(TASKS_FILES_PATH, newTaskJson.documentUrl))
             };
         } //eslint-disable-next-line
         catch (err: any) {
@@ -53,7 +54,7 @@ export default class TaskService {
         return {
             tasks: tasks.map(task => ({
                 ...task.toJSON() as ITask,
-                documentUrl: task.documentUrl ? `${TASKS_FILES_PATH}/${task.documentUrl}` : ''
+                documentUrl: task.documentUrl ? task.documentUrl : ''
             })),
             total: count,
             pages: Math.ceil(count / (limit || 10))
@@ -72,7 +73,7 @@ export default class TaskService {
             const oldDocumentUrl = task.documentUrl;
             const newDocumentUrl = taskPayload.documentUrl;
             if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
-                this._deleteOldDocument(oldDocumentUrl);
+                deleteFile(path.join(TASKS_FILES_PATH, oldDocumentUrl));
             }
 
             // if no new document is uploaded, keep the old document
@@ -85,7 +86,8 @@ export default class TaskService {
             const newTaskJson = newTask.toJSON() as ITask;
             return {
                 ...newTaskJson,
-                documentUrl: newTaskJson.documentUrl ? `${TASKS_FILES_PATH}/${newTaskJson.documentUrl}` : ''
+                documentUrl: newTaskJson.documentUrl ? newTaskJson.documentUrl : '',
+                size: await getFileSizeAsync(path.join(TASKS_FILES_PATH, newTaskJson.documentUrl))
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -107,7 +109,8 @@ export default class TaskService {
         const taskJson = task.toJSON() as ITask;
         return {
             ...taskJson,
-            documentUrl: taskJson.documentUrl ? `${TASKS_FILES_PATH}/${taskJson.documentUrl}` : ''
+            documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
+            size: await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl))
         };
     }
 
@@ -119,6 +122,9 @@ export default class TaskService {
             }
 
             await task.destroy();
+            if (task.documentUrl) {
+                deleteFile(path.join(TASKS_FILES_PATH, task.documentUrl));
+            }
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Error deleting task: ${error.message}`);
@@ -127,16 +133,5 @@ export default class TaskService {
             }
             throw new Error(`Error deleting task: ${error.message}`);
         }
-    }
-
-    private _deleteOldDocument(documentUrl: string): void {
-        const filePath = path.join(TASKS_FILES_PATH, documentUrl);
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
-            } else {
-                logger.info(`Old image file deleted: ${filePath}`);
-            }
-        });
     }
 }

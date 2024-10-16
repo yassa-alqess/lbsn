@@ -3,7 +3,7 @@ import { IUserAddPayload } from "../users/users.interface";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import { generateRandomPassword } from "../../shared/utils";
 import Guest from "../../shared/models/guest";
-import { IsApprovedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
+import { IsApprovedEnum, IsLockedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
 import UserService from "../users/users.service";
 import Role from "../../shared/models/role";
 import User from "../../shared/models/user";
@@ -181,6 +181,7 @@ export default class GuestService {
                 companyAddress: guest.companyAddress,
                 password: hashedPassword,
                 isVerified: IsVerifiedEnum.PENDING,
+                isLocked: IsLockedEnum.UNLOCKED,
             };
 
             const newUser = await User.create({ ...userPayload }, { transaction });

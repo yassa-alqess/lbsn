@@ -7,10 +7,10 @@ import logger from "../../config/logger";
 import { Sequelize } from "sequelize";
 import DatabaseManager from "../../config/database/db-manager";
 import { TASK_SUBMISSIONS_FILES_PATH } from "../../shared/constants";
+import { getFileSizeAsync, deleteFile } from "../../shared/utils";
 
 // 3rd party dependencies
 import path from 'path';
-import fs from 'fs';
 
 export default class TaskSubmissionService {
     private _sequelize: Sequelize | null = null;
@@ -47,7 +47,8 @@ export default class TaskSubmissionService {
                 status: newTaskSubmission.status,
                 createdAt: newTaskSubmission.createdAt,
                 approvedAt: newTaskSubmission.approvedAt,
-                documentUrl: newTaskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmission.documentUrl}` : ''
+                documentUrl: newTaskSubmission.documentUrl ? newTaskSubmission.documentUrl : '',
+                size: await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, newTaskSubmission.documentUrl))
             };
 
             //eslint-disable-next-line
@@ -73,7 +74,7 @@ export default class TaskSubmissionService {
             const oldDocumentUrl = taskSubmission.documentUrl;
             const newDocumentUrl = taskSubmissionUpdatePayload.documentUrl;
             if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
-                this._deleteOldDocument(oldDocumentUrl);
+                deleteFile(path.join(TASK_SUBMISSIONS_FILES_PATH, oldDocumentUrl));
             }
 
             // if no new document is uploaded, keep the old document
@@ -90,7 +91,8 @@ export default class TaskSubmissionService {
                 status: newTaskSubmission.status,
                 createdAt: newTaskSubmission.createdAt,
                 approvedAt: newTaskSubmission.approvedAt,
-                documentUrl: newTaskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${newTaskSubmission.documentUrl}` : ''
+                documentUrl: newTaskSubmission.documentUrl ? newTaskSubmission.documentUrl : '',
+                size: await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, newTaskSubmission.documentUrl))
             };
         } //eslint-disable-next-line
         catch (error: any) {
@@ -120,7 +122,8 @@ export default class TaskSubmissionService {
             status: taskSubmission.status,
             createdAt: taskSubmission.createdAt,
             approvedAt: taskSubmission.approvedAt,
-            documentUrl: taskSubmission.documentUrl ? `${TASK_SUBMISSIONS_FILES_PATH}/${taskSubmission.documentUrl}` : ''
+            documentUrl: taskSubmission.documentUrl ? taskSubmission.documentUrl : '',
+            size: await getFileSizeAsync(path.join(TASK_SUBMISSIONS_FILES_PATH, taskSubmission.documentUrl))
         };
     }
 
@@ -135,6 +138,9 @@ export default class TaskSubmissionService {
         try {
             // Delete the task submission
             await taskSubmission.destroy({ transaction });
+            if (taskSubmission.documentUrl) {
+                deleteFile(path.join(TASK_SUBMISSIONS_FILES_PATH, taskSubmission.documentUrl));
+            }
 
             // Update the associated task status
             await Task.update(
@@ -165,16 +171,5 @@ export default class TaskSubmissionService {
             logger.error(`Error approving task submission: ${error.message}`);
             throw new Error(`Error approving task submission: ${error.message}`);
         }
-    }
-
-    private _deleteOldDocument(documentUrl: string): void {
-        const filePath = path.join(TASK_SUBMISSIONS_FILES_PATH, documentUrl);
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
-            } else {
-                logger.info(`Old image file deleted: ${filePath}`);
-            }
-        });
     }
 }

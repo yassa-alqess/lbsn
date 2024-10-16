@@ -121,7 +121,6 @@ export default class TaskController implements Controller {
                 ...req.body,
                 taskId,
                 documentUrl: path
-
             }
             const task = await this._taskService.updateTask(taskUpdatePayload);
             res.status(StatusCodes.OK).json(task).end();

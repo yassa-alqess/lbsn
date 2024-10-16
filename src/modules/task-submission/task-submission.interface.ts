@@ -24,6 +24,7 @@ export interface ITaskSubmission {
     title: string;
     comment: string;
     documentUrl: string;
+    size?: string;
     status: TaskSubmissionStatusEnum
     createdAt: Date;
     approvedAt: Date;

@@ -33,6 +33,7 @@ export interface ITask {
     title: string;
     comment: string;
     documentUrl: string;
+    size?: string;
     status: TaskStatusEnum;
     createdAt: Date;
     submittedAt?: Date;
