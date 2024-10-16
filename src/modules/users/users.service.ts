@@ -1,6 +1,6 @@
 import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetPayload, IUsersGetResponse, IUserUpdatePayload } from "./users.interface";
 import User from "../../shared/models/user";
-import { readXlsx } from "../../shared/utils";
+import { deleteFile, getFileSizeAsync, readXlsx } from "../../shared/utils";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { IsLockedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
 import Role from "../../shared/models/role";
@@ -12,7 +12,6 @@ import { USER_IMAGES_PATH } from "../../shared/constants";
 import bcrypt from 'bcrypt';
 import { Op, Sequelize } from 'sequelize';
 import path from 'path';
-import fs from 'fs';
 
 export default class UserService {
 
@@ -67,7 +66,8 @@ export default class UserService {
                 companyEmail: newUser.companyEmail,
                 companyPhone: newUser.companyPhone,
                 companyAddress: newUser.companyAddress,
-                image: newUser.image ? `${USER_IMAGES_PATH}/${newUser.image}` : '',
+                image: newUser.image ? newUser.image : '',
+                size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, newUser.image)),
                 isVerified: newUser.isVerified,
                 isLocked: newUser.isLocked,
             };
@@ -128,7 +128,7 @@ export default class UserService {
             const oldImage = user.image;
             const newImage = userPayload.image;
             if (newImage && oldImage !== newImage) {
-                this._deleteOldImage(oldImage);
+                deleteFile(path.join(USER_IMAGES_PATH, oldImage));
             }
 
             // if no new image provided, don't update the image field (remove it from the update payload)
@@ -155,7 +155,8 @@ export default class UserService {
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
-                image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
+                image: user.image ? user.image : '',
+                size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)),
                 isVerified: user.isVerified,
                 isLocked: user.isLocked
             };
@@ -289,7 +290,8 @@ export default class UserService {
             companyEmail: user.companyEmail,
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
-            image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
+            image: user.image ? user.image : '',
+            size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)),
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -313,7 +315,8 @@ export default class UserService {
             companyEmail: user.companyEmail,
             companyPhone: user.companyPhone,
             companyAddress: user.companyAddress,
-            image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
+            image: user.image ? user.image : '',
+            size: await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)),
             isVerified: user.isVerified,
             isLocked: user.isLocked,
         };
@@ -322,16 +325,25 @@ export default class UserService {
     public async getUsers(usersGetPayload: IUsersGetPayload): Promise<IUsersGetResponse | undefined> {
         const { limit, offset } = usersGetPayload;
         const { rows: users, count } = await User.findAndCountAll({
-            include: [{ model: Role, as: 'roles', where: { name: RoleEnum.USER } }],
+            include: [{
+                model: Role,
+                as: 'roles',
+                where: { name: RoleEnum.USER },
+                through: {
+                    attributes: []
+                }
+            }],
             where: {
-                isLocked: IsLockedEnum.UNLOCKED
+                isLocked: {
+                    [Op.ne]: IsLockedEnum.LOCKED
+                }
             },
             limit,
             offset,
             order: [['createdAt', 'DESC']]
         });
         return {
-            users: users.map(user => ({
+            users: users.map((user) => ({
                 userId: user.userId,
                 username: user.username,
                 userEmail: user.userEmail,
@@ -342,7 +354,7 @@ export default class UserService {
                 companyEmail: user.companyEmail,
                 companyPhone: user.companyPhone,
                 companyAddress: user.companyAddress,
-                image: user.image ? `${USER_IMAGES_PATH}/${user.image}` : '',
+                image: user.image ? user.image : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked,
             })),
@@ -366,21 +378,13 @@ export default class UserService {
         try {
 
             await user.destroy();
+            if (user.image) {
+                deleteFile(path.join(USER_IMAGES_PATH, user.image));
+            }
         } //eslint-disable-next-line
         catch (error: any) {
             logger.error(`Couldn't Delete User, ${error.message}`);
             throw new Error(`Couldn't Delete User, ${error.message}`);
         }
-    }
-
-    private _deleteOldImage(imageFileName: string): void {
-        const filePath = path.join(USER_IMAGES_PATH, imageFileName);
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
-            } else {
-                logger.info(`Old image file deleted: ${filePath}`);
-            }
-        });
     }
 }

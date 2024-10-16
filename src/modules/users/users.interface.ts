@@ -28,6 +28,7 @@ export interface IUserResponse {
     companyPhone: string;
     companyAddress: string;
     image: string;
+    size?: string;
     isLocked: IsLockedEnum;
     isVerified: IsVerifiedEnum;
 }
