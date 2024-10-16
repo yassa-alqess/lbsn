@@ -142,9 +142,11 @@ export default class TicketController implements Controller {
             const { ticketId } = req.params;
             if (!ticketId) throw new ParamRequiredException('ticketId');
 
+            const path = req.file ? req.file.filename : '';
             const ticketUpdatePayload: ITicketsUpdatePayload = {
                 ...req.body,
-                ticketId
+                ticketId,
+                documentUrl: path
             }
             const ticket = await this._ticketService.updateTicket(ticketUpdatePayload);
             res.status(StatusCodes.OK).json(ticket).end();

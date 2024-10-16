@@ -5,10 +5,10 @@ import { TicketStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
 import { TICKETS_FILES_PATH } from "../../shared/constants";
 import ProfileService from "../profiles/profiles.service";
+import { deleteFile, getFileSizeAsync } from "../../shared/utils";
 
 // 3rd party dependencies
 import path from 'path';
-import fs from 'fs';
 
 export default class TicketService {
     private _profileService = new ProfileService();
@@ -28,7 +28,8 @@ export default class TicketService {
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
                 ...newTicketJson,
-                documentUrl: newTicketJson.documentUrl ? `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}` : ''
+                documentUrl: newTicketJson.documentUrl ? newTicketJson.documentUrl : '',
+                size: await getFileSizeAsync(path.join(TICKETS_FILES_PATH, newTicketJson.documentUrl))
             };
             //eslint-disable-next-line
         } catch (err: any) {
@@ -53,7 +54,7 @@ export default class TicketService {
         return {
             tickets: tickets.map(ticket => ({
                 ...ticket.toJSON(),
-                documentUrl: ticket.documentUrl ? `${TICKETS_FILES_PATH}/${ticket.documentUrl}` : ''
+                documentUrl: ticket.documentUrl ? ticket.documentUrl : ''
             })),
             total: count,
             pages: Math.ceil(count / (limit || 10))
@@ -88,7 +89,8 @@ export default class TicketService {
         const ticketJson = ticket.toJSON() as ITicket;
         return {
             ...ticketJson,
-            documentUrl: ticketJson.documentUrl ? `${TICKETS_FILES_PATH}/${ticketJson.documentUrl}` : ''
+            documentUrl: ticketJson.documentUrl ? ticketJson.documentUrl : '',
+            size: await getFileSizeAsync(path.join(TICKETS_FILES_PATH, ticketJson.documentUrl))
         };
     }
 
@@ -104,7 +106,7 @@ export default class TicketService {
             const oldDocumentUrl = ticket.documentUrl;
             const newDocumentUrl = ticketPayload.documentUrl;
             if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
-                this._deleteOldDocument(oldDocumentUrl);
+                deleteFile(path.join(TICKETS_FILES_PATH, oldDocumentUrl));
             }
 
             // if no new document is uploaded, keep the old document
@@ -116,7 +118,8 @@ export default class TicketService {
             const newTicketJson = newTicket.toJSON() as ITicket;
             return {
                 ...newTicketJson,
-                documentUrl: newTicketJson.documentUrl ? `${TICKETS_FILES_PATH}/${newTicketJson.documentUrl}` : ''
+                documentUrl: newTicketJson.documentUrl ? newTicketJson.documentUrl : '',
+                size: await getFileSizeAsync(path.join(TICKETS_FILES_PATH, newTicketJson.documentUrl))
             };
             //eslint-disable-next-line
         } catch (error: any) {
@@ -135,6 +138,9 @@ export default class TicketService {
                 throw new NotFoundException('Ticket', 'ticketId', ticketId);
             }
             await ticket.destroy();
+            if (ticket.documentUrl) {
+                deleteFile(path.join(TICKETS_FILES_PATH, ticket.documentUrl));
+            }
         } //eslint-disable-next-line
         catch (err: any) {
             logger.error(`Error deleting ticket: ${err.message} `);
@@ -143,16 +149,5 @@ export default class TicketService {
             }
             throw new Error(`Error deleting ticket: ${err.message} `);
         }
-    }
-
-    private _deleteOldDocument(documentUrl: string): void {
-        const filePath = path.join(TICKETS_FILES_PATH, documentUrl);
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                logger.error(`Failed to delete old image file: ${filePath}, Error: ${err.message}`);
-            } else {
-                logger.info(`Old image file deleted: ${filePath}`);
-            }
-        });
     }
 }

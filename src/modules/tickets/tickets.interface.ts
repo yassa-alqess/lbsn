@@ -16,6 +16,7 @@ export interface ITicketsGetResponse {
 export interface ITicket {
     ticketId: string;
     documentUrl: string;
+    size?: string;
     profileId: string;
     title: string;
     comment: string;
