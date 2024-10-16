@@ -1,6 +1,7 @@
 # Leadbull Sales Network
 
 ## Overview
+
 This README will guide you through setting up the application in both development and production modes using Docker Compose.
 
 ## Prerequisites
@@ -23,18 +24,22 @@ The application requires specific environment variables for development and prod
 
 - For **Development** mode:
   - Create a new file named `.env.dev` in the root directory.
-  - Copy the contents of the `.env.example` file into the `.env.dev` file:
+  - Copy the contents of the `.env.sample` file into the `.env.dev` file:
+
     ```bash
     cp .env.example .env.dev
     ```
+
   - Update the values in `.env.dev` as necessary.
 
 - For **Production** mode:
   - Create a new file named `.env.prod` in the root directory.
-  - Copy the contents of the `.env.example` file into the `.env.prod` file:
+  - Copy the contents of the `.env.sample` file into the `.env.prod` file:
+
     ```bash
     cp .env.example .env.prod
     ```
+
   - Update the values in `.env.prod` with production-specific values.
 
 - Both **Development** and **Production** modes require additional Google service keys. Ensure you have the required `.keys/credentials.json` for Google services available in both environments.
@@ -44,7 +49,7 @@ The application requires specific environment variables for development and prod
 For production, you need to provide self-signed certificates:
 
 - Place the SSL certificates in a directory called `/certs` in the root of your project.
-  - Example: 
+  - Example:
     - `/certs/privkey.pem`
     - `/certs/fullchain.pem`
 
