@@ -336,11 +336,6 @@ export default class UserService {
                     attributes: []
                 }
             }],
-            where: {
-                isLocked: {
-                    [Op.ne]: IsLockedEnum.LOCKED
-                }
-            },
             limit,
             offset,
             order: [['createdAt', 'DESC']]
