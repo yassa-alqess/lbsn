@@ -63,13 +63,13 @@ export default class TicketService {
         };
     }
 
-    public async resolveTicket(ticketId: string): Promise<void> {
+    public async resolveTicket(ticketId: string, status: TicketStatusEnum): Promise<void> {
         try {
             const ticket = await Ticket.findByPk(ticketId);
             if (!ticket) {
                 throw new NotFoundException('Ticket', "ticketId", ticketId);
             }
-            ticket.status = TicketStatusEnum.RESOLVED;
+            ticket.status = status;
             ticket.resolvedAt = new Date();
             await ticket.save();
         }  //eslint-disable-next-line
