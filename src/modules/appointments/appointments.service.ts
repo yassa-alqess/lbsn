@@ -1,6 +1,6 @@
 //file dependinces
 import { IGuestAddPayload, IGuestResponse } from "../guests/guests.interface";
-import { IAppointment, IAppointmentsAddPayload, IAppointmentsResponse } from "./appointments.interface";
+import { IAppointment, IAppointmentsAddPayload, IAppointmentsGetAllPayload, IAppointmentsGetPayload, IAppointmentsResponse } from "./appointments.interface";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import GuestService from "../guests/guests.service";
 import logger from "../../config/logger";
@@ -8,6 +8,8 @@ import EmailService from "../../config/mailer";
 import GuestRequestsService from "../guest-requests/guest-requests.service";
 import MeetingService from "../meetings/meeting.service";
 import Appointment from "../../shared/models/appointment";
+import TimeSlot from "../../shared/models/time-slot";
+import Guest from "../../shared/models/guest";
 import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
 import { ACQUISITION_MAIL, MAIN_MAIL } from "../../shared/constants";
 import { IMeeting } from "../meetings/meeting.interface";
@@ -15,7 +17,6 @@ import { hashPassword } from "../../shared/utils/hash-password";
 import TimeSlotService from "../time-slots/time-slots.service";
 import { ITimeSlotResponse } from "../time-slots/time-slots.interface";
 import { IsAvailableEnum } from "../../shared/enums";
-import TimeSlot from "../../shared/models/time-slot";
 
 
 export default class AppointmentService {
@@ -134,7 +135,7 @@ export default class AppointmentService {
     private async _prepareMeeting(appointmentPayload: IAppointmentsAddPayload): Promise<IMeeting> {
         try {
             const { time, isAvailable } = await this._timeSlotService.getTimeSlot(appointmentPayload.timeSlotId as string) as ITimeSlotResponse; //will throw error if not found
-            
+
             if (isAvailable === IsAvailableEnum.UNAVAILABLE) {
                 throw new Error('Time is already allocated');
             }
@@ -147,8 +148,9 @@ export default class AppointmentService {
         }
     }
 
-    public async getAppointments(guestId: string): Promise<IAppointmentsResponse | undefined> {
-        const appointments = await Appointment.findAll({
+    public async getAppointments(payload: IAppointmentsGetPayload): Promise<IAppointmentsResponse | undefined> {
+        const { guestId, limit, offset } = payload;
+        const { rows: appointments, count } = await Appointment.findAndCountAll({
             where: {
                 ...(guestId && { guestId }),
             },
@@ -158,6 +160,8 @@ export default class AppointmentService {
                     attributes: ['time'],
                 },
             ],
+            limit,
+            offset
         });
         return {
             appointments: appointments.map(appointment => ({
@@ -169,7 +173,44 @@ export default class AppointmentService {
                 serviceId: appointment.serviceId,
                 timeSlotId: appointment.timeSlotId,
                 time: appointment.timeSlot?.time,
-            }))
+            })),
+            total: count,
+            pages: Math.ceil(count / limit)
+        };
+    }
+
+    //get all appointments & guet user name
+    public async getAllAppointments(payload: IAppointmentsGetAllPayload): Promise<IAppointmentsResponse | undefined> {
+        const { limit, offset } = payload;
+        const { rows: appointments, count } = await Appointment.findAndCountAll({
+            include: [
+                {
+                    model: TimeSlot,
+                    attributes: ['time'],
+                },
+                {
+                    model: Guest,
+                    attributes: ['companyEmail', 'username'],
+                }
+            ],
+            limit,
+            offset
+        });
+
+        return {
+            appointments: appointments.map(appointment => ({
+                appointmentId: appointment.appointmentId,
+                guestEmail: appointment.guestEmail,
+                guestUsername: appointment.guest?.username,
+                meetingUrl: appointment.meetingUrl,
+                meetingJoinUrl: appointment.meetingJoinUrl,
+                guestId: appointment.guestId,
+                serviceId: appointment.serviceId,
+                timeSlotId: appointment.timeSlotId,
+                time: appointment.timeSlot?.time,
+            })),
+            total: count,
+            pages: Math.ceil(count / limit)
         };
     }
 }

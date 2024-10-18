@@ -15,6 +15,7 @@ export interface IAppointmentsAddPayload {
 export interface IAppointment {
     appointmentId: string;
     guestEmail: string;
+    guestUsername?: string;
     meetingUrl: string;
     meetingJoinUrl: string;
     guestId: string;
@@ -25,8 +26,20 @@ export interface IAppointment {
 
 export interface IAppointmentsResponse {
     appointments: IAppointment[];
+    total: number;
+    pages: number;
 }
 
+export interface IAppointmentsGetPayload {
+    guestId: string;
+    limit: number;
+    offset: number;
+}
+
+export interface IAppointmentsGetAllPayload {
+    limit: number;
+    offset: number;
+}
 
 // Appointment time is given in UTC format by passing the adjusted timeSlotId based on the client local time.
 // timeslots are given to the client in UTC format, and the client is responsible to adjust those timeSlots based on the client local tiimezone
