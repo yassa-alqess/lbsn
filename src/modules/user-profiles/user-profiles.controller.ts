@@ -25,7 +25,7 @@ export default class UserProfilesController implements Controller {
 
     private _initializeRoutes() {
         this.router.get(this.path, accessTokenGuard, this.getUserProfiles);
-        this.router.get(`${this.path}/all`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getUserProfilesByUserId);
+        this.router.get(`${this.path}/all`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getUserProfilesByUserId); //this endpoint is resolved before profiles/:profileId, that's why user-prfiles router is before profiles router
         this.router.post(this.path, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(createProfileDto), this.addUserProfile);
     }
 
@@ -85,7 +85,7 @@ export default class UserProfilesController implements Controller {
 
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`error at getUserProfiles action ${error}`);
+            logger.error(`error at getUserProfilesByUserId action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('userId'));
             }
