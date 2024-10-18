@@ -3,10 +3,10 @@ import logger from "../../config/logger";
 import { InvalidIdException, NotFoundException, NotOwnerOfProfileException, ParamRequiredException } from "../exceptions";
 import Profile from "../models/profile";
 import { INVALID_UUID } from "../constants";
+import { RoleEnum } from "../enums";
 
 // 3rd party dependencies
 import { Request, Response, NextFunction } from "express";
-import { RoleEnum } from "../enums";
 
 export async function isOwnerOfProfileGuard(req: Request, res: Response, next: NextFunction) {
     logger.debug('validating if user is owner of profile');
