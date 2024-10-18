@@ -7,7 +7,12 @@ export interface ITasksGetPayload {
     offset: number;
 }
 
-export interface ITasksGetRespones {
+export interface ITasksGetAllPayload {
+    limit: number;
+    offset: number;
+}
+
+export interface ITasksGetResponse {
     tasks: ITask[];
     total: number;
     pages: number;
@@ -30,6 +35,7 @@ export interface ITaskUpdatePayload {
 export interface ITask {
     taskId: string;
     profileId: string;
+    username?: string;
     title: string;
     comment: string;
     documentUrl: string;

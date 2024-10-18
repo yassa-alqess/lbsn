@@ -1,5 +1,7 @@
-import { ITasksAddPayload, ITask, ITasksGetPayload, ITasksGetRespones, ITaskUpdatePayload } from "./tasks.interface";
+import { ITasksAddPayload, ITask, ITasksGetPayload, ITaskUpdatePayload, ITasksGetResponse, ITasksGetAllPayload } from "./tasks.interface";
 import Task from "../../shared/models/task";
+import Profile from "../../shared/models/profile";
+import User from "../../shared/models/user";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TaskStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
@@ -40,7 +42,7 @@ export default class TaskService {
         }
     }
 
-    public async getTasks(payload: ITasksGetPayload): Promise<ITasksGetRespones | undefined> {
+    public async getTasks(payload: ITasksGetPayload): Promise<ITasksGetResponse | undefined> {
         const { limit, offset } = payload;
         const { rows: tasks, count } = await Task.findAndCountAll({
             where: {
@@ -133,5 +135,43 @@ export default class TaskService {
             }
             throw new Error(`Error deleting task: ${error.message}`);
         }
+    }
+
+    public async getAllTasks(payload: ITasksGetAllPayload): Promise<ITasksGetResponse | undefined> {
+        const { limit, offset } = payload;
+        const { rows: tasks, count } = await Task.findAndCountAll({
+            include: [
+                {
+                    model: Profile,
+                    as: 'profile',
+                    attributes: ['profileId'],
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['username']
+                        }
+                    ]
+                }
+            ],
+            limit,
+            offset
+        });
+
+        return {
+            tasks: tasks.map(task => ({
+                taskId: task.taskId,
+                title: task.title,
+                comment: task.comment,
+                status: task.status,
+                createdAt: task.createdAt,
+                submittedAt: task.submittedAt,
+                profileId: task.profileId,
+                username: task.profile.user.username, // Add username here
+                documentUrl: task.documentUrl ? task.documentUrl : ''
+            })),
+            total: count,
+            pages: Math.ceil(count / (limit || 10))
+        };
     }
 }
