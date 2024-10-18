@@ -7,6 +7,11 @@ export interface ITicketsGetPayload {
     offset: number;
 }
 
+export interface ITicketsGetAllPayload {
+    limit: number;
+    offset: number;
+}
+
 export interface ITicketsGetResponse {
     tickets: ITicket[];
     total: number;
@@ -18,6 +23,7 @@ export interface ITicket {
     documentUrl: string;
     size?: string;
     profileId: string;
+    username?: string;
     title: string;
     comment: string;
     status: TicketStatusEnum;

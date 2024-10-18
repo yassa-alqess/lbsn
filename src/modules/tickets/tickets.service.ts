@@ -1,5 +1,7 @@
-import { ITicket, ITicketsAddPayload, ITicketsGetPayload, ITicketsGetResponse, ITicketsUpdatePayload } from "./tickets.interface";
+import { ITicket, ITicketsAddPayload, ITicketsGetAllPayload, ITicketsGetPayload, ITicketsGetResponse, ITicketsUpdatePayload } from "./tickets.interface";
 import Ticket from "../../shared/models/ticket";
+import Profile from "../../shared/models/profile";
+import User from "../../shared/models/user";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import { TicketStatusEnum } from "../../shared/enums";
 import logger from "../../config/logger";
@@ -149,5 +151,44 @@ export default class TicketService {
             }
             throw new Error(`Error deleting ticket: ${err.message} `);
         }
+    }
+
+    public async getAllTickets(payload: ITicketsGetAllPayload): Promise<ITicketsGetResponse | undefined> {
+        const { limit, offset } = payload;
+        const { rows: tickets, count } = await Ticket.findAndCountAll({
+            include: [
+                {
+                    model: Profile,
+                    as: 'profile',
+                    attributes: ['profileId'],
+                    include: [
+                        {
+                            model: User,
+                            as: 'user',
+                            attributes: ['username']
+                        }
+                    ]
+                }
+            ],
+            limit,
+            offset
+        });
+
+        return {
+            tickets: tickets.map(ticket => ({
+                ticketId: ticket.ticketId,
+                title: ticket.title,
+                comment: ticket.comment,
+                status: ticket.status,
+                createdAt: ticket.createdAt,
+                updatedAt: ticket.updatedAt,
+                resolvedAt: ticket.resolvedAt,
+                profileId: ticket.profileId,
+                username: ticket.profile.user.username, // Add username here
+                documentUrl: ticket.documentUrl ? ticket.documentUrl : ''
+            })),
+            total: count,
+            pages: Math.ceil(count / (limit || 10))
+        };
     }
 }

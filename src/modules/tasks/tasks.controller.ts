@@ -1,6 +1,6 @@
 
 // file dependinces
-import { ITasksAddPayload, ITasksGetPayload, ITaskUpdatePayload } from './tasks.interface';
+import { ITasksAddPayload, ITasksGetAllPayload, ITasksGetPayload, ITaskUpdatePayload } from './tasks.interface';
 import { DUPLICATE_ERR, INVALID_UUID, PROFILES_PATH, TASKS_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TaskService from './tasks.service';
@@ -34,6 +34,8 @@ export default class TaskController implements Controller {
         this.router.post(`/${this.path}`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), upload(`${this.path}`)!.single("file"), validate(CreateTaskDto), this.addTask);
         this.router.patch(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), upload(`${this.path}`)!.single("file"), validate(UpdateTaskDto), this.updateTask);
         this.router.delete(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
+
+        this.router.get(`/${this.path}/all`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllTasks);
     }
 
     public addTask = async (req: Request, res: Response, next: NextFunction) => {
@@ -156,6 +158,24 @@ export default class TaskController implements Controller {
             if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public getAllTasks = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { limit = 10, page = 1 } = req.query;
+
+            const payload: ITasksGetAllPayload = {
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
+            }
+            const tasks = await this._taskService.getAllTasks(payload);
+            res.status(StatusCodes.OK).json(tasks).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at getAllTasks action ${error}`);
             next(new InternalServerException(error.message));
         }
     }

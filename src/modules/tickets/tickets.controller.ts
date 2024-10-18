@@ -2,7 +2,7 @@
 
 // file dependinces
 import { DUPLICATE_ERR, INVALID_UUID, PROFILES_PATH, TICKETS_PATH } from '../../shared/constants';
-import { ITicketsAddPayload, ITicketsGetPayload, ITicketsUpdatePayload } from './tickets.interface';
+import { ITicketsAddPayload, ITicketsGetAllPayload, ITicketsGetPayload, ITicketsUpdatePayload } from './tickets.interface';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import TicketService from './tickets.service';
 import { RoleEnum, TicketStatusEnum } from '../../shared/enums';
@@ -27,7 +27,7 @@ export default class TicketController implements Controller {
 
     private _initializeRoutes() {
         this.router.patch(`/${this.path}/:ticketId/resolve`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.resolveTicket);
-
+        this.router.get(`/${this.path}/all`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getAllTickets);
 
         // user routes
         this.router.all(`${this.profilesPath}/:profileId/${this.path}*`, accessTokenGuard, isOwnerOfProfileGuard); // protect all routes
@@ -183,6 +183,24 @@ export default class TicketController implements Controller {
             if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
                 return next(error);
             }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public getAllTickets = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { limit = 10, page = 1 } = req.query;
+
+            const payload: ITicketsGetAllPayload = {
+                limit: parseInt(limit as string),
+                offset: (parseInt(page as string) - 1) * parseInt(limit as string)
+            }
+            const tickets = await this._ticketService.getAllTickets(payload);
+            res.status(StatusCodes.OK).json(tickets).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error('error at getAllTickets action', error);
             next(new InternalServerException(error.message));
         }
     }
