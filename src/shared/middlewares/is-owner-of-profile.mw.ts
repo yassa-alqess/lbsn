@@ -6,11 +6,15 @@ import { INVALID_UUID } from "../constants";
 
 // 3rd party dependencies
 import { Request, Response, NextFunction } from "express";
+import { RoleEnum } from "../enums";
 
 export async function isOwnerOfProfileGuard(req: Request, res: Response, next: NextFunction) {
     logger.debug('validating if user is owner of profile');
-
     try {
+        const { roles } = req.user as IAuthPayload;
+        if (roles && (roles.includes(RoleEnum.ADMIN) || roles.includes(RoleEnum.SUPER_ADMIN))) {
+            return next();
+        }
         const { profileId } = (req.params) as { profileId: string }; // profileId for user endpoints is a param in the path
         if (!profileId) {
             throw new ParamRequiredException('profileId');
