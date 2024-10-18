@@ -101,7 +101,13 @@ export default class TicketController implements Controller {
         try {
             const { ticketId } = req.params;
             if (!ticketId) throw new ParamRequiredException('ticketId');
-            await this._ticketService.resolveTicket(ticketId);
+
+            const { status } = req.query;
+            if (!status) throw new ParamRequiredException('status');
+            if (!Object.values(TicketStatusEnum).includes(status as TicketStatusEnum)) {
+                throw new InvalidEnumValueException('TicketStatus');
+            }
+            await this._ticketService.resolveTicket(ticketId, status as TicketStatusEnum);
             res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
@@ -110,7 +116,7 @@ export default class TicketController implements Controller {
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
                 return next(new InvalidIdException('ticketId'));
             }
-            if (error instanceof NotFoundException || error instanceof ParamRequiredException) {
+            if (error instanceof NotFoundException || error instanceof ParamRequiredException || error instanceof InvalidEnumValueException) {
                 return next(error);
             }
             next(new InternalServerException(error.message));

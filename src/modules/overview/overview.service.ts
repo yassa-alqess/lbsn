@@ -8,7 +8,7 @@ import sequelize, { Op } from 'sequelize';
 import moment from 'moment';
 
 export default class OverviewService {
-    async getLeadsCountByPeriod(periodPayload: IPeriod) {
+    private async _getLeadsCountByPeriod(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
@@ -105,7 +105,7 @@ export default class OverviewService {
         }));
     }
 
-    public async getDealsCountByPeriod(periodPayload: IPeriod) {
+    private async _getDealsCountByPeriod(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
@@ -208,7 +208,7 @@ export default class OverviewService {
         }));
     }
 
-    public async getDealsCount(periodPayload: IPeriod) {
+    private async _getDealsCount(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
@@ -264,7 +264,7 @@ export default class OverviewService {
         }
     }
 
-    public async getLeadsCount(periodPayload: IPeriod) {
+    private async _getLeadsCount(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
@@ -319,7 +319,7 @@ export default class OverviewService {
         }
     }
 
-    public async getDealsValueSum(periodPayload: IPeriod) {
+    private async _getDealsValueSum(periodPayload: IPeriod) {
         const { profileId, period, start: startDate, end: endDate } = periodPayload;
         const today = moment().startOf('day');
 
@@ -375,11 +375,11 @@ export default class OverviewService {
         }
     }
 
-    public async getConversionRate(periodPayload: IPeriod) {
+    private async _getConversionRate(periodPayload: IPeriod) {
         try {
 
-            const leads = await this.getLeadsCount(periodPayload);
-            const deals = await this.getDealsCount(periodPayload);
+            const leads = await this._getLeadsCount(periodPayload);
+            const deals = await this._getDealsCount(periodPayload);
 
             if (leads === 0) {
                 return 0;
@@ -389,6 +389,28 @@ export default class OverviewService {
             //eslint-disable-next-line
         } catch (error: any) {
             throw new Error(`Failed to get conversion rate: ${error.message}`);
+        }
+    }
+
+    public async getGraphData(periodPayload: IPeriod) {
+        try {
+            const leads = await this._getLeadsCountByPeriod(periodPayload);
+            const deals = await this._getDealsCountByPeriod(periodPayload);
+            const dealsCount = await this._getDealsCount(periodPayload);
+            const dealsValueSum = await this._getDealsValueSum(periodPayload);
+            const conversionRate = await this._getConversionRate(periodPayload);
+
+            return {
+                leads,
+                deals,
+                dealsCount,
+                dealsValueSum,
+                conversionRate,
+            };
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            throw new Error(`Failed to get graph data: ${error.message}`);
         }
     }
 }
