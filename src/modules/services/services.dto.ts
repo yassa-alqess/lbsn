@@ -2,6 +2,7 @@ import Joi from 'joi';
 
 export const CreateServiceDto = Joi.object({
     name: Joi.string().required(),
+    categoryId: Joi.string().required(),
 });
 
 export const UpdateServiceDto = Joi.object({
@@ -11,5 +12,6 @@ export const UpdateServiceDto = Joi.object({
 export const BulkAddServicesDto = Joi.object({
     names: Joi.array()
         .items(Joi.string())
-        .required()
+        .required(),
+    categoryId: Joi.string().required()
 });

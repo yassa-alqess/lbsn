@@ -1,7 +1,8 @@
 
 import { Router } from 'express';
 import AppointmentController from './appointments/appointments.controller';
-import ServiceController from './services/services.controller';
+import ServicesController from './services/services.controller';
+import CategoriesController from './categories/categories.controller';
 import UserController from './users/users.controller';
 import TaskSubmissionController from './task-submission/task-submission.controller';
 import TimeSlotsController from './time-slots/time-slots.controller';
@@ -23,7 +24,8 @@ import FilesController from './files/files.controller';
 const restRouter = Router();
 for (const controller of [
     AppointmentController,
-    ServiceController,
+    ServicesController,
+    CategoriesController,
     UserController,
     TaskSubmissionController,
     TimeSlotsController,

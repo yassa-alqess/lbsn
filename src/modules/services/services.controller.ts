@@ -13,7 +13,7 @@ import logger from '../../config/logger';
 import express, { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
-export default class ServiceController implements Controller {
+export default class ServicesController implements Controller {
 
     path = `/${SERVICES_PATH}`;
     router = express.Router();
@@ -104,7 +104,8 @@ export default class ServiceController implements Controller {
 
     public getServices = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const services = await this._servicesService.getServices();
+            const { categoryId } = req.query;
+            const services = await this._servicesService.getServices(categoryId as string); //filter by categoryId if provided
             res.status(StatusCodes.OK).json(services).end();
 
             //eslint-disable-next-line
@@ -138,8 +139,8 @@ export default class ServiceController implements Controller {
     public bulkAddServices = async (req: Request, res: Response, next: NextFunction) => {
         try {
             const bulkAddServicesPayload: IServicesBulkAddPayload = req.body;
-            const BulkAddServicesResponse = await this._servicesService.bulkAddServices(bulkAddServicesPayload);
-            res.status(StatusCodes.CREATED).json(BulkAddServicesResponse).end();
+            const bulkAddServicesResponse = await this._servicesService.bulkAddServices(bulkAddServicesPayload);
+            res.status(StatusCodes.CREATED).json(bulkAddServicesResponse).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
