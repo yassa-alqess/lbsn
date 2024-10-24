@@ -10,6 +10,7 @@ import MeetingService from "../meetings/meeting.service";
 import Appointment from "../../shared/models/appointment";
 import TimeSlot from "../../shared/models/time-slot";
 import Guest from "../../shared/models/guest";
+import Service from "../../shared/models/service";
 import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
 import { ACQUISITION_MAIL, MAIN_MAIL } from "../../shared/constants";
 import { IMeeting } from "../meetings/meeting.interface";
@@ -83,8 +84,9 @@ export default class AppointmentService {
                 guestId: guest.guestId,
                 serviceId: appointmentPayload.serviceId,
                 timeSlotId: appointmentPayload.timeSlotId,
-
             });
+
+            const service = await Service.findByPk(appointmentPayload.serviceId); //i'm sure it's there
 
             return {
                 appointmentId: appointment.appointmentId,
@@ -93,6 +95,7 @@ export default class AppointmentService {
                 meetingJoinUrl: appointment.meetingJoinUrl,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
+                serviceName: service?.name as string,
                 timeSlotId: appointment.timeSlotId,
                 time: meeting.time,
             }
@@ -159,6 +162,10 @@ export default class AppointmentService {
                     model: TimeSlot,
                     attributes: ['time'],
                 },
+                {
+                    model: Service,
+                    attributes: ['name'],
+                }
             ],
             limit,
             offset
@@ -171,6 +178,7 @@ export default class AppointmentService {
                 meetingJoinUrl: appointment.meetingJoinUrl,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
+                serviceName: appointment.service?.name,
                 timeSlotId: appointment.timeSlotId,
                 time: appointment.timeSlot?.time,
             })),
@@ -190,7 +198,11 @@ export default class AppointmentService {
                 },
                 {
                     model: Guest,
-                    attributes: ['companyEmail', 'username'],
+                    attributes: ['username'],
+                },
+                {
+                    model: Service,
+                    attributes: ['name'],
                 }
             ],
             limit,
@@ -206,6 +218,7 @@ export default class AppointmentService {
                 meetingJoinUrl: appointment.meetingJoinUrl,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
+                serviceName: appointment.service?.name,
                 timeSlotId: appointment.timeSlotId,
                 time: appointment.timeSlot?.time,
             })),

@@ -20,6 +20,7 @@ export interface IAppointment {
     meetingJoinUrl: string;
     guestId: string;
     serviceId: string;
+    serviceName: string;
     timeSlotId: string;
     time: Date;
 }
