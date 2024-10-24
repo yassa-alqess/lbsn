@@ -3,11 +3,15 @@ import _ from 'lodash';
 import { MarketingBudgetEnum } from '../../shared/enums';
 
 export const updateProfileDto = Joi.object({
-  name: Joi.string().optional(),
   marketingBudget: Joi.string()
     .valid(..._.values(MarketingBudgetEnum))
     .optional(),
   sheetUrl: Joi.string().optional(),
-  sheetName: Joi.string().optional(),
+  sheetName: Joi.number()
+    .when('sheetUrl', {
+      is: Joi.exist(),
+      then: Joi.required(),
+      otherwise: Joi.optional(),
+    }),
   serviceId: Joi.string().optional(),
 });
