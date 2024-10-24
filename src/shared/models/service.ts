@@ -3,6 +3,8 @@ import GuestRequest from './guest-request';
 import Guest from './guest';
 import Appointment from './appointment';
 import Profile from './profile';
+import Category from './category';
+import ServiceCategory from './service-category';
 
 
 @Table({ schema: 'public', timestamps: true })
@@ -19,6 +21,9 @@ class Service extends Model {
         unique: true,
     })
     declare name: string;
+
+    @BelongsToMany(() => Category, () => ServiceCategory)
+    declare categories: Category[];
 
     @HasMany(() => Profile)
     declare profiles: Profile[];
