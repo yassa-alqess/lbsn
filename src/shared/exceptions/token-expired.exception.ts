@@ -3,6 +3,6 @@ import { StatusCodes } from 'http-status-codes';
 
 export class ExpiredException extends HttpException {
     constructor(type: string) {
-        super(StatusCodes.UNAUTHORIZED, `${type} expired`);
+        super(StatusCodes.FORBIDDEN, `${type} expired`);
     }
 }

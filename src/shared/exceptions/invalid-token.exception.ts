@@ -3,6 +3,6 @@ import { StatusCodes } from 'http-status-codes';
 
 export class InvalidTokenException extends HttpException {
   constructor(type = 'token') {
-    super(StatusCodes.UNAUTHORIZED, `${type} is invalid`);
+    super(StatusCodes.FORBIDDEN, `${type} is invalid`);
   }
 }
