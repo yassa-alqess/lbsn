@@ -119,8 +119,9 @@ export default class ServicesController implements Controller {
         const { serviceId } = req.params;
         if (!serviceId) return next(new ParamRequiredException('serviceId'));
 
+        const { categoryId } = req.query;
         try {
-            await this._servicesService.deleteService(serviceId);
+            await this._servicesService.deleteService(serviceId, categoryId as string);
             res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
