@@ -5,7 +5,7 @@ export interface IServiceAddPayload {
 
 export interface IServiceResponse {
     serviceId: string;
-    categoryId: string;
+    categoryId?: string;
     name: string;
 }
 export interface IServiceUpdatePayload {
@@ -15,15 +15,12 @@ export interface IServiceUpdatePayload {
 }
 
 export interface IServicesGetResponse {
-    services: IServiceResponse[]
+    categoryId: string;
+    services: IServiceResponse[];
+    count: number;
 }
 
 export interface IServicesBulkAddPayload {
     names: string[];
     categoryId: string;
-}
-
-export interface IServicesBulkAddResponse {
-    services: IServiceResponse[]
-    count: number
 }
