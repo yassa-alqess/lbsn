@@ -97,8 +97,10 @@ export default class UserProfilesController implements Controller {
 
     public requestNewProfile = async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const { id: userId } = req.user as IAuthPayload;
             const payload: IProfileRequestPayload = {
                 ...req.body,
+                userId
             }
             await this._userProfilesService.requestNewProfile(payload);
             res.status(StatusCodes.CREATED).json({}).end();
