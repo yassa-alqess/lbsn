@@ -4,6 +4,7 @@ import {
     Column,
     ForeignKey,
     DataType,
+    BelongsTo,
 } from 'sequelize-typescript';
 import Service from './service';
 import Category from './category';
@@ -28,6 +29,13 @@ class ServiceCategory extends Model {
         type: DataType.UUID,
     })
     declare categoryId: string;
+
+    // Define association
+    @BelongsTo(() => Service)
+    service!: Service;
+
+    @BelongsTo(() => Category)
+    category!: Category;
 }
 
 export default ServiceCategory;
