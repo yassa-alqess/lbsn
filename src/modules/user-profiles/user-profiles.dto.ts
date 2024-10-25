@@ -21,7 +21,6 @@ export const RequestProfileDto = Joi.object({
     marketingBudget: Joi.string()
         .valid(..._.values(MarketingBudgetEnum))
         .required(),
-    userId: Joi.string().required(),
     serviceId: Joi.string().required(),
     categoryId: Joi.string().required(),
 });
