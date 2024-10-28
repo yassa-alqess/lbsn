@@ -4,6 +4,7 @@ import Task from './task';
 import Lead from './lead';
 import User from './user';
 import Service from './service';
+import GuestRequest from './guest-request';
 import { MarketingBudgetEnum } from '../enums';
 
 //3rd party dependencies
@@ -67,6 +68,15 @@ class Profile extends Model {
 
     @BelongsTo(() => User, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare user: User;
+
+    @ForeignKey(() => GuestRequest)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare requestId: string;
+
+    @BelongsTo(() => GuestRequest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare request: GuestRequest;
 }
 
 export default Profile;

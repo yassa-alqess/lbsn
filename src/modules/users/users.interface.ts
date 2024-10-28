@@ -14,6 +14,7 @@ export interface IUserAddPayload {
     password: string;
     isLocked?: IsLockedEnum;
     isVerified?: IsVerifiedEnum;
+    guestId: string;
 }
 
 export interface IUserResponse {

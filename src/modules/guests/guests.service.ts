@@ -182,6 +182,7 @@ export default class GuestService {
                 password: hashedPassword,
                 isVerified: IsVerifiedEnum.PENDING,
                 isLocked: IsLockedEnum.UNLOCKED,
+                guestId,
             };
 
             const newUser = await User.create({ ...userPayload }, { transaction });

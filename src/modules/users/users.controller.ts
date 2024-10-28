@@ -35,8 +35,9 @@ export default class UserController implements Controller {
         this.router.post(this.path, upload(`${this.path}/images`)!.single("file"), validate(CreateUserDto), this.addUser);
         this.router.post(`${this.path}/bulk`, upload(this.path)!.single("file"), this.bulkAddUsers);
         this.router.patch(`${this.path}/:userId`, upload(`${this.path}/images`)!.single("file"), validate(UpdateUserDto), this.updateUser);
-        this.router.get(`${this.path}/:userId`, this.getUser);
         this.router.get(this.path, this.getUsers);
+        this.router.get(`${this.path}/:userId/requests`, this.getUserRequests);
+        this.router.get(`${this.path}/:userId`, this.getUser);
         this.router.delete(`${this.path}/:userId`, this.deleteUser);
     }
 
@@ -143,6 +144,28 @@ export default class UserController implements Controller {
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at getUsers action ${error}`);
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public getUserRequests = async (req: Request, res: Response, next: NextFunction) => {
+        const { userId } = req.params;
+        if (!userId) {
+            return next(new ParamRequiredException('userId'));
+        }
+        try {
+            const requests = await this._userService.getUserRequests(userId);
+            res.status(StatusCodes.OK).json(requests).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`error at getUserRequests action ${error}`);
+            if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
+                return next(new InvalidIdException('userId'));
+            }
+            if (error instanceof NotFoundException) {
+                return next(error);
+            }
             next(new InternalServerException(error.message));
         }
     }

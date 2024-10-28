@@ -7,6 +7,8 @@ import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
 import { USER_IMAGES_PATH } from "../../shared/constants";
+import GuestRequestsService from "../guest-requests/guest-requests.service";
+import { IgetGuestRequestsResponse } from "../guest-requests/guest-requests.interface";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -16,6 +18,7 @@ import path from 'path';
 export default class UserService {
 
     private _sequelize: Sequelize | null = null;
+    private _guestRequestsService = new GuestRequestsService();
     constructor() {
         this._sequelize = DatabaseManager.getSQLInstance();
     }
@@ -359,6 +362,14 @@ export default class UserService {
             total: count,
             pages: Math.ceil(count / (limit || 10)),
         };
+    }
+
+    public async getUserRequests(userId: string): Promise<IgetGuestRequestsResponse | undefined> {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User', 'userId', userId);
+        }
+        return this._guestRequestsService.getGuestRequests(user.guestId);
     }
 
     public async deleteUser(userId: string): Promise<void> {

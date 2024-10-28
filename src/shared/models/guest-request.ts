@@ -1,10 +1,11 @@
-import { Column, Table, Model, ForeignKey, DataType, BelongsTo } from 'sequelize-typescript';
+import { Column, Table, Model, ForeignKey, DataType, BelongsTo, HasOne } from 'sequelize-typescript';
 import Guest from './guest';
 import Service from './service';
 import { IsResolvedEnum, MarketingBudgetEnum } from '../enums';
 
 //3rd party dependencies
 import * as _ from "lodash";
+import Profile from './profile';
 
 const isResolvedStatueses: string[] = _.values(IsResolvedEnum);
 const marketingBudgetEnumValues: string[] = _.values(MarketingBudgetEnum);
@@ -59,6 +60,9 @@ class GuestRequest extends Model {
 
     @BelongsTo(() => Service)
     service!: Service;
+
+    @HasOne(() => Profile)
+    profile!: Profile;
 }
 
 export default GuestRequest;

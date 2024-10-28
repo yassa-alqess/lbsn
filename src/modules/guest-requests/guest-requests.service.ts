@@ -223,79 +223,22 @@ export default class GuestRequestsService {
         const transaction = txn || await this._sequelize!.transaction();
 
         try {
-            const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId }, transaction });
-            if (!guestRequest) {
-                throw new Error('Guest Request not found');
-            }
+            const guestRequest = await this._findGuestRequest(guestId, requestId, transaction);
+            await this._updateGuestRequestStatus(guestRequest, transaction);
 
-            // Update guest-service status
-            await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
+            const approvalResult = await this._approveGuest(guestId, transaction);
+            const requestData = await this._fetchRequestData(requestId, transaction);
 
-            // Approve guest and return necessary data for email
-            let approvalResult: ApproveGuestResponse | null = null;
-            try {
-                approvalResult = await this._guestService.approveGuest(guestId, transaction);
-                //eslint-disable-next-line
-            } catch (err: any) {
-                if (err instanceof NotFoundException) {
-                    throw new Error(err.message);
-                } else if (err instanceof AlreadyExistsException) {
-                    logger.info(err.message);
-                } else {
-                    logger.error(`Couldn't approve the guest: ${err.message}`);
-                    throw new Error(`Couldn't approve the guest`);
-                }
-            }
-
-            // Fetch request data
-            const requestData = await Service.findOne({ where: { serviceId: requestId }, transaction });
-            if (!requestData) {
-                throw new NotFoundException("Service", "serviceId", requestId);
-            }
-
-            //create new sheet & add the user to the sheet as editor
-            let sheetUrl: string = '';
-            try {
-
-                const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`, requestData.name);
-                sheetUrl = sheet.spreadsheetId;
-                // await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
-                await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); //temporary for testing
-
-            } //eslint-disable-next-line
-            catch (error: any) {
-                logger.error(`Error creating sheet: ${error.message}`);
-                throw new Error(`Error creating sheet`);
-            }
-
-            // Create profile & add service/request data to profile
-            try {
-                const profilePayload: IProfileAddPayload = {
-                    userId: approvalResult?.userId as string,
-                    marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
-                    sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`,
-                    sheetName: requestData.name,
-                    serviceId: requestData.serviceId,
-                }
-                await this._userProfilesService.addUserProfile(profilePayload, transaction);
-                //eslint-disable-next-line
-            } catch (err: any) {
-                if (err instanceof AlreadyExistsException) {
-                    logger.info(err.message);
-                } else {
-                    logger.error(`Couldn't create a profile: ${err.message}`);
-                    throw new Error(`Couldn't create a profile`);
-                }
-            }
+            const sheetUrl = await this._createAndShareSheet(approvalResult?.userId, requestData);
+            await this._createProfile(approvalResult?.userId, guestRequest, requestData, sheetUrl, transaction);
 
             await transaction.commit(); // Commit the transaction
 
-            // Send the email after committing the transaction
-            if (approvalResult?.sendEmail == true) {
+            if (approvalResult?.sendEmail) {
                 await this._emailService.sendEmail(approvalResult?.emailPayload as IEmailOptions);
             }
 
-            // eslint-disable-next-line
+            //eslint-disable-next-line
         } catch (error: any) {
             if (!txn) {
                 await transaction.rollback(); // Rollback the transaction only if it wasn't provided
@@ -304,4 +247,81 @@ export default class GuestRequestsService {
             throw new Error(`Error approving guest request: ${error.message}`);
         }
     }
+
+    private async _findGuestRequest(guestId: string, requestId: string, transaction: Transaction) {
+        const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId }, transaction });
+        if (!guestRequest) {
+            throw new Error('Guest Request not found');
+        }
+        return guestRequest;
+    }
+
+    private async _updateGuestRequestStatus(guestRequest: GuestRequest, transaction: Transaction) {
+        await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
+    }
+
+    private async _approveGuest(guestId: string, transaction: Transaction): Promise<ApproveGuestResponse | null> {
+        try {
+            return await this._guestService.approveGuest(guestId, transaction);
+
+            //eslint-disable-next-line
+        } catch (err: any) {
+            if (err instanceof NotFoundException) {
+                throw new Error(err.message);
+            } else if (err instanceof AlreadyExistsException) { //if user record of this guest already exists (guest already approved)
+                logger.info(err.message);
+                return null;
+            } else {
+                logger.error(`Couldn't approve the guest: ${err.message}`);
+                throw new Error(`Couldn't approve the guest`);
+            }
+        }
+    }
+
+    private async _fetchRequestData(requestId: string, transaction: Transaction) {
+        const requestData = await Service.findOne({ where: { serviceId: requestId }, transaction });
+        if (!requestData) {
+            throw new NotFoundException("Service", "serviceId", requestId);
+        }
+        return requestData;
+    }
+
+    private async _createAndShareSheet(userId: string | undefined, requestData: Service): Promise<string> {
+        let sheetUrl: string = '';
+        try {
+            const sheet = await this._sheetsService.createSpreadSheet(`${userId}-${requestData.name}-${Date.now()}`, requestData.name);
+            sheetUrl = sheet.spreadsheetId;
+            await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); // temporary for testing
+            return `https://docs.google.com/spreadsheets/d/${sheetUrl}`;
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error creating sheet: ${error.message}`);
+            throw new Error(`Error creating sheet`);
+        }
+    }
+
+    private async _createProfile(userId: string | undefined, guestRequest: GuestRequest, requestData: Service, sheetUrl: string, transaction: Transaction) {
+        try {
+            const profilePayload: IProfileAddPayload = {
+                userId: userId as string,
+                marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
+                sheetUrl: sheetUrl,
+                sheetName: requestData.name,
+                serviceId: requestData.serviceId,
+                requestId: guestRequest.guestRequestId,
+            };
+            await this._userProfilesService.addUserProfile(profilePayload, transaction);
+
+            //eslint-disable-next-line
+        } catch (err: any) {
+            if (err instanceof AlreadyExistsException) {
+                logger.info(err.message);
+            } else {
+                logger.error(`Couldn't create a profile: ${err.message}`);
+                throw new Error(`Couldn't create a profile`);
+            }
+        }
+    }
+
 }

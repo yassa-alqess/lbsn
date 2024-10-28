@@ -1,7 +1,8 @@
-import { Table, Model, Column, DataType, BelongsToMany, HasMany, AllowNull } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsToMany, HasMany, AllowNull, HasOne } from 'sequelize-typescript';
 import Service from './service';
 import GuestRequest from './guest-request'
 import Appointment from './appointment';
+import User from './user';
 import { IsApprovedEnum } from '../enums';
 
 //3rd party dependencies
@@ -93,6 +94,9 @@ class Guest extends Model {
 
     @HasMany(() => Appointment)
     declare appointments: Appointment[];
+
+    @HasOne(() => User)
+    user!: User;
 }
 
 export default Guest;
