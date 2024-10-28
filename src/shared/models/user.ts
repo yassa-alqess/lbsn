@@ -1,8 +1,9 @@
-import { Table, Model, Column, DataType, BelongsToMany, AllowNull, HasMany } from 'sequelize-typescript';
+import { Table, Model, Column, DataType, BelongsToMany, AllowNull, HasMany, BelongsTo, ForeignKey } from 'sequelize-typescript';
 import Profile from './profile';
 import RefreshToken from './refresh-token';
 import Role from './role';
 import UserRole from './user-role';
+import Guest from './guest';
 import { IsLockedEnum, IsVerifiedEnum } from '../enums';
 
 //3rd party dependinces
@@ -120,6 +121,16 @@ class User extends Model {
 
   @BelongsToMany(() => Role, () => UserRole)
   declare roles: Role[];
+
+
+  @ForeignKey(() => Guest)
+  @Column({
+    type: DataType.UUID,
+  })
+  declare guestId: string;
+
+  @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+  declare guest: Guest;
 }
 
 export default User;
