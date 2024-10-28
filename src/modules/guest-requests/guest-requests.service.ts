@@ -219,92 +219,6 @@ export default class GuestRequestsService {
         }
     }
 
-    public async approveGuestRequest2(guestId: string, requestId: string, txn?: Transaction): Promise<void> {
-        const transaction = txn || await this._sequelize!.transaction();
-
-        try {
-            const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId: requestId }, transaction });
-            if (!guestRequest) {
-                throw new Error('Guest Request not found');
-            }
-
-            // Update guest-service status
-            await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
-
-            // Approve guest and return necessary data for email
-            let approvalResult: ApproveGuestResponse | null = null;
-            try {
-                approvalResult = await this._guestService.approveGuest(guestId, transaction);
-                //eslint-disable-next-line
-            } catch (err: any) {
-                if (err instanceof NotFoundException) {
-                    throw new Error(err.message);
-                } else if (err instanceof AlreadyExistsException) {
-                    logger.info(err.message);
-                } else {
-                    logger.error(`Couldn't approve the guest: ${err.message}`);
-                    throw new Error(`Couldn't approve the guest`);
-                }
-            }
-
-            // Fetch request data
-            const requestData = await Service.findOne({ where: { serviceId: requestId }, transaction });
-            if (!requestData) {
-                throw new NotFoundException("Service", "serviceId", requestId);
-            }
-
-            //create new sheet & add the user to the sheet as editor
-            let sheetUrl: string = '';
-            try {
-
-                const sheet = await this._sheetsService.createSpreadSheet(`${approvalResult?.userId}-${requestData.name}-${Date.now()}`, requestData.name);
-                sheetUrl = sheet.spreadsheetId;
-                // await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
-                await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); //temporary for testing
-
-            } //eslint-disable-next-line
-            catch (error: any) {
-                logger.error(`Error creating sheet: ${error.message}`);
-                throw new Error(`Error creating sheet`);
-            }
-
-            // Create profile & add service/request data to profile
-            try {
-                const profilePayload: IProfileAddPayload = {
-                    userId: approvalResult?.userId as string,
-                    marketingBudget: guestRequest.marketingBudget as MarketingBudgetEnum,
-                    sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetUrl}`,
-                    sheetName: requestData.name,
-                    serviceId: requestData.serviceId,
-                }
-                await this._userProfilesService.addUserProfile(profilePayload, transaction);
-                //eslint-disable-next-line
-            } catch (err: any) {
-                if (err instanceof AlreadyExistsException) {
-                    logger.info(err.message);
-                } else {
-                    logger.error(`Couldn't create a profile: ${err.message}`);
-                    throw new Error(`Couldn't create a profile`);
-                }
-            }
-
-            await transaction.commit(); // Commit the transaction
-
-            // Send the email after committing the transaction
-            if (approvalResult?.sendEmail == true) {
-                await this._emailService.sendEmail(approvalResult?.emailPayload as IEmailOptions);
-            }
-
-            // eslint-disable-next-line
-        } catch (error: any) {
-            if (!txn) {
-                await transaction.rollback(); // Rollback the transaction only if it wasn't provided
-            }
-            logger.error(`Error approving guest request: ${error.message}`);
-            throw new Error(`Error approving guest request: ${error.message}`);
-        }
-    }
-
     public async approveGuestRequest(guestId: string, requestId: string, txn?: Transaction): Promise<void> {
         const transaction = txn || await this._sequelize!.transaction();
 
@@ -395,6 +309,7 @@ export default class GuestRequestsService {
                 sheetUrl: sheetUrl,
                 sheetName: requestData.name,
                 serviceId: requestData.serviceId,
+                requestId: guestRequest.guestRequestId,
             };
             await this._userProfilesService.addUserProfile(profilePayload, transaction);
 

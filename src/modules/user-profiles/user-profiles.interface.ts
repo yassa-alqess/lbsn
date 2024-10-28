@@ -6,6 +6,7 @@ export interface IProfileAddPayload {
     sheetUrl?: string;
     sheetName?: string;
     serviceId: string;
+    requestId: string;
 }
 
 export interface IProfileRequestPayload {
