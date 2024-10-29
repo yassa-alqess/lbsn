@@ -2,13 +2,14 @@ import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetPayload,
 import User from "../../shared/models/user";
 import { deleteFile, getFileSizeAsync, readXlsx } from "../../shared/utils";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
-import { IsLockedEnum, IsVerifiedEnum, RoleEnum } from "../../shared/enums";
+import { IsLockedEnum, IsResolvedEnum, IsVerifiedEnum, MarketingBudgetEnum, RoleEnum } from "../../shared/enums";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
 import { USER_IMAGES_PATH } from "../../shared/constants";
-import GuestRequestsService from "../guest-requests/guest-requests.service";
-import { IgetGuestRequestsResponse } from "../guest-requests/guest-requests.interface";
+import { IgetGuestRequestsResponse, IGuestRequest } from "../guest-requests/guest-requests.interface";
+import GuestRequest from "../../shared/models/guest-request";
+import Service from "../../shared/models/service";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -18,7 +19,6 @@ import path from 'path';
 export default class UserService {
 
     private _sequelize: Sequelize | null = null;
-    private _guestRequestsService = new GuestRequestsService();
     constructor() {
         this._sequelize = DatabaseManager.getSQLInstance();
     }
@@ -365,11 +365,37 @@ export default class UserService {
     }
 
     public async getUserRequests(userId: string): Promise<IgetGuestRequestsResponse | undefined> {
-        const user = await User.findByPk(userId);
-        if (!user) {
-            throw new NotFoundException('User', 'userId', userId);
+        try {
+            const user = await User.findByPk(userId);
+            if (!user) {
+                throw new NotFoundException('User', 'userId', userId);
+            }
+            const guestRequests = await GuestRequest.findAll({
+                where: { guestId: user?.guestId },
+                include: [{
+                    model: Service,
+                    attributes: ['serviceId', 'name'],
+                }],
+            });
+
+            const guestRequestsResponse: IGuestRequest[] = guestRequests.map(request => ({
+                // ...request.toJSON() as IGuestRequest,
+                guestRequestId: request.guestRequestId,
+                guestId: request.guestId,
+                requestId: request.serviceId,
+                name: request.service.name,
+                status: request.resolved as IsResolvedEnum,
+                marketingBudget: request.marketingBudget as MarketingBudgetEnum
+            }));
+
+            return { gestRequests: guestRequestsResponse };
         }
-        return this._guestRequestsService.getGuestRequests(user.guestId);
+
+        //eslint-disable-next-line
+        catch (error: any) {
+            logger.error(`Couldn't get guest requests, ${error.message}`);
+            throw new Error(`Couldn't get guest requests, ${error.message}`);
+        }
     }
 
     public async deleteUser(userId: string): Promise<void> {
