@@ -13,7 +13,7 @@ import Service from "../../shared/models/service";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
-import { Op, Sequelize } from 'sequelize';
+import { Op, Sequelize, Transaction } from 'sequelize';
 import path from 'path';
 
 export default class UserService {
@@ -83,92 +83,117 @@ export default class UserService {
     }
 
     public async updateUser(userPayload: IUserUpdatePayload): Promise<IUserResponse | undefined> {
-        const { userId, companyTaxId, companyEmail, password } = userPayload;
-        let user = await User.findByPk(userId, {
-        });
-        if (!user) {
-            throw new NotFoundException('User', 'userId', userId);
-        }
+        const { userId, password } = userPayload;
+        let user = await this._findUserById(userId);
 
         const transaction = await this._sequelize!.transaction(); // Start a transaction
 
         try {
-            // Hash password if it’s provided and different from the current one
-            if (password && !(await bcrypt.compare(password, user.password))) {
-                userPayload.password = await bcrypt.hash(password, 10);
-            } else {
-                delete userPayload.password;
+            if (password) {
+                await this._handlePasswordUpdate(userPayload, password, user.password);
             }
 
-            // Check for unique email and taxId to avoid constraint violation
-            if (companyEmail) {
-                const existingUserWithEmail = await User.findOne({
-                    where: {
-                        companyEmail,
-                        userId: { [Op.ne]: userId }, // Exclude the current user from the check
-                    },
-                    transaction,
-                });
-                if (existingUserWithEmail) {
-                    throw new AlreadyExistsException('User', 'email', companyEmail as string);
-                }
-            }
+            await this._checkUniqueFields(userPayload, userId, transaction);
 
-            if (companyTaxId) {
-                const existingUserWithTaxId = await User.findOne({
-                    where: {
-                        companyTaxId,
-                        userId: { [Op.ne]: userId }, // Exclude the current user from the check
-                    },
-                    transaction,
-                });
-                if (existingUserWithTaxId) {
-                    throw new AlreadyExistsException('User', 'taxId', companyTaxId as string);
-                }
-            }
+            await this._handleImageUpdate(userPayload, user);
 
-            // Delete old image if a new image is provided
-            const oldImage = user.image;
-            const newImage = userPayload.image;
-            if (newImage && oldImage !== newImage) {
-                deleteFile(path.join(USER_IMAGES_PATH, oldImage));
-            }
-
-            // if no new image provided, don't update the image field (remove it from the update payload)
-            if (!newImage) {
-                delete userPayload.image;
-            }
-
-            // Update user if there are changes
-            if (Object.keys(userPayload).length > 0) {
-                user = await user.update(userPayload, { transaction });
-            }
+            user = await this._updateUserPayload(userPayload, user, transaction);
 
             await transaction.commit();
 
+            return this._buildUserResponse(user);
 
-            return {
-                userId: user.userId,
-                username: user.username,
-                userEmail: user.userEmail,
-                userPhone: user.userPhone,
-                userAddress: user.userAddress,
-                companyTaxId: user.companyTaxId,
-                companyName: user.companyName,
-                companyEmail: user.companyEmail,
-                companyPhone: user.companyPhone,
-                companyAddress: user.companyAddress,
-                image: user.image ? user.image : '',
-                size: user.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)) : '0KB',
-                isVerified: user.isVerified,
-                isLocked: user.isLocked
-            };
             //eslint-disable-next-line
         } catch (error: any) {
             await transaction.rollback();
             logger.error(`Couldn't Update User, ${error.message}`);
             throw new Error(`Couldn't Update User, ${error.message}`);
         }
+    }
+
+    private async _findUserById(userId: string): Promise<User> {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            throw new NotFoundException('User', 'userId', userId);
+        }
+        return user;
+    }
+
+    private async _handlePasswordUpdate(userPayload: IUserUpdatePayload, newPassword: string, currentPassword: string): Promise<void> {
+        if (!(await bcrypt.compare(newPassword, currentPassword))) {
+            userPayload.password = await bcrypt.hash(newPassword, 10);
+        } else {
+            delete userPayload.password; // Remove the password field if it hasn't changed
+        }
+    }
+
+    private async _checkUniqueFields(userPayload: IUserUpdatePayload, userId: string, transaction: Transaction): Promise<void> {
+        const { companyEmail, companyTaxId } = userPayload;
+
+        if (companyEmail) {
+            const existingUserWithEmail = await User.findOne({
+                where: {
+                    companyEmail,
+                    userId: { [Op.ne]: userId }
+                },
+                transaction,
+            });
+            if (existingUserWithEmail) {
+                throw new AlreadyExistsException('User', 'email', companyEmail as string);
+            }
+        }
+
+        if (companyTaxId) {
+            const existingUserWithTaxId = await User.findOne({
+                where: {
+                    companyTaxId,
+                    userId: { [Op.ne]: userId }
+                },
+                transaction,
+            });
+            if (existingUserWithTaxId) {
+                throw new AlreadyExistsException('User', 'taxId', companyTaxId as string);
+            }
+        }
+    }
+
+    private async _handleImageUpdate(userPayload: IUserUpdatePayload, user: User): Promise<void> {
+        const oldImage = user.image;
+        const newImage = userPayload.image;
+
+        if (newImage && oldImage !== newImage) {
+            deleteFile(path.join(USER_IMAGES_PATH, oldImage));
+        }
+
+        if (!newImage) {
+            delete userPayload.image;
+        }
+    }
+
+    private async _updateUserPayload(userPayload: IUserUpdatePayload, user: User, transaction: Transaction): Promise<User> {
+        if (Object.keys(userPayload).length > 0) {
+            user = await user.update(userPayload, { transaction });
+        }
+        return user;
+    }
+
+    private async _buildUserResponse(user: User): Promise<IUserResponse> {
+        return {
+            userId: user.userId,
+            username: user.username,
+            userEmail: user.userEmail,
+            userPhone: user.userPhone,
+            userAddress: user.userAddress,
+            companyTaxId: user.companyTaxId,
+            companyName: user.companyName,
+            companyEmail: user.companyEmail,
+            companyPhone: user.companyPhone,
+            companyAddress: user.companyAddress,
+            image: user.image ? user.image : '',
+            size: user.image ? await getFileSizeAsync(path.join(USER_IMAGES_PATH, user.image)) : '0KB',
+            isVerified: user.isVerified,
+            isLocked: user.isLocked,
+        };
     }
 
     public async bulkAddUsers(filePath: string): Promise<IUserBulkAddResponse | undefined> {
