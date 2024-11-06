@@ -8,13 +8,14 @@ export const CreateProfileDto = Joi.object({
         .valid(..._.values(MarketingBudgetEnum))
         .required(),
     sheetUrl: Joi.string().optional(),
-    sheetName: Joi.number()
+    sheetName: Joi.string()
         .when('sheetUrl', {
             is: Joi.exist(),
-            then: Joi.required(),
-            otherwise: Joi.forbidden(),
+            then: Joi.string().required(),
+            otherwise: Joi.string().forbidden(),
         }),
     serviceId: Joi.string().required(),
+    categoryId: Joi.string().required(),
 });
 
 export const RequestProfileDto = Joi.object({

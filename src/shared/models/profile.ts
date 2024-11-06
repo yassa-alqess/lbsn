@@ -6,6 +6,7 @@ import User from './user';
 import Service from './service';
 import GuestRequest from './guest-request';
 import { MarketingBudgetEnum } from '../enums';
+import Category from './category';
 
 //3rd party dependencies
 import * as _ from "lodash";
@@ -59,6 +60,15 @@ class Profile extends Model {
 
     @BelongsTo(() => Service, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare service: Service;
+
+    @ForeignKey(() => Category)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare categoryId: string;
+
+    @BelongsTo(() => Category, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare category: Category;
 
     @ForeignKey(() => User)
     @Column({

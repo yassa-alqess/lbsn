@@ -4,10 +4,14 @@ import Service from "../../shared/models/service";
 import { NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
 import ServicesService from "../services/services.service";
+import CategoriesService from "../categories/categories.service";
 import SheetsService from "../sheets/sheets.service";
+import ServiceCategory from "../../shared/models/service-category";
+import HttpException from "../../shared/exceptions/http.exception";
 
 export default class ProfileService {
     private _servicesService = new ServicesService();
+    private _categoriesService = new CategoriesService();
     private _sheetsService = new SheetsService();
     public async updateProfile(profilePayload: IProfileUpdatePayload): Promise<IProfileResponse | undefined> {
         const { profileId } = profilePayload;
@@ -30,12 +34,23 @@ export default class ProfileService {
             // first check for the service if it was changed, then check if the default sheet was changed
             let newSheetUrl = profile.sheetUrl;
             let newSheetName = profile.sheetName;
-            if (profilePayload.serviceId && profile.serviceId !== profilePayload.serviceId) {
+            if (profilePayload.serviceId && profilePayload.categoryId && profile.serviceId !== profilePayload.serviceId) {
                 const service = await this._servicesService.getService(profilePayload.serviceId as string);
                 if (!service) {
                     throw new NotFoundException('Service', 'serviceId', profilePayload.serviceId as string);
                 }
-                const newSheet = await this._sheetsService.createSpreadSheet(`${profile?.userId}-${service.name}-${Date.now()}`, service.name);
+
+                const category = await this._categoriesService.getCategory(profilePayload.categoryId as string);
+                if (!category) {
+                    throw new NotFoundException('Category', 'categoryId', profilePayload.categoryId as string);
+                }
+
+                const serviceCategory = await ServiceCategory.findOne({ where: { serviceId: profilePayload.serviceId, categoryId: profilePayload.categoryId } });
+                if (!serviceCategory) {
+                    throw new HttpException(400, "Service is not in the category");
+                }
+
+                const newSheet = await this._sheetsService.createSpreadSheet(`${profile?.userId}-${category.name}-${service.name}-${Date.now()}`, service.name);
                 const sheetUrl = newSheet.spreadsheetId;
                 // await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
                 await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); //temporary for testing
@@ -59,6 +74,7 @@ export default class ProfileService {
                 sheetName: newProfile.sheetName,
                 userId: newProfile.userId,
                 serviceId: newProfile.serviceId,
+                categoryId: newProfile.categoryId,
                 serviceName: newProfile.service?.name
             };
 
@@ -93,6 +109,7 @@ export default class ProfileService {
             sheetName: profile.sheetName,
             userId: profile.userId,
             serviceId: profile.serviceId,
+            categoryId: profile.categoryId,
             serviceName: profile.service?.name
         };
     }
