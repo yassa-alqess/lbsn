@@ -405,10 +405,10 @@ export default class UserService {
 
             const guestRequestsResponse: IGuestRequest[] = guestRequests.map(request => ({
                 // ...request.toJSON() as IGuestRequest,
-                guestRequestId: request.guestRequestId,
+                requestId: request.guestRequestId,
                 guestId: request.guestId,
-                requestId: request.serviceId,
-                name: request.service.name,
+                serviceId: request.serviceId,
+                categoryId: request.categoryId,
                 status: request.resolved as IsResolvedEnum,
                 marketingBudget: request.marketingBudget as MarketingBudgetEnum
             }));
