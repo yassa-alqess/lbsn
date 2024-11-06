@@ -1,6 +1,7 @@
 import { Column, Table, Model, ForeignKey, DataType, BelongsTo, HasOne } from 'sequelize-typescript';
 import Guest from './guest';
 import Service from './service';
+import Category from './category';
 import { IsResolvedEnum, MarketingBudgetEnum } from '../enums';
 
 //3rd party dependencies
@@ -25,6 +26,11 @@ class GuestRequest extends Model {
     })
     declare serviceId: string;
 
+    @ForeignKey(() => Category)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare categoryId: string;
 
     @ForeignKey(() => Guest)
     @Column({
@@ -55,11 +61,14 @@ class GuestRequest extends Model {
     declare marketingBudget: MarketingBudgetEnum;
 
     // Define association
-    @BelongsTo(() => Guest)
+    @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     guest!: Guest;
 
-    @BelongsTo(() => Service)
+    @BelongsTo(() => Service, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     service!: Service;
+
+    @BelongsTo(() => Category, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    category!: Category;
 
     @HasOne(() => Profile)
     profile!: Profile;

@@ -4,10 +4,12 @@ export interface IgetGuestRequestsResponse {
 }
 
 export interface IGuestRequest {
-    guestRequestId: string;
-    guestId: string;
     requestId: string;
-    name: string;
+    guestId: string;
+    serviceId: string;
+    serviceName?: string;
+    categoryId: string;
+    categoryName?: string;
     status: IsResolvedEnum;
     marketingBudget: MarketingBudgetEnum;
 }
@@ -15,12 +17,15 @@ export interface IGuestRequest {
 
 export interface IGuestRequestAddPayload {
     guestId: string;
-    requestId: string;
+    serviceId: string;
+    categoryId: string;
     marketingBudget: MarketingBudgetEnum;
 }
 
 export interface IGuestRequestUpdatePayload {
-    guestId: string;
     requestId: string;
+    serviceId?: string;
+    categoryId?: string;
     marketingBudget?: MarketingBudgetEnum;
+    status?: IsResolvedEnum;
 }
