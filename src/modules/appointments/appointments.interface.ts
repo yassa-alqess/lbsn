@@ -10,6 +10,7 @@ export interface IAppointmentsAddPayload {
     marketingBudget: MarketingBudgetEnum;
     timeSlotId: string;
     serviceId: string;
+    categoryId: string;
 }
 
 export interface IAppointment {
@@ -21,6 +22,8 @@ export interface IAppointment {
     guestId: string;
     serviceId: string;
     serviceName: string;
+    categoryId: string;
+    categoryName: string;
     timeSlotId: string;
     time: Date;
 }
