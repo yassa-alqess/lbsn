@@ -50,7 +50,8 @@ export default class AuthService {
 
         try {
             const accessToken = generateAccessToken(tokenPayload) as string;
-            const result = await this._redisClient?.setEx(`access-token:${user.userId}:${accessToken}`, ms(ACCESS_TOKEN_EXPIRY), 'valid');
+            const token = `access-token:${user.userId}:${accessToken}`;
+            const result = await this._redisClient?.setEx(token, ms(ACCESS_TOKEN_EXPIRY), 'valid');
             logger.debug(`cache result: ${result}`);
 
 
@@ -80,7 +81,8 @@ export default class AuthService {
                 throw new InvalidTokenException('access token');
             }
 
-            const isValid = await this._redisClient?.get(`access-token:${decoded.id}:${accessToken}`);
+            const token = `access-token:${decoded.id}:${accessToken}`;
+            const isValid = await this._redisClient?.get(token);
             if (!isValid) throw new InvalidTokenException('access token');
 
             if (!refreshTokenValue) throw new InvalidTokenException('refresh token');
