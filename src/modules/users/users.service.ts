@@ -161,7 +161,7 @@ export default class UserService {
         const oldImage = user.image;
         const newImage = userPayload.image;
 
-        if (newImage && oldImage !== newImage) {
+        if (newImage && oldImage && oldImage !== newImage) {
             deleteFile(path.join(USER_IMAGES_PATH, oldImage));
         }
 
