@@ -107,7 +107,7 @@ export default class TicketService {
             // Delete old document if new document is uploaded
             const oldDocumentUrl = ticket.documentUrl;
             const newDocumentUrl = ticketPayload.documentUrl;
-            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+            if (newDocumentUrl && oldDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
                 deleteFile(path.join(TICKETS_FILES_PATH, oldDocumentUrl));
             }
 
