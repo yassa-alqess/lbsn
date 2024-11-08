@@ -48,7 +48,7 @@ export default class AppointmentService {
             categoryId: appointmentPayload.categoryId,
             marketingBudget: appointmentPayload.marketingBudget
         };
-        await this._guestRequestsService.addGuestRequest({
+        const { requestId } = await this._guestRequestsService.addGuestRequest({
             ...guestRequest
         });
 
@@ -56,7 +56,7 @@ export default class AppointmentService {
         await this._sendConfirmationEmail(guest, meeting);
 
         // create appointment record after the meeting is prepared & the guest-request-record is created & the email is sent
-        return await this._createAppointmentRecord(guest, appointmentPayload, meeting);
+        return await this._createAppointmentRecord(requestId, guest, appointmentPayload, meeting);
     }
 
     private _mapAppointmentToGuest(appointmentPayload: IAppointmentsAddPayload): IGuestAddPayload {
@@ -71,6 +71,7 @@ export default class AppointmentService {
     }
 
     private async _createAppointmentRecord(
+        requestId: string,
         guest: IGuestResponse,
         appointmentPayload: IAppointmentsAddPayload,
         meeting: IMeeting,
@@ -83,6 +84,7 @@ export default class AppointmentService {
                 meetingUrl: meeting.start_url,
                 meetingJoinUrl: meeting.join_url,
                 meetingPassword: hashedPassword,
+                requestId,
                 guestId: guest.guestId,
                 serviceId: appointmentPayload.serviceId,
                 categoryId: appointmentPayload.categoryId,
@@ -97,6 +99,7 @@ export default class AppointmentService {
                 guestEmail: appointment.guestEmail,
                 meetingUrl: appointment.meetingUrl,
                 meetingJoinUrl: appointment.meetingJoinUrl,
+                requestId: appointment.requestId,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 serviceName: service?.name as string,
@@ -186,6 +189,7 @@ export default class AppointmentService {
                 guestEmail: appointment.guestEmail,
                 meetingUrl: appointment.meetingUrl,
                 meetingJoinUrl: appointment.meetingJoinUrl,
+                requestId: appointment.requestId,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 serviceName: appointment.service?.name,
@@ -232,6 +236,7 @@ export default class AppointmentService {
                 guestUsername: appointment.guest?.username,
                 meetingUrl: appointment.meetingUrl,
                 meetingJoinUrl: appointment.meetingJoinUrl,
+                requestId: appointment.requestId,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 serviceName: appointment.service?.name,

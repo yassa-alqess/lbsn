@@ -19,6 +19,7 @@ export interface IAppointment {
     guestUsername?: string;
     meetingUrl: string;
     meetingJoinUrl: string;
+    requestId: string;
     guestId: string;
     serviceId: string;
     serviceName: string;

@@ -57,7 +57,7 @@ export default class GuestRequestsService {
             }
 
             const newGuestRequest = await GuestRequest.create({
-                guestId, serviceId, resolved: IsResolvedEnum.PENDING, marketingBudget
+                guestId, serviceId, categoryId, resolved: IsResolvedEnum.PENDING, marketingBudget
             });
 
             return {
@@ -67,7 +67,6 @@ export default class GuestRequestsService {
                 categoryId: category.categoryId,
                 status: newGuestRequest.resolved as IsResolvedEnum,
                 marketingBudget: newGuestRequest.marketingBudget as MarketingBudgetEnum
-
             }
         }
         //eslint-disable-next-line
@@ -222,7 +221,7 @@ export default class GuestRequestsService {
         try {
             const guestRequest = await this._findGuestRequest(requestId, transaction);
             await this._updateGuestRequestStatus(guestRequest.requestId, transaction);
-
+            logger.debug(`guestRequest: ${JSON.stringify(guestRequest)}`);
             const approvalResult = await this._approveGuest(guestRequest.guestId, transaction);
 
             const sheetUrl = await this._createAndShareSheet(approvalResult?.userId, guestRequest);
@@ -299,14 +298,6 @@ export default class GuestRequestsService {
                 throw new Error(`Couldn't approve the guest`);
             }
         }
-    }
-
-    private async _fetchRequestData(requestId: string, transaction: Transaction) {
-        const requestData = await Service.findOne({ where: { serviceId: requestId }, transaction });
-        if (!requestData) {
-            throw new NotFoundException("Service", "serviceId", requestId);
-        }
-        return requestData;
     }
 
     private async _createAndShareSheet(userId: string | undefined, guestRequest: IGuestRequest): Promise<string> {

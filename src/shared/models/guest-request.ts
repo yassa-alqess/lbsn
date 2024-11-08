@@ -7,6 +7,7 @@ import { IsResolvedEnum, MarketingBudgetEnum } from '../enums';
 //3rd party dependencies
 import * as _ from "lodash";
 import Profile from './profile';
+import Appointment from './appointment';
 
 const isResolvedStatueses: string[] = _.values(IsResolvedEnum);
 const marketingBudgetEnumValues: string[] = _.values(MarketingBudgetEnum);
@@ -72,6 +73,9 @@ class GuestRequest extends Model {
 
     @HasOne(() => Profile)
     profile!: Profile;
+
+    @HasOne(() => Appointment)
+    appointment!: Appointment;
 }
 
 export default GuestRequest;

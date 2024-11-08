@@ -3,6 +3,7 @@ import Guest from './guest';
 import Service from './service';
 import TimeSlot from './time-slot';
 import Category from './category';
+import GuestRequest from './guest-request';
 
 @Table({ schema: 'public', timestamps: true })
 class Appointment extends Model {
@@ -41,6 +42,15 @@ class Appointment extends Model {
 
     @BelongsTo(() => Guest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     declare guest: Guest;
+
+    @ForeignKey(() => GuestRequest)
+    @Column({
+        type: DataType.UUID,
+    })
+    declare requestId: string;
+
+    @BelongsTo(() => GuestRequest, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
+    declare request: GuestRequest;
 
     @ForeignKey(() => Service)
     @Column({
