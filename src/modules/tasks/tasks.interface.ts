@@ -43,5 +43,6 @@ export interface ITask {
     size?: string;
     status: TaskStatusEnum;
     createdAt: Date;
+    submittedAt?: Date;
     submission?: ITaskSubmission;
 }

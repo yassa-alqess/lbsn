@@ -61,7 +61,13 @@ export default class TaskService {
                 const taskJson = task.toJSON() as ITask;
                 const taskSubmission = task.taskSubmission ? task.taskSubmission.toJSON() as ITaskSubmission : undefined;
                 return {
-                    ...taskJson,
+                    taskId: taskJson.taskId,
+                    profileId: taskJson.profileId,
+                    title: taskJson.title,
+                    comment: taskJson.comment,
+                    status: taskJson.status,
+                    createdAt: taskJson.createdAt,
+                    submittedAt: taskJson.submittedAt,
                     documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
                     size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB',
                     submission: taskSubmission,
@@ -88,7 +94,7 @@ export default class TaskService {
             // Delete old document if new document is uploaded
             const oldDocumentUrl = task.documentUrl;
             const newDocumentUrl = taskPayload.documentUrl;
-            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+            if (newDocumentUrl && oldDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
                 deleteFile(path.join(TASKS_FILES_PATH, oldDocumentUrl));
             }
 
@@ -127,7 +133,13 @@ export default class TaskService {
 
         const taskJson = task.toJSON() as ITask;
         return {
-            ...taskJson,
+            taskId: taskJson.taskId,
+            profileId: taskJson.profileId,
+            title: taskJson.title,
+            comment: taskJson.comment,
+            status: taskJson.status,
+            createdAt: taskJson.createdAt,
+            submittedAt: taskJson.submittedAt,
             documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
             size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB',
             submission: taskSubmissionJson
@@ -185,7 +197,13 @@ export default class TaskService {
                 const taskJson = task.toJSON() as ITask;
                 const taskSubmission = task.taskSubmission ? task.taskSubmission.toJSON() as ITaskSubmission : undefined;
                 return {
-                    ...taskJson,
+                    taskId: taskJson.taskId,
+                    profileId: taskJson.profileId,
+                    title: taskJson.title,
+                    comment: taskJson.comment,
+                    status: taskJson.status,
+                    createdAt: taskJson.createdAt,
+                    submittedAt: taskJson.submittedAt,
                     documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
                     size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB',
                     username: task.profile.user.username,
