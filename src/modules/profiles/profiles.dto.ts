@@ -7,11 +7,17 @@ export const updateProfileDto = Joi.object({
     .valid(..._.values(MarketingBudgetEnum))
     .optional(),
   sheetUrl: Joi.string().optional(),
-  sheetName: Joi.number()
+  sheetName: Joi.string()
     .when('sheetUrl', {
       is: Joi.exist(),
-      then: Joi.required(),
-      otherwise: Joi.optional(),
+      then: Joi.string().required(),
+      otherwise: Joi.string().optional(),
     }),
   serviceId: Joi.string().optional(),
+  categoryId: Joi.string()
+    .when('serviceId', {
+      is: Joi.exist(),
+      then: Joi.string().required(),
+      otherwise: Joi.string().forbidden(),
+    }),
 });

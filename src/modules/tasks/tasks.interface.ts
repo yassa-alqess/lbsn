@@ -1,4 +1,5 @@
 import { TaskStatusEnum } from "../../shared/enums";
+import { ITaskSubmission } from "../task-submission/task-submission.interface";
 
 export interface ITasksGetPayload {
     profileId: string;
@@ -43,4 +44,5 @@ export interface ITask {
     status: TaskStatusEnum;
     createdAt: Date;
     submittedAt?: Date;
+    submission?: ITaskSubmission;
 }

@@ -100,43 +100,22 @@ export default class LeadsService {
     }
 
     public async updateLead(payload: ILeadUpdatePayload): Promise<void> {
-
         try {
             const { leadId, status } = payload;
+            const lead = await this._findLeadById(leadId);
 
-            const lead = await Lead.findByPk(leadId);
-            if (!lead) {
-                throw new NotFoundException('Lead', 'leadId', leadId);
+            switch (status) {
+                case LeadStatusEnum.SALE_MADE:
+                    await this._handleSaleMadeStatus(lead, payload);
+                    break;
+                case LeadStatusEnum.OTHER:
+                    await this._handleOtherStatus(lead, payload);
+                    break;
+                default:
+                    lead.status = status as LeadStatusEnum;
+                    await lead.save();
             }
-            if (status) {
-                if (status === LeadStatusEnum.SALE_MADE) {
-                    const { stage, dealValue, dealCurrency, comment } = payload;
-                    if (stage && dealValue && dealCurrency) {
-                        Sale.create({
-                            saleId: lead.leadId,
-                            profileId: lead.profileId,
-                            stage,
-                            dealValue,
-                            dealCurrency,
-                            comment,
-                            record: lead.record
-                        });
-                        await lead.destroy();
-                        return;
-                    } else {
-                        throw new Error('Missing required fields for SALE_MADE status');
-                    }
-                }
 
-                lead.status = status;
-                if (status === LeadStatusEnum.OTHER) {
-                    const { otherType } = payload;
-                    if (otherType) {
-                        lead.otherType = otherType;
-                    }
-                }
-                await lead.save();
-            }
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`Error updating lead: ${error.message}`);
@@ -146,6 +125,44 @@ export default class LeadsService {
             throw new Error(`Failed to update lead: ${error.message}`);
         }
     }
+
+    private async _findLeadById(leadId: string): Promise<Lead> {
+        const lead = await Lead.findByPk(leadId);
+        if (!lead) {
+            throw new NotFoundException('Lead', 'leadId', leadId);
+        }
+        return lead;
+    }
+
+    private async _handleSaleMadeStatus(lead: Lead, payload: ILeadUpdatePayload): Promise<void> {
+        const { stage, dealValue, dealCurrency, comment } = payload;
+        if (stage && dealValue && dealCurrency) {
+            await Sale.create({
+                saleId: lead.leadId,
+                profileId: lead.profileId,
+                stage,
+                dealValue,
+                dealCurrency,
+                comment,
+                record: lead.record
+            });
+            await lead.destroy();
+        } else {
+            throw new Error('Missing required fields for SALE_MADE status');
+        }
+    }
+
+    private async _handleOtherStatus(lead: Lead, payload: ILeadUpdatePayload): Promise<void> {
+        const { otherType } = payload;
+        if (otherType) {
+            lead.otherType = otherType;
+        } else {
+            throw new Error('Missing required fields for OTHER status');
+        }
+        lead.status = LeadStatusEnum.OTHER;
+        await lead.save();
+    }
+
 
     public async getAllLeadsGrouped(): Promise<GroupedLeads[]> {
         try {

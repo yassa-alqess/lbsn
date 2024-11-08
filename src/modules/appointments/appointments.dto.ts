@@ -13,5 +13,6 @@ export const CreateAppointmentDto = Joi.object({
         .valid(..._.values(MarketingBudgetEnum))
         .required(),
     timeSlotId: Joi.string().required(),
-    serviceId: Joi.string().required()
+    serviceId: Joi.string().required(),
+    categoryId: Joi.string().required(),
 });

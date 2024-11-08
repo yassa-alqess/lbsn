@@ -8,6 +8,8 @@ import logger from "../../config/logger";
 import { TASKS_FILES_PATH } from "../../shared/constants";
 import ProfileService from "../profiles/profiles.service";
 import { deleteFile, getFileSizeAsync } from "../../shared/utils";
+import { ITaskSubmission } from "../task-submission/task-submission.interface";
+import TaskSubmission from "../../shared/models/task-submission";
 
 // 3rd party dependencies
 import path from 'path';
@@ -51,17 +53,35 @@ export default class TaskService {
             },
             limit,
             offset,
+            include: [TaskSubmission],
         });
 
+        const tasksWithSubmissions = await Promise.all(
+            tasks.map(async task => {
+                const taskJson = task.toJSON() as ITask;
+                const taskSubmission = task.taskSubmission ? task.taskSubmission.toJSON() as ITaskSubmission : undefined;
+                return {
+                    taskId: taskJson.taskId,
+                    profileId: taskJson.profileId,
+                    title: taskJson.title,
+                    comment: taskJson.comment,
+                    status: taskJson.status,
+                    createdAt: taskJson.createdAt,
+                    submittedAt: taskJson.submittedAt,
+                    documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
+                    size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB',
+                    submission: taskSubmission,
+                };
+            })
+        );
+
         return {
-            tasks: tasks.map(task => ({
-                ...task.toJSON() as ITask,
-                documentUrl: task.documentUrl ? task.documentUrl : ''
-            })),
+            tasks: tasksWithSubmissions,
             total: count,
-            pages: Math.ceil(count / (limit || 10))
+            pages: Math.ceil(count / (limit || 10)),
         };
     }
+
 
     public async updateTask(taskPayload: ITaskUpdatePayload): Promise<ITask | undefined> {
         try {
@@ -74,7 +94,7 @@ export default class TaskService {
             // Delete old document if new document is uploaded
             const oldDocumentUrl = task.documentUrl;
             const newDocumentUrl = taskPayload.documentUrl;
-            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+            if (newDocumentUrl && oldDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
                 deleteFile(path.join(TASKS_FILES_PATH, oldDocumentUrl));
             }
 
@@ -108,11 +128,21 @@ export default class TaskService {
             throw new NotFoundException('Task', 'taskId', taskId);
         }
 
+        const taskSubmission = await task.$get('taskSubmission');
+        const taskSubmissionJson = taskSubmission ? taskSubmission.toJSON() as ITaskSubmission : undefined;
+
         const taskJson = task.toJSON() as ITask;
         return {
-            ...taskJson,
+            taskId: taskJson.taskId,
+            profileId: taskJson.profileId,
+            title: taskJson.title,
+            comment: taskJson.comment,
+            status: taskJson.status,
+            createdAt: taskJson.createdAt,
+            submittedAt: taskJson.submittedAt,
             documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
-            size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB'
+            size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB',
+            submission: taskSubmissionJson
         };
     }
 
@@ -152,26 +182,41 @@ export default class TaskService {
                             attributes: ['username']
                         }
                     ]
+                },
+                {
+                    model: TaskSubmission,
+                    as: 'taskSubmission'
                 }
             ],
             limit,
             offset
         });
 
+        const tasksWithSubmissions = await Promise.all(
+            tasks.map(async task => {
+                const taskJson = task.toJSON() as ITask;
+                const taskSubmission = task.taskSubmission ? task.taskSubmission.toJSON() as ITaskSubmission : undefined;
+                return {
+                    taskId: taskJson.taskId,
+                    profileId: taskJson.profileId,
+                    title: taskJson.title,
+                    comment: taskJson.comment,
+                    status: taskJson.status,
+                    createdAt: taskJson.createdAt,
+                    submittedAt: taskJson.submittedAt,
+                    documentUrl: taskJson.documentUrl ? taskJson.documentUrl : '',
+                    size: taskJson.documentUrl ? await getFileSizeAsync(path.join(TASKS_FILES_PATH, taskJson.documentUrl)) : '0KB',
+                    username: task.profile.user.username,
+                    submission: taskSubmission,
+                };
+            })
+        );
+
         return {
-            tasks: tasks.map(task => ({
-                taskId: task.taskId,
-                title: task.title,
-                comment: task.comment,
-                status: task.status,
-                createdAt: task.createdAt,
-                submittedAt: task.submittedAt,
-                profileId: task.profileId,
-                username: task.profile.user.username, // Add username here
-                documentUrl: task.documentUrl ? task.documentUrl : ''
-            })),
+            tasks: tasksWithSubmissions,
             total: count,
-            pages: Math.ceil(count / (limit || 10))
+            pages: Math.ceil(count / (limit || 10)),
         };
     }
+
 }

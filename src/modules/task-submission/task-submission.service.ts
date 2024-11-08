@@ -73,7 +73,7 @@ export default class TaskSubmissionService {
             // Delete old document if new document is uploaded
             const oldDocumentUrl = taskSubmission.documentUrl;
             const newDocumentUrl = taskSubmissionUpdatePayload.documentUrl;
-            if (newDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
+            if (newDocumentUrl && oldDocumentUrl && oldDocumentUrl !== newDocumentUrl) {
                 deleteFile(path.join(TASK_SUBMISSIONS_FILES_PATH, oldDocumentUrl));
             }
 

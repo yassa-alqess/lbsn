@@ -215,7 +215,6 @@ export default class UserController implements Controller {
                 userId,
                 image: path
             }
-            logger.debug(`req.file.filename: ${JSON.stringify(req.file)}`);
             const user = await this._userService.updateUser(userUpdatePayload);
             res.status(StatusCodes.OK).json(user).end();
 

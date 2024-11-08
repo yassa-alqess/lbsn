@@ -11,6 +11,7 @@ import Appointment from "../../shared/models/appointment";
 import TimeSlot from "../../shared/models/time-slot";
 import Guest from "../../shared/models/guest";
 import Service from "../../shared/models/service";
+import Category from "../../shared/models/category";
 import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
 import { ACQUISITION_MAIL, MAIN_MAIL } from "../../shared/constants";
 import { IMeeting } from "../meetings/meeting.interface";
@@ -43,10 +44,11 @@ export default class AppointmentService {
         // add to table guest-services
         const guestRequest: IGuestRequestAddPayload = {
             guestId: guest.guestId,
-            requestId: appointmentPayload.serviceId,
+            serviceId: appointmentPayload.serviceId,
+            categoryId: appointmentPayload.categoryId,
             marketingBudget: appointmentPayload.marketingBudget
         };
-        await this._guestRequestsService.addGuestRequest({
+        const { requestId } = await this._guestRequestsService.addGuestRequest({
             ...guestRequest
         });
 
@@ -54,7 +56,7 @@ export default class AppointmentService {
         await this._sendConfirmationEmail(guest, meeting);
 
         // create appointment record after the meeting is prepared & the guest-request-record is created & the email is sent
-        return await this._createAppointmentRecord(guest, appointmentPayload, meeting);
+        return await this._createAppointmentRecord(requestId, guest, appointmentPayload, meeting);
     }
 
     private _mapAppointmentToGuest(appointmentPayload: IAppointmentsAddPayload): IGuestAddPayload {
@@ -69,6 +71,7 @@ export default class AppointmentService {
     }
 
     private async _createAppointmentRecord(
+        requestId: string,
         guest: IGuestResponse,
         appointmentPayload: IAppointmentsAddPayload,
         meeting: IMeeting,
@@ -81,21 +84,27 @@ export default class AppointmentService {
                 meetingUrl: meeting.start_url,
                 meetingJoinUrl: meeting.join_url,
                 meetingPassword: hashedPassword,
+                requestId,
                 guestId: guest.guestId,
                 serviceId: appointmentPayload.serviceId,
+                categoryId: appointmentPayload.categoryId,
                 timeSlotId: appointmentPayload.timeSlotId,
             });
 
             const service = await Service.findByPk(appointmentPayload.serviceId); //i'm sure it's there
+            const category = await Category.findByPk(appointmentPayload.categoryId); //i'm sure it's there
 
             return {
                 appointmentId: appointment.appointmentId,
                 guestEmail: appointment.guestEmail,
                 meetingUrl: appointment.meetingUrl,
                 meetingJoinUrl: appointment.meetingJoinUrl,
+                requestId: appointment.requestId,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 serviceName: service?.name as string,
+                categoryId: appointment.categoryId,
+                categoryName: category?.name as string,
                 timeSlotId: appointment.timeSlotId,
                 time: meeting.time,
             }
@@ -165,6 +174,10 @@ export default class AppointmentService {
                 {
                     model: Service,
                     attributes: ['name'],
+                },
+                {
+                    model: Category,
+                    attributes: ['name'],
                 }
             ],
             limit,
@@ -176,9 +189,12 @@ export default class AppointmentService {
                 guestEmail: appointment.guestEmail,
                 meetingUrl: appointment.meetingUrl,
                 meetingJoinUrl: appointment.meetingJoinUrl,
+                requestId: appointment.requestId,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 serviceName: appointment.service?.name,
+                categoryId: appointment.categoryId,
+                categoryName: appointment.category?.name,
                 timeSlotId: appointment.timeSlotId,
                 time: appointment.timeSlot?.time,
             })),
@@ -203,6 +219,10 @@ export default class AppointmentService {
                 {
                     model: Service,
                     attributes: ['name'],
+                },
+                {
+                    model: Category,
+                    attributes: ['name'],
                 }
             ],
             limit,
@@ -216,9 +236,12 @@ export default class AppointmentService {
                 guestUsername: appointment.guest?.username,
                 meetingUrl: appointment.meetingUrl,
                 meetingJoinUrl: appointment.meetingJoinUrl,
+                requestId: appointment.requestId,
                 guestId: appointment.guestId,
                 serviceId: appointment.serviceId,
                 serviceName: appointment.service?.name,
+                categoryId: appointment.categoryId,
+                categoryName: appointment.category?.name,
                 timeSlotId: appointment.timeSlotId,
                 time: appointment.timeSlot?.time,
             })),

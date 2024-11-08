@@ -1,5 +1,5 @@
 // file dependinces
-import { DUPLICATE_ERR, GUESTS_PATH, INVALID_UUID } from '../../shared/constants';
+import { INVALID_UUID, REQUESTS_PATH } from '../../shared/constants';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import GuestRequestsService from './guest-requests.service';
 import { RoleEnum } from '../../shared/enums';
@@ -15,7 +15,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export default class GuestRequestsController implements Controller {
 
-    path = `/${GUESTS_PATH}`;
+    path = `/${REQUESTS_PATH}`;
     router = express.Router();
     private _guestRequestsService = new GuestRequestsService();
     constructor() {
@@ -24,28 +24,17 @@ export default class GuestRequestsController implements Controller {
 
     private _initializeRoutes() {
         this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
-        this.router.post(`${this.path}/:guestId/requests/:requestId`, validate(CreateGuestRequestDto), this.addGuestRequest);
-        this.router.get(`${this.path}/:guestId/requests`, this.getGuestRequests);
-        this.router.get(`${this.path}/:guestId/requests/:requestId`, this.getGuestRequest);
-        this.router.delete(`${this.path}/:guestId/requests/:requestId`, this.deleteGuestRequest);
-        this.router.patch(`${this.path}/:guestId/requests/:requestId`, validate(UpdateGuestRequestDto), this.updateGuestRequest);
-        this.router.patch(`${this.path}/:guestId/requests/:requestId/approve`, this.approveGuestRequest);
+        this.router.post(`${this.path}`, validate(CreateGuestRequestDto), this.addGuestRequest);
+        this.router.get(`${this.path}`, this.getGuestRequests);
+        this.router.get(`${this.path}/:requestId`, this.getGuestRequest);
+        this.router.delete(`${this.path}/:requestId`, this.deleteGuestRequest);
+        this.router.patch(`${this.path}/:requestId/approve`, this.approveGuestRequest);
+        this.router.patch(`${this.path}/:requestId`, validate(UpdateGuestRequestDto), this.updateGuestRequest);
     }
 
     public addGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
-        const { guestId, requestId } = req.params;
-        if (!guestId) {
-            return next(new ParamRequiredException('guestId'));
-        }
-        if (!requestId) {
-            return next(new ParamRequiredException('requestId'));
-        }
         try {
-            const guestRequestPayload: IGuestRequestAddPayload = {
-                guestId,
-                requestId,
-                marketingBudget: req.body.marketingBudget,
-            }
+            const guestRequestPayload: IGuestRequestAddPayload = req.body;
             const guestRequest = await this._guestRequestsService.addGuestRequest(guestRequestPayload);
             res.status(StatusCodes.CREATED).json(guestRequest).end();
 
@@ -53,10 +42,7 @@ export default class GuestRequestsController implements Controller {
         } catch (error: any) {
             logger.error(`error at addGuestRequest action ${error}`);
             if (error?.original?.code === INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('guestId or requestId'));
-            }
-            if (error?.original?.code === DUPLICATE_ERR) { //duplicate key value violates unique constraint
-                return next(new AlreadyExistsException('Guest Request', 'requestId', requestId));
+                return next(new InvalidIdException('guestId, serviceId or categoryId'));
             }
             if (error instanceof AlreadyExistsException) {
                 return next(error);
@@ -66,18 +52,14 @@ export default class GuestRequestsController implements Controller {
     }
 
     public updateGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
-        const { guestId, requestId } = req.params;
-        if (!guestId) {
-            return next(new ParamRequiredException('guestId'));
-        }
+        const { requestId } = req.params;
         if (!requestId) {
             return next(new ParamRequiredException('requestId'));
         }
         try {
             const guestRequestPayload: IGuestRequestUpdatePayload = {
-                guestId,
-                requestId,
-                marketingBudget: req.body.marketingBudget,
+                ...req.body,
+                requestId
             }
             const guestRequest = await this._guestRequestsService.updateGuestRequest(guestRequestPayload);
             res.status(StatusCodes.OK).json(guestRequest).end();
@@ -96,7 +78,7 @@ export default class GuestRequestsController implements Controller {
     }
 
     public getGuestRequests = async (req: Request, res: Response, next: NextFunction) => {
-        const { guestId } = req.params;
+        const { guestId } = req.query as { guestId: string };
         if (!guestId) {
             return next(new ParamRequiredException('guestId'));
         }
@@ -121,22 +103,19 @@ export default class GuestRequestsController implements Controller {
     }
 
     public deleteGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
-        const { guestId, requestId } = req.params;
-        if (!guestId) {
-            return next(new ParamRequiredException('guestId'));
-        }
+        const { requestId } = req.params;
         if (!requestId) {
             return next(new ParamRequiredException('requestId'));
         }
         try {
-            await this._guestRequestsService.deleteGuestRequest(guestId, requestId);
+            await this._guestRequestsService.deleteGuestRequest(requestId);
             res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at deleteGuestRequest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('guestId or requestId'));
+                return next(new InvalidIdException('requestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);
@@ -146,15 +125,12 @@ export default class GuestRequestsController implements Controller {
     }
 
     public approveGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
-        const { guestId, requestId } = req.params;
-        if (!guestId) {
-            next(new ParamRequiredException('guestId'));
-        }
+        const { requestId } = req.params;
         if (!requestId) {
             next(new ParamRequiredException('requestId'));
         }
         try {
-            await this._guestRequestsService.approveGuestRequest(guestId, requestId); //not interested in the response
+            await this._guestRequestsService.approveGuestRequest(requestId); //not interested in the response
             res.status(StatusCodes.OK).json({}).end();
 
             //eslint-disable-next-line
@@ -171,22 +147,19 @@ export default class GuestRequestsController implements Controller {
     }
 
     public getGuestRequest = async (req: Request, res: Response, next: NextFunction) => {
-        const { guestId, requestId } = req.params;
-        if (!guestId) {
-            return next(new ParamRequiredException('guestId'));
-        }
+        const { requestId } = req.params;
         if (!requestId) {
             return next(new ParamRequiredException('requestId'));
         }
         try {
-            const guestRequest = await this._guestRequestsService.getGuestRequest(guestId, requestId);
+            const guestRequest = await this._guestRequestsService.getGuestRequest(requestId);
             res.status(StatusCodes.OK).json(guestRequest).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
             logger.error(`error at getGuestRequest action ${error}`);
             if (error?.original?.code == INVALID_UUID) { //invalid input syntax for type uuid
-                return next(new InvalidIdException('guestId or requestId'));
+                return next(new InvalidIdException('requestId'));
             }
             if (error instanceof NotFoundException) {
                 return next(error);

@@ -6,12 +6,17 @@ import User from "../../shared/models/user";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
 import Service from "../../shared/models/service";
+import ServiceCategory from "../../shared/models/service-category";
 import { IEmailOptions } from "../../config/mailer/email.interface";
 import ServicesService from "../services/services.service";
 import CategoriesService from "../categories/categories.service";
+import GuestRequest from "../../shared/models/guest-request";
 import SheetsService from "../sheets/sheets.service";
 import EmailService from "../../config/mailer";
 import { MAIN_MAIL } from "../../shared/constants";
+import HttpException from "../../shared/exceptions/http.exception";
+import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
+import { IsResolvedEnum } from "../../shared/enums";
 
 // 3rd party dependencies
 import { Sequelize, Transaction } from "sequelize";
@@ -40,6 +45,16 @@ export default class UserProfilesService {
             throw new NotFoundException('Service', 'serviceId', profilePayload.serviceId as string);
         }
 
+        const category = await this._categoriesService.getCategory(profilePayload.categoryId as string);
+        if (!category) {
+            throw new NotFoundException('Category', 'categoryId', profilePayload.categoryId as string);
+        }
+
+        const serviceCategory = await ServiceCategory.findOne({ where: { serviceId: profilePayload.serviceId, categoryId: profilePayload.categoryId } });
+        if (!serviceCategory) {
+            throw new HttpException(400, "Service is not in the category");
+        }
+
         if (!profilePayload.sheetUrl || !profilePayload.sheetName) {
             const sheet = await this._sheetsService.createSpreadSheet(`${user.userId}-${service.name}-${Date.now()}`, service.name);
             profilePayload.sheetUrl = sheet.spreadsheetId;
@@ -63,6 +78,7 @@ export default class UserProfilesService {
                 sheetName: newProfile.sheetName,
                 userId: newProfile.userId,
                 serviceId: newProfile.serviceId,
+                categoryId: newProfile.categoryId,
                 serviceName: service.name
             };
             //eslint-disable-next-line
@@ -97,6 +113,7 @@ export default class UserProfilesService {
                 sheetName: profile.sheetName,
                 userId: profile.userId,
                 serviceId: profile.serviceId,
+                categoryId: profile.categoryId,
                 serviceName: profile.service.name
             }))
         };
@@ -118,6 +135,25 @@ export default class UserProfilesService {
         if (!category) {
             throw new NotFoundException('Category', 'categoryId', categoryId);
         }
+
+        const serviceCategory = await ServiceCategory.findOne({ where: { serviceId: profilePayload.serviceId, categoryId: profilePayload.categoryId } });
+        if (!serviceCategory) {
+            throw new HttpException(400, "Service is not in the category");
+        }
+
+        const guestRequestPayload: IGuestRequestAddPayload = {
+            guestId: user.guestId,
+            serviceId: service.serviceId,
+            categoryId: category.categoryId,
+            marketingBudget,
+        }
+
+        const guestRequest = await GuestRequest.findOne({ where: { guestId: user.guestId, serviceId } });
+        if (guestRequest) {
+            throw new HttpException(400, "Guest request already exists");
+        }
+
+        await GuestRequest.create({ ...guestRequestPayload, resolved: IsResolvedEnum.PENDING, });
 
         const emailPayload: IEmailOptions = {
             to: MAIN_MAIL,

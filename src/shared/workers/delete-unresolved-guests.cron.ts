@@ -28,7 +28,7 @@ export async function deleteUnresolvedGuestRequests() {
         });
 
         for (const request of unresolvedRequests) {
-            await guestRequestsService.deleteGuestRequest(request.guestId, request.serviceId, transaction); //delegate the deletion to the service
+            await guestRequestsService.deleteGuestRequest(request.guestRequestId, transaction); //delegate the deletion to the service
             logger.info(`Marked guest request for guest ID ${request.guestId} for deletion.`);
         }
 

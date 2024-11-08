@@ -7,6 +7,7 @@ export interface IProfileResponse {
     sheetName: string;
     userId: string;
     serviceId: string;
+    categoryId: string;
     serviceName: string;
 }
 export interface IProfileUpdatePayload {
@@ -15,6 +16,7 @@ export interface IProfileUpdatePayload {
     sheetUrl?: string;
     sheetName?: string;
     serviceId?: string;
+    categoryId?: string;
 }
 
 export interface IProfilesGetResponse {

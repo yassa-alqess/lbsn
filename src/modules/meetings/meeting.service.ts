@@ -8,8 +8,9 @@ export default class MeetingService {
 
     public _getAccessToken = async () => {
         const url = `${MEETING_AUTH_API_URL}/oauth/token?grant_type=account_credentials&account_id=${MEETING_ACCOUNT_ID}`
+        const secret = `${MEETING_CLIENT_ID}:${MEETING_CLIENT_SECRET}`
         const headers = {
-            Authorization: `Basic ${Buffer.from(`${MEETING_CLIENT_ID}:${MEETING_CLIENT_SECRET}`).toString('base64')}`,
+            Authorization: `Basic ${Buffer.from(secret).toString('base64')}`,
         }
 
         const response = await axios.post(url, {}, { headers });
