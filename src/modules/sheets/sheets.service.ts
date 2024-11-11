@@ -101,7 +101,8 @@ export default class SheetsService {
                 if (timestampIndex >= 0 && phoneIndex >= 0 && row[timestampIndex] && row[phoneIndex]) {
                     const timestamp = row[timestampIndex] || 'No Timestamp';
                     const phone = row[phoneIndex]
-                    record['_id'] = `${timestamp}-${phone}`;
+                    const formatedTimeStamp = new Date(timestamp).toISOString();
+                    record['_id'] = `${formatedTimeStamp}-${phone}`;
                 } else {
                     continue; // Skip the row if either column is missing
                 }
