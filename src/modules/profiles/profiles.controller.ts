@@ -3,7 +3,7 @@ import { INVALID_UUID, DUPLICATE_ERR, PROFILES_PATH } from '../../shared/constan
 import { IProfileUpdatePayload } from './profiles.interface';
 import { Controller } from '../../shared/interfaces/controller.interface';
 import ProfileService from './profiles.service';
-import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../shared/middlewares';
+import { accessTokenGuard, requireAnyOfThoseRoles, validate, isOwnerOfProfileGuard } from '../../shared/middlewares';
 import { AlreadyExistsException, InternalServerException, InvalidIdException, NotFoundException, ParamRequiredException } from '../../shared/exceptions';
 import { updateProfileDto } from './profiles.dto';
 import { RoleEnum } from '../../shared/enums';
@@ -24,7 +24,7 @@ export default class ProfileController implements Controller {
 
     private _initializeRoutes() {
         this.router.patch(`${this.path}/:profileId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(updateProfileDto), this.updateProfile);
-        this.router.get(`${this.path}/:profileId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getProfile);
+        this.router.get(`${this.path}/:profileId`, accessTokenGuard, isOwnerOfProfileGuard, this.getProfile);
         this.router.delete(`${this.path}/:profileId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteProfile);
     }
 
