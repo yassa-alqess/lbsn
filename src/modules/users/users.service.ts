@@ -27,7 +27,7 @@ export default class UserService {
 
         try {
             // Check if user already exists
-            const user = await User.findOne({ where: { email: userPayload.companyEmail } });
+            const user = await User.findOne({ where: { companyEmail: userPayload.companyEmail } });
             if (user) {
                 throw new AlreadyExistsException('User', 'email', userPayload.companyEmail);
             }
@@ -214,7 +214,7 @@ export default class UserService {
 
             const definedUser = user as { username: string, userEmail: string, userPhone: string, userAddress: string, companytaxId: string, companyName: string, companyEmail: string, companyPhone: string, companyAddress: string, roles: string, isVerified: IsVerifiedEnum, isLocked: IsLockedEnum };
 
-            if (User.findOne({ where: { email: definedUser.companyEmail } }) !== null) {
+            if (User.findOne({ where: { companyEmail: definedUser.companyEmail } }) !== null) {
                 logger.info(`User with email ${definedUser.companyEmail} already exists`);
                 continue; // Skip if the user already exists
             }
