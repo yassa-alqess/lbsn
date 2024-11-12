@@ -71,10 +71,10 @@ export default class JobService {
         const job = await Job.findByPk(jobId, {
             include: [{
                 model: Skill,
-                as: 'skills',
-                through: { attributes: [] }  // This ensures the join table attributes are not included
+                as: 'skills'
             }]
         });
+
         if (!job) {
             throw new NotFoundException('Job', 'jobId', jobId);
         }
@@ -86,12 +86,12 @@ export default class JobService {
         };
     }
 
+
     public async getJobs(): Promise<IJobsGetResponse | undefined> {
         const jobs = await Job.findAll({
             include: [{
                 model: Skill,
-                as: 'skills',
-                through: { attributes: [] }  // This ensures the join table attributes are not included
+                as: 'skills'
             }]
         });
 
@@ -102,6 +102,7 @@ export default class JobService {
             }))
         };
     }
+
 
     public async deleteJob(jobId: string): Promise<void> {
         try {
