@@ -10,6 +10,7 @@ import { USER_IMAGES_PATH } from "../../shared/constants";
 import { IgetGuestRequestsResponse, IGuestRequest } from "../guest-requests/guest-requests.interface";
 import GuestRequest from "../../shared/models/guest-request";
 import Service from "../../shared/models/service";
+import Category from "../../shared/models/category";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -355,6 +356,7 @@ export default class UserService {
 
     public async getUsers(usersGetPayload: IUsersGetPayload): Promise<IUsersGetResponse | undefined> {
         const { limit, offset } = usersGetPayload;
+
         const { rows: users, count } = await User.findAndCountAll({
             include: [{
                 model: Role,
@@ -368,8 +370,13 @@ export default class UserService {
             offset,
             order: [['createdAt', 'DESC']]
         });
-        return {
-            users: users.map((user) => ({
+
+        const userPromises = users.map(async (user) => {
+            const numOfRequests = await GuestRequest.count({
+                where: { guestId: user.guestId, resolved: IsResolvedEnum.PENDING }
+            });
+
+            return {
                 userId: user.userId,
                 username: user.username,
                 userEmail: user.userEmail,
@@ -383,11 +390,19 @@ export default class UserService {
                 image: user.image ? user.image : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked,
-            })),
+                numOfRequests
+            };
+        });
+
+        const updatedUsers = await Promise.all(userPromises);
+
+        return {
+            users: updatedUsers,
             total: count,
             pages: Math.ceil(count / (limit || 10)),
         };
     }
+
 
     public async getUserRequests(userId: string): Promise<IgetGuestRequestsResponse | undefined> {
         try {
@@ -396,11 +411,16 @@ export default class UserService {
                 throw new NotFoundException('User', 'userId', userId);
             }
             const guestRequests = await GuestRequest.findAll({
-                where: { guestId: user?.guestId },
+                where: { guestId: user?.guestId, resolved: IsResolvedEnum.PENDING },
                 include: [{
                     model: Service,
-                    attributes: ['serviceId', 'name'],
-                }],
+                    attributes: ['name'],
+                },
+                {
+                    model: Category,
+                    attributes: ['name'],
+                }
+                ],
             });
 
             const guestRequestsResponse: IGuestRequest[] = guestRequests.map(request => ({
@@ -408,7 +428,9 @@ export default class UserService {
                 requestId: request.guestRequestId,
                 guestId: request.guestId,
                 serviceId: request.serviceId,
+                serviceName: request.service.name,
                 categoryId: request.categoryId,
+                categoryName: request.category.name,
                 status: request.resolved as IsResolvedEnum,
                 marketingBudget: request.marketingBudget as MarketingBudgetEnum
             }));
