@@ -355,6 +355,7 @@ export default class UserService {
 
     public async getUsers(usersGetPayload: IUsersGetPayload): Promise<IUsersGetResponse | undefined> {
         const { limit, offset } = usersGetPayload;
+
         const { rows: users, count } = await User.findAndCountAll({
             include: [{
                 model: Role,
@@ -368,8 +369,13 @@ export default class UserService {
             offset,
             order: [['createdAt', 'DESC']]
         });
-        return {
-            users: users.map((user) => ({
+
+        const userPromises = users.map(async (user) => {
+            const numOfRequests = await GuestRequest.count({
+                where: { guestId: user.guestId, resolved: IsResolvedEnum.PENDING }
+            });
+
+            return {
                 userId: user.userId,
                 username: user.username,
                 userEmail: user.userEmail,
@@ -383,11 +389,19 @@ export default class UserService {
                 image: user.image ? user.image : '',
                 isVerified: user.isVerified,
                 isLocked: user.isLocked,
-            })),
+                numOfRequests
+            };
+        });
+
+        const updatedUsers = await Promise.all(userPromises);
+
+        return {
+            users: updatedUsers,
             total: count,
             pages: Math.ceil(count / (limit || 10)),
         };
     }
+
 
     public async getUserRequests(userId: string): Promise<IgetGuestRequestsResponse | undefined> {
         try {

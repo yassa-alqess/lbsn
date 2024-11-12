@@ -33,6 +33,7 @@ export interface IUserResponse {
     roles?: RoleEnum[];
     isLocked: IsLockedEnum;
     isVerified: IsVerifiedEnum;
+    numOfRequests?: number;
 }
 export interface IUserUpdatePayload {
     userId: string;
