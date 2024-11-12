@@ -43,6 +43,8 @@ export const WARM_LEADS_PATH = "warm-leads"
 export const CONTACT_US_PATH = "contact-us"
 export const OVERVIEW_PATH = "overview"
 export const DOWNLOAD_PATH = "download"
+export const CAREERS_PATH = "careers"
+export const JOBS_PATH = "jobs"
 
 
 export const DOMAIN = process.env.DOMAIN;
