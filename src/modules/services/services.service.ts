@@ -4,7 +4,6 @@ import Category from "../../shared/models/category";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
 import logger from "../../config/logger";
 import ServiceCategory from "../../shared/models/service-category";
-import { col, fn } from "sequelize";
 
 export default class ServicesService {
     public async addService(serviceAddPayload: IServiceAddPayload): Promise<IServiceResponse> {
@@ -82,50 +81,56 @@ export default class ServicesService {
 
     public async getServices(categoryId?: string): Promise<IServicesGetResponse[]> {
         try {
-            // Step 1: Fetch the service counts grouped by categoryId
-            const servicesCount = await ServiceCategory.findAll({
-                attributes: [
-                    'categoryId', // Group by categoryId
-                    [fn('COUNT', col('serviceId')), 'servicesCount'], // Count services per category
+            // Step 1: Fetch all service categories along with their services and category details
+            const serviceCategories = await ServiceCategory.findAll({
+                where: categoryId ? { categoryId } : {},
+                include: [
+                    {
+                        model: Service,
+                        attributes: ['serviceId', 'name'],
+                    },
+                    {
+                        model: Category,
+                        attributes: ['categoryId', 'name'],
+                    }
                 ],
-                group: ['categoryId'], // Grouping by categoryId
-                order: [['categoryId', 'ASC']], // Optional: order by categoryId
-                where: categoryId ? { categoryId } : {} // Optional filter by categoryId
+                order: [['createdAt', 'ASC']], // Optional: order services
             });
 
-            // Prepare the result array
-            const groupedServices: IServicesGetResponse[] = [];
+            // Prepare a map to group services by category
+            const servicesMap: { [key: string]: IServicesGetResponse } = {};
 
-            // Step 2: Fetch all services details for each categoryId
-            for (const serviceGroup of servicesCount) {
-                const currentCategoryId = serviceGroup.categoryId;
-                const serviceCategories = await ServiceCategory.findAll({
-                    where: { categoryId: currentCategoryId },
-                    include: [Service],
-                    order: [['createdAt', 'ASC']] // Optional: order services
-                });
+            // Step 2: Group services by category and count them
+            for (const serviceCategory of serviceCategories) {
+                const currentCategoryId = serviceCategory.categoryId;
+                const categoryName = serviceCategory.category?.name;
 
-                const services = serviceCategories.map(async (serviceCategory) => {
-                    const service = await Service.findByPk(serviceCategory.serviceId);
-                    return {
-                        serviceId: service?.serviceId,
-                        name: service?.name,
-                    } as IServiceResponse;
-                });
-                groupedServices.push({
-                    categoryId: currentCategoryId,
-                    count: serviceGroup.get('servicesCount') as number,
-                    services: await Promise.all(services),
+                if (!servicesMap[currentCategoryId]) {
+                    servicesMap[currentCategoryId] = {
+                        categoryId: currentCategoryId,
+                        categoryName: categoryName,
+                        count: 0,
+                        services: []
+                    };
+                }
+
+                servicesMap[currentCategoryId].count += 1;
+                servicesMap[currentCategoryId].services.push({
+                    serviceId: serviceCategory.serviceId,
+                    name: serviceCategory.service?.name,
                 });
             }
 
+            // Convert the map to an array
+            const groupedServices: IServicesGetResponse[] = Object.values(servicesMap);
+
             return groupedServices;
-        }
-        catch (error) {
+        } catch (error) {
             logger.error('Error fetching all services: ', error);
             throw new Error('Failed to fetch all services');
         }
     }
+
 
     public async deleteService(serviceId: string, categoryId?: string): Promise<void> {
         try {

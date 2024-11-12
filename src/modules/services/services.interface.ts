@@ -16,6 +16,7 @@ export interface IServiceUpdatePayload {
 
 export interface IServicesGetResponse {
     categoryId: string;
+    categoryName?: string;
     services: IServiceResponse[];
     count: number;
 }
