@@ -10,6 +10,7 @@ import { USER_IMAGES_PATH } from "../../shared/constants";
 import { IgetGuestRequestsResponse, IGuestRequest } from "../guest-requests/guest-requests.interface";
 import GuestRequest from "../../shared/models/guest-request";
 import Service from "../../shared/models/service";
+import Category from "../../shared/models/category";
 
 // 3rd party dependencies
 import bcrypt from 'bcrypt';
@@ -413,8 +414,13 @@ export default class UserService {
                 where: { guestId: user?.guestId, resolved: IsResolvedEnum.PENDING },
                 include: [{
                     model: Service,
-                    attributes: ['serviceId', 'name'],
-                }],
+                    attributes: ['name'],
+                },
+                {
+                    model: Category,
+                    attributes: ['name'],
+                }
+                ],
             });
 
             const guestRequestsResponse: IGuestRequest[] = guestRequests.map(request => ({
@@ -422,7 +428,9 @@ export default class UserService {
                 requestId: request.guestRequestId,
                 guestId: request.guestId,
                 serviceId: request.serviceId,
+                serviceName: request.service.name,
                 categoryId: request.categoryId,
+                categoryName: request.category.name,
                 status: request.resolved as IsResolvedEnum,
                 marketingBudget: request.marketingBudget as MarketingBudgetEnum
             }));
