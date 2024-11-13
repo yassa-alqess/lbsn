@@ -6,53 +6,132 @@ import Lead from "../../shared/models/lead";
 import Sale from "../../shared/models/sale";
 import { LeadStatusEnum } from "../../shared/enums";
 import { GroupedLeads, ILead, ILeadAddPayload, ILeadsGetPayload, ILeadsGetResponse, ILeadUpdatePayload } from "./leads.interface";
-
-import { fn, col } from "sequelize";
 import { IProfileResponse } from "../profiles/profiles.interface";
+import Profile from '../../shared/models/profile';
+import DatabaseManager from "../../config/database/db-manager";
+
+import { fn, col, Sequelize } from "sequelize";
+import crypto from 'crypto';
 
 export default class LeadsService {
     private _sheetsService: SheetsService;
     private _profileService: ProfileService;
+    private _sequelize: Sequelize | null = null;
     constructor() {
+        this._sequelize = DatabaseManager.getSQLInstance();
         this._sheetsService = new SheetsService();
         this._profileService = new ProfileService();
     }
 
-    public async _syncSheetLeads(profile: IProfileResponse): Promise<void> {
+    //eslint-disable-next-line
+    private _generateHash(data: any) {
+        return crypto
+            .createHash('md5')
+            .update(JSON.stringify(data))
+            .digest('hex');
+    }
+
+    public async _syncSheetData(profile: IProfileResponse): Promise<void> {
+        const transaction = await this._sequelize!.transaction(); // Start a transaction
+
         try {
-            const { sheetUrl, sheetName } = profile;
-            const leads = await this._sheetsService.getSpreadSheetValues({ spreadsheetId: sheetUrl.split('/')[5], sheetName });
+            const { sheetUrl, sheetName, profileId } = profile;
 
-            // Use Promise.all to insert all leads concurrently
-            await Promise.all(leads.map(async (leadData) => {
-                const { _id, ...record } = leadData;
-                try {
-                    // Find the existing lead
-                    const lead = await Lead.findByPk(_id as string);
+            // Fetch records from Google Sheets
+            const spreadsheetId = sheetUrl.split('/')[5];
+            const records = await this._sheetsService.getSpreadSheetValues({
+                spreadsheetId,
+                sheetName,
+            });
 
-                    if (lead) {
-                        // Update the existing lead
-                        await Lead.update({ record }, { where: { leadId: _id as string } });
+            // Generate a hash for the current sheet data
+            const { hashState: oldHash } = await Profile.findOne({ where: { sheetUrl } }) as Profile;
+            const newHash = this._generateHash(records);
 
-                    } else {
-                        const sale = await Sale.findByPk(_id as string);
+            // If the hash is the same, skip processing
+            if (oldHash && oldHash === newHash) {
+                logger.info('No changes detected');
+                await transaction.rollback();
+                return;
+            }
 
-                        // Create a new lead if it does not exist and it's not a sale
-                        if (!sale) await Lead.create({ leadId: _id as string, record, status: LeadStatusEnum.PENDING_VISIT, profileId: profile.profileId, createdAt: new Date(record.Timestamp).toISOString() });
+            // Get existing records from both Lead and Sale tables filtered by profileId
+            const leadRecords = await Lead.findAll({ where: { profileId }, transaction });
+            const saleRecords = await Sale.findAll({ where: { profileId }, transaction });
+
+            const leadIds = new Set(leadRecords.map(r => r.leadId));
+            const saleIds = new Set(saleRecords.map(r => r.saleId));
+            const sheetIds = new Set(records.map(r => r._id));
+
+            // Determine records to delete (in DB but not in sheet)
+            const recordsToDelete = [
+                ...leadRecords.filter(r => !sheetIds.has(r.leadId)),
+                ...saleRecords.filter(r => !sheetIds.has(r.saleId)),
+            ];
+
+            // Determine records to create (in sheet but not in DB)
+            const recordsToCreate = records.filter(r => !leadIds.has(r._id) && !saleIds.has(r._id));
+
+            // Determine records to update (existing in Lead or Sale tables)
+            const recordsToUpdate = records.filter(r => leadIds.has(r._id) || saleIds.has(r._id));
+
+            // Perform database operations within the transaction
+            await Promise.all([
+                // Delete removed records from Lead or Sale tables
+                ...recordsToDelete.map(async (record) => {
+                    if ('leadId' in record && leadIds.has(record.leadId)) {
+                        await Lead.destroy({ where: { leadId: record.leadId, profileId }, transaction });
                     }
-                } catch (error) {
-                    logger.error('Error processing lead:', error);
-                    throw new Error('Error processing lead');
-                    // Handle the error as needed, e.g., pushing an error message or logging
-                }
-            }));
+                    if ('saleId' in record && saleIds.has(record.saleId)) {
+                        await Sale.destroy({ where: { saleId: record.saleId, profileId }, transaction });
+                    }
+                }),
+
+                // Create new records in the Lead table
+                recordsToCreate.length > 0 &&
+                Lead.bulkCreate(
+                    recordsToCreate.map(record => ({
+                        leadId: record._id,
+                        record,
+                        status: LeadStatusEnum.PENDING_VISIT,
+                        profileId,
+                        createdAt: new Date(record.Timestamp).toISOString(),
+                    })),
+                    { transaction }
+                ),
+
+                // Update existing records in Lead or Sale tables
+                ...recordsToUpdate.map(async (record) => {
+                    if (leadIds.has(record._id)) {
+                        await Lead.update(
+                            { record },
+                            { where: { leadId: record._id, profileId }, transaction }
+                        );
+                    } else if (saleIds.has(record._id)) {
+                        await Sale.update(
+                            { record },
+                            { where: { saleId: record._id, profileId }, transaction }
+                        );
+                    }
+                }),
+            ]);
+
+            // Update the hash state in the database after successful sync
+            await Profile.update({ hashState: newHash }, { where: { sheetUrl }, transaction });
+
+            // Commit the transaction
+            await transaction.commit();
+            logger.info('Sync completed successfully');
 
             //eslint-disable-next-line
         } catch (error: any) {
-            logger.error(`Error getting sheet leads: ${error.message}`);
-            throw new Error(`Error getting sheet leads: ${error.message}`);
+            // Rollback the transaction on error
+            await transaction.rollback();
+            logger.error(`Error syncing sheet data: ${error.message}`);
+            throw new Error(`Error syncing sheet data: ${error.message}`);
         }
     }
+
 
     public async getLeads(payload: ILeadsGetPayload): Promise<ILeadsGetResponse> {
         try {
@@ -62,8 +141,9 @@ export default class LeadsService {
             if (!profile) {
                 throw new NotFoundException('Profile', 'profileId', profileId);
             }
+
             // sync the leads from the sheet
-            await this._syncSheetLeads(profile);
+            await this._syncSheetData(profile);
 
             // Fetch leads and total count
             const { rows: leads, count: total } = await Lead.findAndCountAll({

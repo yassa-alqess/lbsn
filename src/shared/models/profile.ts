@@ -28,6 +28,11 @@ class Profile extends Model {
     declare sheetUrl: string;
 
     @Column({
+        type: DataType.TEXT,
+    })
+    declare hashState: string;
+
+    @Column({
         type: DataType.STRING(200),
     })
     declare sheetName: string;
