@@ -6,7 +6,6 @@ import Lead from "../../shared/models/lead";
 import Sale from "../../shared/models/sale";
 import { LeadStatusEnum } from "../../shared/enums";
 import { GroupedLeads, ILead, ILeadAddPayload, ILeadsGetPayload, ILeadsGetResponse, ILeadUpdatePayload } from "./leads.interface";
-import { IProfileResponse } from "../profiles/profiles.interface";
 import Profile from '../../shared/models/profile';
 import DatabaseManager from "../../config/database/db-manager";
 
@@ -31,11 +30,10 @@ export default class LeadsService {
             .digest('hex');
     }
 
-    public async _syncSheetData(profile: IProfileResponse): Promise<void> {
+    public async syncSheetData({ profileId, sheetUrl, sheetName }: { profileId: string, sheetUrl: string, sheetName: string }) {
         const transaction = await this._sequelize!.transaction(); // Start a transaction
 
         try {
-            const { sheetUrl, sheetName, profileId } = profile;
 
             // Fetch records from Google Sheets
             const spreadsheetId = sheetUrl.split('/')[5];
@@ -141,9 +139,6 @@ export default class LeadsService {
             if (!profile) {
                 throw new NotFoundException('Profile', 'profileId', profileId);
             }
-
-            // sync the leads from the sheet
-            await this._syncSheetData(profile);
 
             // Fetch leads and total count
             const { rows: leads, count: total } = await Lead.findAndCountAll({
