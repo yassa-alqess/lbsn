@@ -17,7 +17,7 @@ import { initializeRedisClient } from './config/cache'; // initialize redis clie
 import { initWebSocket, initSecureWebSocket } from './config/ws';
 import { userRolesMigration } from './shared/migrations/seed-data';
 import { ExtendedWebSocketServer } from './shared/interfaces';
-import './shared/workers' // schedule cron jobs
+import './shared/tasks' // schedule cron jobs
 
 
 // app container & middlewares
