@@ -30,7 +30,7 @@ export default class TaskController implements Controller {
         this.router.get(`${this.profilesPath}/:profileId/${this.path}/:taskId`, this.getTask);
 
         // admin routes
-        this.router.post(`/${this.path}*`, accessTokenGuard);
+        this.router.all(`/${this.path}*`, accessTokenGuard);
         this.router.post(`/${this.path}`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), upload(`${this.path}`)!.single("file"), validate(CreateTaskDto), this.addTask);
         this.router.patch(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), upload(`${this.path}`)!.single("file"), validate(UpdateTaskDto), this.updateTask);
         this.router.delete(`/${this.path}/:taskId`, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteTask);
