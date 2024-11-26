@@ -24,5 +24,4 @@ export const UpdateJobDto = Joi.object({
     employmentType: Joi.string()
         .valid(..._.values(EmploymentTypeEnum))
         .optional(),
-    skills: Joi.array().items(Joi.string()).optional()
 });

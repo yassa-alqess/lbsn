@@ -3,13 +3,14 @@ import {
     Model,
     Column,
     DataType,
-    HasMany,
+    BelongsToMany,
 } from 'sequelize-typescript';
 import { JobCategoryEnum, EmploymentTypeEnum } from '../enums';
 import Skill from './skill';
 
 //3rd party imports
 import * as _ from "lodash";
+import JobSkill from './job-skill';
 const jobCategories: string[] = _.values(JobCategoryEnum);
 const employmentTypes: string[] = _.values(EmploymentTypeEnum);
 
@@ -56,7 +57,7 @@ class Job extends Model {
     })
     declare employmentType: EmploymentTypeEnum;
 
-    @HasMany(() => Skill)
+    @BelongsToMany(() => Skill, () => JobSkill)
     declare skills: Skill[];
 }
 
