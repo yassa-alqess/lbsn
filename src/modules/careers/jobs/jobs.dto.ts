@@ -25,3 +25,12 @@ export const UpdateJobDto = Joi.object({
         .valid(..._.values(EmploymentTypeEnum))
         .optional(),
 });
+
+export const GetJobsDto = Joi.object({
+    jobCategory: Joi.string()
+        .valid(..._.values(JobCategoryEnum))
+        .optional(),
+    employmentType: Joi.string()
+        .valid(..._.values(EmploymentTypeEnum))
+        .optional(),
+});

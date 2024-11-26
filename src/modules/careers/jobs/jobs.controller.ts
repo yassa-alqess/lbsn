@@ -1,11 +1,11 @@
 // file dependinces
 import { INVALID_UUID, DUPLICATE_ERR, CAREERS_PATH, JOBS_PATH } from '../../../shared/constants';
 import { Controller } from '../../../shared/interfaces/controller.interface';
-import { IJobAddPayload, IJobUpdatePayload } from './jobs.interface';
+import { IJobAddPayload, IJobsGetPayload, IJobUpdatePayload } from './jobs.interface';
 import JobsService from './jobs.service';
 import { accessTokenGuard, requireAnyOfThoseRoles, validate } from '../../../shared/middlewares';
 import { RoleEnum } from '../../../shared/enums';
-import { CreateJobDto, UpdateJobDto } from './jobs.dto';
+import { CreateJobDto, GetJobsDto, UpdateJobDto } from './jobs.dto';
 import { AlreadyExistsException, InvalidIdException, InternalServerException, NotFoundException, ParamRequiredException } from '../../../shared/exceptions';
 import logger from '../../../config/logger';
 
@@ -24,7 +24,7 @@ export default class JobsController implements Controller {
 
     private _initializeRoutes() {
         this.router.get(`${this.path}/:jobId`, this.getJob);
-        this.router.get(`${this.path}`, this.getJobs);
+        this.router.get(`${this.path}`, validate(GetJobsDto, "query"), this.getJobs);
 
         this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
         this.router.post(this.path, validate(CreateJobDto), this.addJob);
@@ -100,8 +100,9 @@ export default class JobsController implements Controller {
 
     public getJobs = async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const jobss = await this._jobsService.getJobs();
-            res.status(StatusCodes.OK).json(jobss).end();
+            const payload: IJobsGetPayload = req.query;
+            const jobs = await this._jobsService.getJobs(payload);
+            res.status(StatusCodes.OK).json(jobs).end();
 
             //eslint-disable-next-line
         } catch (error: any) {
