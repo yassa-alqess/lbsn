@@ -225,6 +225,13 @@ export default class GuestService {
         };
     }
 
+    public async verifyGuest(email: string): Promise<void> {
+        const guest = await Guest.findOne({ where: { companyEmail: email } });
+        if (guest) {
+            throw new AlreadyExistsException('Guest', 'email', email);
+        }
+    }
+
     public async getOrCreateGuest(guestData: IGuestAddPayload): Promise<IGuestResponse> {
         let guest;
         try {

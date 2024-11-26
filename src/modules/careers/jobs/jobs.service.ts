@@ -1,4 +1,4 @@
-import { IJobAddPayload, IJobResponse, IJobsGetResponse, IJobUpdatePayload } from "./jobs.interface";
+import { IJobAddPayload, IJobResponse, IJobsGetPayload, IJobsGetResponse, IJobUpdatePayload } from "./jobs.interface";
 import Job from "../../../shared/models/job";
 import Skill from "../../../shared/models/skill";
 import { AlreadyExistsException, NotFoundException } from "../../../shared/exceptions";
@@ -87,8 +87,9 @@ export default class JobService {
     }
 
 
-    public async getJobs(): Promise<IJobsGetResponse | undefined> {
+    public async getJobs(payload: IJobsGetPayload): Promise<IJobsGetResponse | undefined> {
         const jobs = await Job.findAll({
+            where: { ...payload },
             include: [{
                 model: Skill,
                 as: 'skills'

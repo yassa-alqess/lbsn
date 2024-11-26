@@ -25,6 +25,11 @@ export interface IJobUpdatePayload {
     employmentType?: EmploymentTypeEnum;
 }
 
+export interface IJobsGetPayload {
+    jobCategory?: JobCategoryEnum;
+    employmentType?: EmploymentTypeEnum;
+}
+
 export interface IJobsGetResponse {
     jobs: IJobResponse[];
 }
