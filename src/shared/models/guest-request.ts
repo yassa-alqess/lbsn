@@ -2,7 +2,7 @@ import { Column, Table, Model, ForeignKey, DataType, BelongsTo, HasOne } from 's
 import Guest from './guest';
 import Service from './service';
 import Category from './category';
-import { IsResolvedEnum, MarketingBudgetEnum } from '../enums';
+import { IsResolvedEnum, IsUserEnum, MarketingBudgetEnum } from '../enums';
 
 //3rd party dependencies
 import * as _ from "lodash";
@@ -11,6 +11,7 @@ import Appointment from './appointment';
 
 const isResolvedStatueses: string[] = _.values(IsResolvedEnum);
 const marketingBudgetEnumValues: string[] = _.values(MarketingBudgetEnum);
+const isUserEnumValues: string[] = _.values(IsUserEnum);
 
 @Table({ schema: process.env.SCHEMA, timestamps: true })
 class GuestRequest extends Model {
@@ -49,6 +50,17 @@ class GuestRequest extends Model {
         },
     })
     declare resolved: IsResolvedEnum;
+
+    @Column({
+        type: DataType.ENUM({
+            values: isUserEnumValues
+        }),
+
+        validate: {
+            isIn: [isUserEnumValues]
+        },
+    })
+    declare isUser: IsUserEnum;
 
     @Column({
         type: DataType.ENUM({

@@ -12,7 +12,7 @@ import { StatusCodes } from 'http-status-codes';
 export default class WarmLeadsController implements Controller {
     private _warmLeadsService = new WarmLeadsService();
     router = express.Router();
-    path = WARM_LEADS_PATH;
+    path = `/${WARM_LEADS_PATH}`;
 
     constructor() {
         this._initializeRoutes();

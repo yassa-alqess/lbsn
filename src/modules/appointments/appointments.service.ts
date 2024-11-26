@@ -18,7 +18,7 @@ import { IMeeting } from "../meetings/meeting.interface";
 import { hashPassword } from "../../shared/utils/hash-password";
 import TimeSlotService from "../time-slots/time-slots.service";
 import { ITimeSlotResponse } from "../time-slots/time-slots.interface";
-import { IsAvailableEnum } from "../../shared/enums";
+import { IsAvailableEnum, IsUserEnum } from "../../shared/enums";
 
 
 export default class AppointmentService {
@@ -49,7 +49,8 @@ export default class AppointmentService {
             marketingBudget: appointmentPayload.marketingBudget
         };
         const { requestId } = await this._guestRequestsService.addGuestRequest({
-            ...guestRequest
+            ...guestRequest,
+            isUser: IsUserEnum.GUEST
         });
 
         // send confirmation email

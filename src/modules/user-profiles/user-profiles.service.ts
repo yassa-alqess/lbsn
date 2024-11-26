@@ -16,7 +16,7 @@ import EmailService from "../../config/mailer";
 import { MAIN_MAIL } from "../../shared/constants";
 import HttpException from "../../shared/exceptions/http.exception";
 import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
-import { IsResolvedEnum } from "../../shared/enums";
+import { IsResolvedEnum, IsUserEnum } from "../../shared/enums";
 
 // 3rd party dependencies
 import { Sequelize, Transaction } from "sequelize";
@@ -153,7 +153,7 @@ export default class UserProfilesService {
             throw new HttpException(400, "Guest request already exists");
         }
 
-        await GuestRequest.create({ ...guestRequestPayload, resolved: IsResolvedEnum.PENDING, });
+        await GuestRequest.create({ ...guestRequestPayload, resolved: IsResolvedEnum.PENDING, isUser: IsUserEnum.USER });
 
         const emailPayload: IEmailOptions = {
             to: MAIN_MAIL,

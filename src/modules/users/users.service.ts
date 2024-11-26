@@ -2,7 +2,7 @@ import { IUserAddPayload, IUserBulkAddResponse, IUserResponse, IUsersGetPayload,
 import User from "../../shared/models/user";
 import { deleteFile, getFileSizeAsync, readXlsx } from "../../shared/utils";
 import { AlreadyExistsException, NotFoundException } from "../../shared/exceptions";
-import { IsLockedEnum, IsResolvedEnum, IsVerifiedEnum, MarketingBudgetEnum, RoleEnum } from "../../shared/enums";
+import { IsLockedEnum, IsResolvedEnum, IsUserEnum, IsVerifiedEnum, MarketingBudgetEnum, RoleEnum } from "../../shared/enums";
 import Role from "../../shared/models/role";
 import logger from "../../config/logger";
 import DatabaseManager from "../../config/database/db-manager";
@@ -373,7 +373,7 @@ export default class UserService {
 
         const userPromises = users.map(async (user) => {
             const numOfRequests = await GuestRequest.count({
-                where: { guestId: user.guestId, resolved: IsResolvedEnum.PENDING }
+                where: { guestId: user.guestId, resolved: IsResolvedEnum.PENDING, isUser: IsUserEnum.USER }
             });
 
             return {

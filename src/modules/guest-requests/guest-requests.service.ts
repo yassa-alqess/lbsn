@@ -30,7 +30,7 @@ export default class GuestRequestsService {
         this._sequelize = DatabaseManager.getSQLInstance();
     }
     public async addGuestRequest(guestRequestPayload: IGuestRequestAddPayload): Promise<IGuestRequest> {
-        const { guestId, serviceId, categoryId, marketingBudget } = guestRequestPayload;
+        const { guestId, serviceId, categoryId, marketingBudget, isUser } = guestRequestPayload;
 
         try {
             const guestRequest = await GuestRequest.findOne({ where: { guestId, serviceId } });
@@ -57,7 +57,7 @@ export default class GuestRequestsService {
             }
 
             const newGuestRequest = await GuestRequest.create({
-                guestId, serviceId, categoryId, resolved: IsResolvedEnum.PENDING, marketingBudget
+                guestId, serviceId, categoryId, resolved: IsResolvedEnum.PENDING, marketingBudget, isUser
             });
 
             return {

@@ -3,10 +3,10 @@ import {
     Model,
     Column,
     DataType,
-    BelongsTo,
-    ForeignKey,
+    BelongsToMany,
 } from 'sequelize-typescript';
 import Job from './job';
+import JobSkill from './job-skill';
 
 @Table({ schema: 'public', timestamps: true })
 class Skill extends Model {
@@ -22,14 +22,8 @@ class Skill extends Model {
     })
     declare name: string;
 
-    @ForeignKey(() => Job)
-    @Column({
-        type: DataType.UUID,
-    })
-    declare jobId: string;
-
-    @BelongsTo(() => Job, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
-    declare job: Job;
+    @BelongsToMany(() => Job, () => JobSkill)
+    declare users: Job[];
 }
 
 export default Skill;

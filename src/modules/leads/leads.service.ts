@@ -31,6 +31,7 @@ export default class LeadsService {
     }
 
     public async syncSheetData({ profileId, sheetUrl, sheetName }: { profileId: string, sheetUrl: string, sheetName: string }) {
+        logger.info(`Syncing sheet data for profile ${profileId}...`);
         const transaction = await this._sequelize!.transaction(); // Start a transaction
 
         try {
