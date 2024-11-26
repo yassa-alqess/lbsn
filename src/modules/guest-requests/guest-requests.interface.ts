@@ -1,4 +1,4 @@
-import { IsResolvedEnum, MarketingBudgetEnum } from "../../shared/enums";
+import { IsResolvedEnum, IsUserEnum, MarketingBudgetEnum } from "../../shared/enums";
 export interface IgetGuestRequestsResponse {
     gestRequests: IGuestRequest[];
 }
@@ -20,6 +20,7 @@ export interface IGuestRequestAddPayload {
     serviceId: string;
     categoryId: string;
     marketingBudget: MarketingBudgetEnum;
+    isUser?: IsUserEnum;
 }
 
 export interface IGuestRequestUpdatePayload {
