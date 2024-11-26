@@ -23,13 +23,13 @@ export default class GuestController implements Controller {
     }
 
     private _initializeRoutes() {
-        this.router.all(`${this.path}*`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]))
-        this.router.post(this.path, validate(CreateGuestDto), this.addGuest);
-        this.router.patch(`${this.path}/:guestId`, validate(UpdateGuestDto), this.updateGuest);
-        this.router.get(`${this.path}/:guestId`, this.getGuest);
-        this.router.get(this.path, this.getGuests);
-        this.router.delete(`${this.path}/:guestId`, this.deleteGuest);
-        this.router.patch(`${this.path}/:guestId/approve`, this.approveGuest);
+        this.router.post(this.path, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(CreateGuestDto), this.addGuest);
+        this.router.patch(`${this.path}/:guestId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), validate(UpdateGuestDto), this.updateGuest);
+        this.router.get(`${this.path}/verify`, this.verifyGuest);
+        this.router.get(`${this.path}/:guestId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getGuest);
+        this.router.get(this.path, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.getGuests);
+        this.router.delete(`${this.path}/:guestId`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.deleteGuest);
+        this.router.patch(`${this.path}/:guestId/approve`, accessTokenGuard, requireAnyOfThoseRoles([RoleEnum.ADMIN, RoleEnum.SUPER_ADMIN]), this.approveGuest);
     }
 
     public addGuest = async (req: Request, res: Response, next: NextFunction) => {
@@ -95,6 +95,24 @@ export default class GuestController implements Controller {
             if (error instanceof NotFoundException) {
                 return next(error);
             }
+            next(new InternalServerException(error.message));
+        }
+    }
+
+    public verifyGuest = async (req: Request, res: Response, next: NextFunction) => {
+        const { email } = req.query as { email: string };
+        if (!email) return next(new ParamRequiredException('email'));
+
+        try {
+            await this._guestService.verifyGuest(email);
+            res.status(StatusCodes.OK).json({}).end();
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            if (error instanceof AlreadyExistsException) {
+                return next(error);
+            }
+            logger.error(`error at verifyGuest action ${error}`);
             next(new InternalServerException(error.message));
         }
     }
