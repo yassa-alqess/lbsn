@@ -45,6 +45,7 @@ export const OVERVIEW_PATH = "overview"
 export const DOWNLOAD_PATH = "download"
 export const CAREERS_PATH = "careers"
 export const JOBS_PATH = "jobs"
+export const APPLICATIONS_PATH = "applications"
 
 
 export const DOMAIN = process.env.DOMAIN;
@@ -73,3 +74,4 @@ export const USER_IMAGES_PATH = `${FILE_URL}/users/images`
 export const TASKS_FILES_PATH = `${FILE_URL}/tasks`
 export const TASK_SUBMISSIONS_FILES_PATH = `${FILE_URL}/tasks/submissions`
 export const TICKETS_FILES_PATH = `${FILE_URL}/tickets`
+export const APPLICATIONS_FILES_PATH = `${FILE_URL}/careers/applications`

@@ -21,6 +21,7 @@ import ContactUsController from './contact-us/contact-us.controller';
 import OverviewController from './overview/overview.controller';
 import FilesController from './files/files.controller';
 import JobsController from './careers/jobs/jobs.controller';
+import ApplicationsController from './careers/applications/applications.controller';
 
 const restRouter = Router();
 for (const controller of [
@@ -45,6 +46,7 @@ for (const controller of [
     OverviewController,
     FilesController,
     JobsController,
+    ApplicationsController,
 ]) {
     const instance = new controller();
     restRouter.use('/', instance.router);
