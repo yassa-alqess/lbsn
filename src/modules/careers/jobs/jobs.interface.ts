@@ -1,4 +1,5 @@
 import { JobCategoryEnum, EmploymentTypeEnum } from "../../../shared/enums";
+import { IApplicationResponse } from "../applications/applications.interface";
 
 export interface IJobAddPayload {
     title: string;
@@ -15,6 +16,7 @@ export interface IJobResponse {
     jobCategory: JobCategoryEnum;
     employmentType: EmploymentTypeEnum;
     skills?: string[];
+    applications?: IApplicationResponse[];
 }
 
 export interface IJobUpdatePayload {

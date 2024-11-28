@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { ResourceEnum } from '../../shared/enums';
-import { TASK_SUBMISSIONS_FILES_PATH, TASKS_FILES_PATH, TICKETS_FILES_PATH, USER_IMAGES_PATH } from '../../shared/constants';
+import { APPLICATIONS_FILES_PATH, TASK_SUBMISSIONS_FILES_PATH, TASKS_FILES_PATH, TICKETS_FILES_PATH, USER_IMAGES_PATH } from '../../shared/constants';
 
 export default class FilesService {
     public async getFile(resourceType: string, fileName: string): Promise<string> {
@@ -22,6 +22,9 @@ export default class FilesService {
                 break;
             case ResourceEnum.images:
                 dir = USER_IMAGES_PATH;
+                break;
+            case ResourceEnum.APPLICATIONS:
+                dir = APPLICATIONS_FILES_PATH;
                 break;
             default:
                 throw new Error('Resource type not found');
