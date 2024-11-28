@@ -411,7 +411,7 @@ export default class UserService {
                 throw new NotFoundException('User', 'userId', userId);
             }
             const guestRequests = await GuestRequest.findAll({
-                where: { guestId: user?.guestId, resolved: IsResolvedEnum.PENDING },
+                where: { guestId: user?.guestId, resolved: IsResolvedEnum.PENDING, isUser: IsUserEnum.USER },
                 include: [{
                     model: Service,
                     attributes: ['name'],
