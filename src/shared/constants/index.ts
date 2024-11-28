@@ -50,7 +50,8 @@ export const APPLICATIONS_PATH = "applications"
 
 export const DOMAIN = process.env.DOMAIN;
 export const ACQUISITION_MAIL = DOMAIN ? `sales@${DOMAIN}` : "";
-export const MAIN_MAIL = `sales@leadbull.net`
+export const MAIN_MAIL = `salesleadbull@gmail.com`
+export const PASSWORD = process.env.PASSWORD || "salesleadbull@COM"
 
 
 export const ENV = process.env.NODE_ENV || 'dev';

@@ -16,6 +16,7 @@ import DatabaseManager from "../../config/database/db-manager";
 import { IProfileAddPayload } from "../user-profiles/user-profiles.interface";
 import SheetsService from "../sheets/sheets.service";
 import HttpException from "../../shared/exceptions/http.exception";
+import { MAIN_MAIL } from "../../shared/constants";
 
 // 3rd party dependencies
 import { Sequelize, Transaction } from "sequelize";
@@ -325,7 +326,7 @@ export default class GuestRequestsService {
         try {
             const sheet = await this._sheetsService.createSpreadSheet(`${userId}-${guestRequest.categoryName}-${guestRequest.serviceName}-${Date.now()}`, guestRequest.serviceName);
             sheetUrl = sheet.spreadsheetId;
-            await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); // temporary for testing
+            await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL); 
             return `https://docs.google.com/spreadsheets/d/${sheetUrl}`;
 
             //eslint-disable-next-line

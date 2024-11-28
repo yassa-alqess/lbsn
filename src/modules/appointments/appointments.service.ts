@@ -13,7 +13,7 @@ import Guest from "../../shared/models/guest";
 import Service from "../../shared/models/service";
 import Category from "../../shared/models/category";
 import { IGuestRequestAddPayload } from "../guest-requests/guest-requests.interface";
-import { ACQUISITION_MAIL, MAIN_MAIL } from "../../shared/constants";
+import { MAIN_MAIL } from "../../shared/constants";
 import { IMeeting } from "../meetings/meeting.interface";
 import { hashPassword } from "../../shared/utils/hash-password";
 import TimeSlotService from "../time-slots/time-slots.service";
@@ -132,7 +132,7 @@ export default class AppointmentService {
 
         const emailPayload: IEmailOptions = {
             to: guest.companyEmail,
-            cc: [MAIN_MAIL, ACQUISITION_MAIL],
+            cc: [MAIN_MAIL],
             template: "appointment",
             subject: 'Appointment Confirmation',
             context: {
