@@ -2,6 +2,7 @@ import Service from "../../shared/models/service";
 import GuestRequest from "../../shared/models/guest-request";
 import GuestService from "../guests/guests.service";
 import Category from "../../shared/models/category";
+import Appointment from "../../shared/models/appointment";
 import ServiceCategory from "../../shared/models/service-category";
 import UserProfilesService from "../user-profiles/user-profiles.service";
 import logger from "../../config/logger";
@@ -221,6 +222,7 @@ export default class GuestRequestsService {
         try {
             const guestRequest = await this._findGuestRequest(requestId, transaction);
             await this._updateGuestRequestStatus(guestRequest.requestId, transaction);
+            await this._deleteAppointmentForApprovedRequest(guestRequest.requestId, transaction);
             logger.debug(`guestRequest: ${JSON.stringify(guestRequest)}`);
             const approvalResult = await this._approveGuest(guestRequest.guestId, transaction);
 
@@ -280,6 +282,24 @@ export default class GuestRequestsService {
             throw new NotFoundException("Guest Request", "requestId", requestId);
         }
         await guestRequest.update({ resolved: IsResolvedEnum.RESOLVED }, { transaction });
+    }
+
+    private async _deleteAppointmentForApprovedRequest(requestId: string, transaction: Transaction) {
+        try {
+            // Find the appointment for the given request
+            const appointment = await Appointment.findByPk(requestId, { transaction });
+            if (!appointment) {
+                throw new NotFoundException("Appointment", "requestId", requestId);
+            }
+
+            // Delete the appointment
+            await appointment.destroy({ transaction });
+
+            //eslint-disable-next-line
+        } catch (error: any) {
+            logger.error(`Error deleting appointment for approved request: ${error.message}`);
+            throw new Error(`Error deleting appointment for approved request: ${error.message}`);
+        }
     }
 
     private async _approveGuest(guestId: string, transaction: Transaction): Promise<ApproveGuestResponse | null> {
