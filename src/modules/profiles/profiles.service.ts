@@ -8,6 +8,7 @@ import CategoriesService from "../categories/categories.service";
 import SheetsService from "../sheets/sheets.service";
 import ServiceCategory from "../../shared/models/service-category";
 import HttpException from "../../shared/exceptions/http.exception";
+import { MAIN_MAIL } from "../../shared/constants";
 
 export default class ProfileService {
     private _servicesService = new ServicesService();
@@ -52,8 +53,7 @@ export default class ProfileService {
 
                 const newSheet = await this._sheetsService.createSpreadSheet(`${profile?.userId}-${category.name}-${service.name}-${Date.now()}`, service.name);
                 const sheetUrl = newSheet.spreadsheetId;
-                // await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
-                await this._sheetsService.shareSheetWithEmail(sheetUrl, "iscoadms2@gmail.com"); //temporary for testing
+                await this._sheetsService.shareSheetWithEmail(sheetUrl, MAIN_MAIL);
                 newSheetUrl = `https://docs.google.com/spreadsheets/d/${sheetUrl}`;
                 newSheetName = service.name;
             }

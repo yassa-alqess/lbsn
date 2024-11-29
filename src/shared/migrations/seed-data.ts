@@ -3,6 +3,7 @@ import User from "../models/user";
 import Role from "../models/role";
 import { RoleEnum } from "../enums"; // Adjust the path to your enums
 import logger from '../../config/logger'; // Adjust the path to your logger
+import { MAIN_MAIL, PASSWORD } from "../constants";
 
 import _ from 'lodash';
 import bcrypt from 'bcrypt';
@@ -10,7 +11,7 @@ import bcrypt from 'bcrypt';
 export const userRolesMigration = async () => {
     const sequelize = DatabaseManager.getSQLInstance();
     const transaction = await sequelize.transaction();
-    const email = "yassa@gmail.com"; // some email
+    const email = MAIN_MAIL;
 
     try {
         // Seed Roles
@@ -29,12 +30,12 @@ export const userRolesMigration = async () => {
 
         if (!user) {
             user = await User.create({
-                username: "Yassa",
-                companyName: "MGIL",
+                username: "leadbull",
+                companyName: "leadbull",
                 companyEmail: email,
-                companyPhone: "123456789",
+                companyPhone: "+201015683986",
                 companyAddress: "Cairo",
-                password: bcrypt.hashSync("123456", 10)
+                password: bcrypt.hashSync(PASSWORD as string, 10)
             }, { transaction });
             logger.info(`User ${user.companyEmail} created.`);
         } else {
